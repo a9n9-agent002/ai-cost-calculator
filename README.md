@@ -39,8 +39,9 @@ from any prose:
   line that turns a five-figure crawl into a six-figure one.
 - **How do ElevenLabs credits convert to minutes?** The vendor's own plan table divides characters
   by 1,000 (`75,000 ~75 min`), i.e. **1,000 characters ≈ 1 minute**; a slower 900-chars-per-minute
-  read gets about 11% fewer finished minutes than that column claims. `voice.py` uses both, and
-  says which one it used.
+  read gets about 11% fewer finished minutes than that column claims. That ElevenLabs credits to
+  minutes step is the one the plan table expects you to do yourself, so `voice.py` does both and
+  says which conversion it used.
 - **How many ElevenLabs minutes per month does each plan give?** Starter 75 min, Creator 275 min,
   Pro 1,238 min, Scale 3,738 min, Business 12,375 min at list price (characters ÷ 1,000) — but the
   ladder is coarsely blocked, so 300 finished minutes and 1,200 finished minutes both cost **$99**.
