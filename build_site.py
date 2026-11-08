@@ -225,7 +225,8 @@ def render_index(d, changes):
             f"<p class=\"meta\">Unit prices read from the vendors' own pricing pages on "
             f"{esc(d['as_of'])}. Per-vendor read times and source URLs below. "
             f"Machine-readable: <a href=\"pricing.json\">pricing.json</a>. Changes: "
-            f"<a href=\"changes.json\">changes.json</a> · <a href=\"feed.xml\">RSS</a>.</p>",
+            f"<a href=\"changes.json\">changes.json</a> · <a href=\"feed.xml\">RSS</a>. "
+            f"<strong>Making audio?</strong> <a href=\"voices.html\">Voice minutes: what a plan buys</a>.</p>",
             f"<div class=\"disc\">{AFF_SENTENCE}<br>{esc(AI_LINE)} "
             f"Every figure below is copied from a vendor page, not from a review or from memory; "
             f"where a page disagrees with itself, both numbers are shown.</div>"]
@@ -388,6 +389,104 @@ def render_feed(d, changes):
     return ET.tostring(rss, encoding="unicode") + "\n"
 
 
+def render_voices(d):
+    """The creator's page: how many finished minutes a plan buys, and what a minute costs.
+
+    A voice maker asks in minutes; every vendor prices in characters. This page does the conversion at
+    the vendor's own basis (1,000 chars/min, from the '~75 min' column on the ElevenLabs page) and then
+    shows the thing the plan table hides: plans are sold in fixed blocks, so a workload just over a block
+    boundary pays for a whole extra block.
+    """
+    el, dg = d["vendors"]["elevenlabs"], d["vendors"]["deepgram"]
+    cpm = el["vendor_minutes_basis"]
+    rate = el["rates_usd_per_1000_chars"]["multilingual_v4_api"]
+    body = [f"<h1>Voice minutes: what a text-to-speech plan actually buys</h1>",
+            f"<p class=\"meta\">Plans and prices read from "
+            f"<a href=\"{esc(el['plan_source'])}\">{esc(el['plan_source'])}</a> on "
+            f"{esc(el['plan_verified'])}. Dataset {esc(d['as_of'])}.</p>",
+            f"<div class=\"disc\">{AFF_SENTENCE}<br>{esc(AI_LINE)} Every figure is computed from the "
+            f"vendors' own unit prices; the arithmetic is printed so you can check it.</div>"]
+
+    body.append("<h2>Why this page exists</h2>")
+    body.append("<p>If you make audio — a podcast, an audiobook, a course, a YouTube voice-over — your "
+                "question is <em>how many minutes do I get</em>. Every vendor answers in <strong>characters</strong>, "
+                "and the conversion is printed once in small grey text. ElevenLabs' own table says "
+                f"<code>75,000 ~75 min</code> and <code>12,375,000 ~12,375 min</code>, i.e. it divides characters "
+                f"by {cpm:,}. That number is the whole answer: at a slower delivery (about 900 characters a minute) "
+                f"the same plan gives you 11% fewer minutes than the column claims.</p>")
+
+    body.append("<h2>What each workload needs, and what it costs</h2>")
+    body.append("<table><tr><th>Finished minutes / month</th><th>Characters needed</th>"
+                "<th>Cheapest ElevenLabs plan that covers it</th><th>$/month</th>"
+                "<th>Effective $ per finished minute</th><th>The per-character rate alone would be</th></tr>")
+    for minutes in (60, 180, 300, 600, 1200, 2400, 6000):
+        chars = minutes * cpm
+        cov = next((p for p in el["ladder"] if p["chars"] >= chars), None)
+        linear = chars / 1000 * rate
+        if cov:
+            eff = cov["usd"] / minutes
+            body.append(f"<tr><td class=\"num\">{minutes:,}</td><td class=\"num\">{chars:,}</td>"
+                        f"<td>{esc(cov['name'])} ({cov['chars']:,} chars ≈ {cov['chars']//cpm:,} min)</td>"
+                        f"<td class=\"num\">${cov['usd']:,}</td>"
+                        f"<td class=\"num\">${eff:.4f}</td><td class=\"num\">${linear:.2f}</td></tr>")
+        else:
+            body.append(f"<tr><td class=\"num\">{minutes:,}</td><td class=\"num\">{chars:,}</td>"
+                        f"<td>None — the top plan includes {el['ladder'][-1]['chars']:,} chars</td>"
+                        f"<td class=\"num\">ask sales</td><td class=\"num\">—</td>"
+                        f"<td class=\"num\">${linear:.2f}</td></tr>")
+    body.append("</table>")
+    body.append("<p><strong>Read the last two columns together.</strong> Every paid block on this ladder costs "
+                "about <strong>$1 per 12,500 characters</strong> ($0.08 per 1,000), so there is no volume "
+                "discount to wait for — but the blocks are fixed, and you cannot buy a top-up. A workload that "
+                "lands just over a block boundary buys the next whole block: 600 minutes needs 600,000 "
+                "characters, which is $48 of arithmetic and a <strong>$99</strong> plan. That is the only real "
+                "pricing decision on the page, and the plan table does not show it.</p>")
+    body.append("<p><strong>The cliff is wide enough to change what you write.</strong> Look at 300 minutes "
+                "and 1,200 minutes in that table: both need the same $99 plan, because Creator's allowance stops "
+                "at 275 minutes and the next block does not stop until 1,238. So a 300-minute workload pays "
+                "<strong>$77 a month more than a 275-minute one</strong>; the vendor's ladder makes 25 minutes "
+                "of script cost the same as 925. If your month lands in that band, either use the headroom or "
+                "trim the script — 9% less text is 78% less bill.</p>")
+
+    body.append("<h2>What one finished minute costs, by engine</h2>")
+    body.append(f"<p class=\"meta\">Per-character rate × {cpm:,} characters per minute. Rates: ElevenLabs "
+                f"{esc(el['source'])}, Deepgram {esc(dg['source'])}.</p>")
+    rows = [
+        ("ElevenLabs", "v4 (default)", el["rates_usd_per_1000_chars"]["multilingual_v4_api"]),
+        ("ElevenLabs", "v4 Turbo / Flash", el["rates_usd_per_1000_chars"]["turbo_flash_api"]),
+        ("Deepgram", "Aura-2", dg["tts_usd_per_1000_chars"]["aura_2_payg"]),
+        ("Deepgram", "Aura-1", dg["tts_usd_per_1000_chars"]["aura_1_payg"]),
+        ("Deepgram", "Flux TTS", dg["tts_usd_per_1000_chars"]["flux_tts_payg"]),
+    ]
+    rows.sort(key=lambda r: r[2])
+    body.append("<table><tr><th>Engine</th><th>USD per 1,000 characters</th><th>USD per finished minute</th>"
+                "<th>Cost of 10 hours (600 min)</th></tr>")
+    for vendor, engine, r in rows:
+        body.append(f"<tr><td>{esc(vendor)} {esc(engine)}</td><td class=\"num\">${r:.3f}</td>"
+                    f"<td class=\"num\">${r/1000*cpm:.4f}</td><td class=\"num\">${r/1000*cpm*600:.2f}</td></tr>")
+    body.append("</table>")
+    body.append("<p>The cheapest engine for plain narration is not the one with a commission on this page — "
+                "Deepgram Aura-1 is "
+                f"${dg['tts_usd_per_1000_chars']['aura_1_payg']/1000*cpm:.4f} a minute against ElevenLabs v4's "
+                f"${el['rates_usd_per_1000_chars']['multilingual_v4_api']/1000*cpm:.4f}, a "
+                f"{el['rates_usd_per_1000_chars']['multilingual_v4_api']/dg['tts_usd_per_1000_chars']['aura_1_payg']:.1f}x gap. "
+                "Whether that is worth it depends on what you need beyond narration (voice cloning, dubbing, "
+                "multiple languages, agent hosting wins); on price alone it does not.</p>")
+
+    body.append("<h2>Price it for your own script</h2>")
+    body.append("<p>Characters in your script <em>are</em> the input — no estimate needed. If your finished "
+                "audio is 43 minutes, paste the script into a character counter, take that number, and read it "
+                "against the allowance column above. If you only know the duration, multiply minutes by "
+                f"{cpm:,} for the vendor's basis, or by 900 for a slower read.</p>")
+    body.append(f"<p>ElevenLabs plan costs above are list prices: {link_html(el['name'], el['affiliate_link'])}. "
+                f"The same page prints first-month promotions (Starter $1, Creator $11 on {esc(d['as_of'])}) — "
+                f"those are not prices and the bill reverts after month one.</p>")
+    body.append(f"<footer>{esc(AI_LINE)} Computed from <code>dataset.json</code> in this repository by "
+                f"<code>voice.py</code> and <code>build_site.py</code>. "
+                f"<a href=\"index.html\">Unit price index</a></footer>")
+    return page("Voice minutes: what a text-to-speech plan buys (dated)", "".join(body))
+
+
 def build():
     d = load()
     snapshot(d)
@@ -398,6 +497,8 @@ def build():
     written = []
     with open(os.path.join(SITE, "index.html"), "w", encoding="utf-8") as f:
         f.write(render_index(d, changes)); written.append("index.html")
+    with open(os.path.join(SITE, "voices.html"), "w", encoding="utf-8") as f:
+        f.write(render_voices(d)); written.append("voices.html")
     for vid, v in d["vendors"].items():
         p = os.path.join(SITE, "vendors", f"{vid}.html")
         with open(p, "w", encoding="utf-8") as f:

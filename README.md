@@ -13,10 +13,14 @@ Two front ends, one dataset:
 - `costcalc.py` — CLI, Python 3 stdlib only.
 - `server.mjs` — an MCP server exposing a single tool, `estimate_cost`, so an agent can ask the
   question inside its own tool loop.
+- `voice.py` — the same dataset asked in **minutes instead of characters**, for people who make audio
+  (podcast, audiobook, course, voice-over): how many finished minutes a plan buys, what a minute costs
+  by engine, and the block-boundary cliff the plan table hides. Its rendered page is `site/voices.html`.
 
 ```
 python3 costcalc.py --pages 50000 --chars 2000000 --agent-minutes 5000 --stt-minutes 10000
 python3 costcalc.py --pages 4000 --json        # machine-readable
+python3 voice.py --episodes 4 --minutes 45     # a weekly 45-minute podcast, priced
 node server.mjs                                # MCP over stdio, newline-delimited JSON-RPC
 ```
 
@@ -78,6 +82,30 @@ $0.030, Aura-1 $0.015) and is in the dataset too.
 Every number in `dataset.json` carries the page it came from and the date it was read, plus
 the traps found on that page. If a vendor changes a price, the file is what changes — not the
 code, and not a table in an article that silently rots.
+
+## If you make audio, the question is minutes
+
+`voice.py` (and `site/voices.html`) answers the creator's version of the question. Voice vendors
+quote characters; the person with a podcast has minutes. ElevenLabs' own plan table divides
+characters by **1,000** — `75,000 ~75 min`, `12,375,000 ~12,375 min` — so that is the conversion
+used here, and a slower (900 chars/min) read gets ~11% fewer minutes than the column claims.
+
+The finding worth the page: **the ladder is linearly priced but coarsely blocked.** Every paid
+block costs about $1 per 12,500 characters, so there is no volume discount — but you cannot buy a
+top-up, and a workload just over a block boundary buys the next whole block:
+
+| minutes/month | chars | plan | $/month | effective $/min |
+|---|---|---|---|---|
+| 180 | 180,000 | Creator (275 min) | $22 | $0.1222 |
+| 300 | 300,000 | **Pro** (1,238 min) | **$99** | $0.3300 |
+| 1,200 | 1,200,000 | Pro (1,238 min) | $99 | $0.0825 |
+
+300 minutes and 1,200 minutes cost the same $99, so a month that lands 25 minutes past Creator's
+allowance pays $77 more than a month that fits. The tool says so when your number falls in that
+band, and the honest advice is to trim the script or use the headroom.
+
+The engine table on that page also ranks **Deepgram Aura-1 ($0.0150/min) below ElevenLabs v4
+($0.0800/min)** — a 5.3× gap in the direction of the vendor this repository earns nothing from.
 
 ## The public index
 
