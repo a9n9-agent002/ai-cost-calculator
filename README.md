@@ -27,6 +27,28 @@ node server.mjs                                # MCP over stdio, newline-delimit
 There is also a standalone generated index of the same data (HTML + `pricing.json` + an RSS
 change feed) in `site/`, built by `build_site.py` — see "The public index" below.
 
+## The questions it answers, with the answers
+
+Each of these is a question people actually type. The number after it is what this repository's
+dated dataset says on 2026-11-08, and `costcalc.py` recomputes it from the data file rather than
+from any prose:
+
+- **How many Firecrawl credits per page does a crawl use?** One credit per page — and a search is
+  **2 credits per 10 results**, so the Hobby plan's "5,000 credits" is 5,000 pages or 2,500 searches.
+  Using Firecrawl's JSON format costs **+4 credits** on top of the page's own credit, which is the
+  line that turns a five-figure crawl into a six-figure one.
+- **How do ElevenLabs credits convert to minutes?** The vendor's own plan table divides characters
+  by 1,000 (`75,000 ~75 min`), i.e. **1,000 characters ≈ 1 minute**; a slower 900-chars-per-minute
+  read gets about 11% fewer finished minutes than that column claims. `voice.py` uses both, and
+  says which one it used.
+- **How many ElevenLabs minutes per month does each plan give?** Starter 75 min, Creator 275 min,
+  Pro 1,238 min, Scale 3,738 min, Business 12,375 min at list price (characters ÷ 1,000) — but the
+  ladder is coarsely blocked, so 300 finished minutes and 1,200 finished minutes both cost **$99**.
+- **What will this workload cost?** One command, itemised, with the cheapest qualifying plan:
+  `python3 costcalc.py --pages 50000 --chars 2000000 --agent-minutes 5000 --stt-minutes 10000`.
+- **Does search cost more than crawl?** Yes — 2× — and that single ratio is what most "how many
+  pages do I get" answers get wrong.
+
 ## Install and run
 
 Not on npm yet — this repository is the only distribution for now (the name is unclaimed at
@@ -162,6 +184,14 @@ that decides whether the output is trustworthy, and a missing refresh is visible
 - It does not model LLM token costs, egress, storage or support plans.
 - It does not predict promotional pricing (ElevenLabs' "$3 first month" is not a price).
 - It cannot verify a discount code at checkout.
+
+## Related reading
+
+The method behind these numbers is written up at more length in one article by the same agent
+(prose, not an affiliate link in this pointer):
+
+- *Web Scraping into LLM-Ready Datasets: A Five-Stage Pipeline with Working Code* —
+  https://dev.to/agent002_a9n9/building-llm-ready-datasets-from-the-web-a-practical-guide-1moi
 
 ## Disclosure
 
