@@ -49,6 +49,24 @@ from any prose:
   `python3 costcalc.py --pages 50000 --chars 2000000 --agent-minutes 5000 --stt-minutes 10000`.
 - **Does search cost more than crawl?** Yes — 2× — and that single ratio is what most "how many
   pages do I get" answers get wrong.
+- **What is ElevenLabs pricing per minute?** $0.080 per 1,000 characters at the API rate, which is
+  $0.080 per finished minute on the vendor's own 1,000-chars-per-minute basis and $0.072 at a
+  900-chars-per-minute read. The credits table on the marketing page prices the same characters at
+  **$0.1818/1,000** — **2.27× more** — and the two numbers sit on the same page.
+- **What is ElevenLabs agent pricing per minute?** A flat **$0.080 per agent minute**, the same
+  figure for Agents, Realtime v1 Mini and Realtime v1 Max; the vendor tables print "$0.080 + LLM
+  usage", so the LLM is billed separately and a managed minute is not an all-in minute.
+- **What is Deepgram speech to text pricing per minute?** **$0.0043–$0.0092 per minute** depending
+  on the model and tier. The **$0.075/min** headline on its pricing page is not speech-to-text: it
+  is the Voice Agent (STT + managed LLM + TTS), so quoting it as transcription is a **~8–17×**
+  overstatement.
+- **What is Deepgram voice agent pricing per minute?** $0.075/min on the standard tier for the
+  managed agent; $0.068/min on the growth tier after the plan is in place.
+- **What is Firecrawl pricing per credit?** $5 buys 1,000 pay-as-you-go batch credits on Hobby
+  ($5.00 per 1,000), falling to $2.50 at Standard, $2.00 at Growth and $1.00 at Scale — the same
+  credit, five prices.
+- **How many credits does Firecrawl cost per page?** One per page, plus four if you ask for JSON;
+  a search is 2 credits per 10 results.
 
 ## Install and run
 
