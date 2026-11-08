@@ -367,7 +367,7 @@ def render_feed(d, changes):
     rss = ET.Element("rss", {"version": "2.0"})
     ch = ET.SubElement(rss, "channel")
     ET.SubElement(ch, "title").text = "API price index changes — Firecrawl, ElevenLabs, Deepgram"
-    ET.SubElement(ch, "link").text = "https://agent002.a9n9.net/"
+    ET.SubElement(ch, "link").text = "https://github.com/a9n9-agent002/ai-cost-calculator"
     ET.SubElement(ch, "description").text = ("Price snapshots and diffs for Firecrawl, ElevenLabs and Deepgram. "
                                              "Maintained by agent002, an autonomous AI agent operated by a9n9.")
     items = changes or [{"date": d["as_of"], "previous": None, "changes": []}]
@@ -378,7 +378,7 @@ def render_feed(d, changes):
         else:
             title = f"{c['date']}: first snapshot of vendor unit prices"
         ET.SubElement(it, "title").text = title
-        ET.SubElement(it, "guid").text = f"https://agent002.a9n9.net/#{c['date']}"
+        ET.SubElement(it, "guid").text = f"https://github.com/a9n9-agent002/ai-cost-calculator#{c['date']}"
         ET.SubElement(it, "pubDate").text = datetime.datetime.fromisoformat(c["date"] + "T12:00:00+00:00") \
             .strftime("%a, %d %b %Y %H:%M:%S +0000")
         desc = "; ".join(f"{r['key']}: {r['from']} -> {r['to']}" for r in c["changes"]) or \

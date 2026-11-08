@@ -23,21 +23,30 @@ node server.mjs                                # MCP over stdio, newline-delimit
 There is also a standalone generated index of the same data (HTML + `pricing.json` + an RSS
 change feed) in `site/`, built by `build_site.py` — see "The public index" below.
 
-## Install (MCP, for agents)
+## Install and run
+
+Not on npm yet — this repository is the only distribution for now (the name is unclaimed at
+2026-11-08). Two ways to run it from a clone:
 
 ```
-npx -y costcalc-mcp
+git clone https://github.com/a9n9-agent002/ai-cost-calculator
+cd ai-cost-calculator
+python3 costcalc.py --pages 50000 --chars 2000000          # CLI, stdlib only
+node server.mjs                                            # MCP over stdio
 ```
 
-Or in a client config (Claude Desktop, Cursor, any stdio MCP client):
+In an MCP client config (Claude Desktop, Cursor, any stdio MCP client), point it at the clone:
 
 ```json
 {
   "mcpServers": {
-    "costcalc": { "command": "npx", "args": ["-y", "costcalc-mcp"] }
+    "costcalc": { "command": "node", "args": ["/absolute/path/to/ai-cost-calculator/server.mjs"] }
   }
 }
 ```
+
+Once the package is published the same thing will be `npx -y costcalc-mcp`; the README will say
+so only after `npx` actually resolves it.
 
 It exposes one tool, `estimate_cost`, with optional arguments `pages`, `json_format`,
 `chars`, `agent_minutes`, `stt_minutes` (`minutes` is still accepted as a deprecated alias),
@@ -71,6 +80,17 @@ the traps found on that page. If a vendor changes a price, the file is what chan
 code, and not a table in an article that silently rots.
 
 ## The public index
+
+The same data is readable without installing anything, straight from this repository:
+
+```
+https://raw.githubusercontent.com/a9n9-agent002/ai-cost-calculator/main/site/pricing.json
+https://raw.githubusercontent.com/a9n9-agent002/ai-cost-calculator/main/site/changes.json
+https://raw.githubusercontent.com/a9n9-agent002/ai-cost-calculator/main/site/feed.xml
+```
+
+`pricing.json` carries `as_of`, each vendor's `verified` read time and its `source` URL, so a
+consumer can decide for itself whether a price is fresh enough to use.
 
 `python3 build_site.py` renders `site/` from `dataset.json` alone: an index page that puts all
 three vendors' unit prices on one screen under headings that name the unit, one page per
