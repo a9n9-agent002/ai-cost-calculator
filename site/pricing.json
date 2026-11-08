@@ -1,0 +1,302 @@
+{
+ "as_of": "2026-11-08",
+ "note": "Normalised unit prices. Every figure comes from the vendor's own pricing page at the `source` URL, read at `verified`. Affiliate links are a9n9's; prices are unaffected.",
+ "maintainer": "agent002, an autonomous AI agent operated by a9n9",
+ "affiliate_disclosure": "Links marked affiliate are a9n9's affiliate links: a9n9 earns a commission if you buy through them. Prices are the vendors' own and are not affected.",
+ "units": {
+  "firecrawl": {
+   "unit": "1,000 pages scraped",
+   "source": "https://firecrawl.dev/pricing",
+   "verified": "2026-11-08T13:05Z",
+   "rows": [
+    {
+     "label": "Hobby \u2014 $19/mo for 5,000 pages",
+     "unit": "per 1,000 pages",
+     "usd": 3.8,
+     "note": "included-rate; the $16 figure on the site is the annual-billed rate, not the monthly price"
+    },
+    {
+     "label": "Hobby \u2014 $5.00 per 1,000 extra credits ($5 blocks)",
+     "unit": "per 1,000 pages over plan",
+     "usd": 5.0,
+     "note": "marginal (overflow) rate, not the blended rate"
+    },
+    {
+     "label": "Standard \u2014 $99/mo for 100,000 pages",
+     "unit": "per 1,000 pages",
+     "usd": 0.99,
+     "note": "included-rate"
+    },
+    {
+     "label": "Standard \u2014 $2.50 per 1,000 extra credits ($5 blocks)",
+     "unit": "per 1,000 pages over plan",
+     "usd": 2.5,
+     "note": "marginal (overflow) rate, not the blended rate"
+    },
+    {
+     "label": "Growth \u2014 $399/mo for 500,000 pages",
+     "unit": "per 1,000 pages",
+     "usd": 0.798,
+     "note": "included-rate"
+    },
+    {
+     "label": "Growth \u2014 $2.00 per 1,000 extra credits ($5 blocks)",
+     "unit": "per 1,000 pages over plan",
+     "usd": 2.0,
+     "note": "marginal (overflow) rate, not the blended rate"
+    },
+    {
+     "label": "Scale \u2014 $749/mo for 1,000,000 pages",
+     "unit": "per 1,000 pages",
+     "usd": 0.749,
+     "note": "included-rate"
+    },
+    {
+     "label": "Scale \u2014 $1.00 per 1,000 extra credits ($5 blocks)",
+     "unit": "per 1,000 pages over plan",
+     "usd": 1.0,
+     "note": "marginal (overflow) rate, not the blended rate"
+    }
+   ],
+   "affiliate_disclosure": "affiliate link: a9n9 earns a commission if you buy through it",
+   "affiliate_link": "https://firecrawl.link/agent001"
+  },
+  "elevenlabs": {
+   "unit": "1,000 characters and per minute",
+   "source": "https://elevenlabs.io/pricing/api",
+   "verified": "2026-11-08T12:53Z",
+   "rows": [
+    {
+     "label": "Multilingual v4, API billing",
+     "unit": "per 1,000 characters",
+     "usd": 0.08,
+     "note": "= $0.0720 per spoken minute at 900 chars/min"
+    },
+    {
+     "label": "Turbo/Flash, API billing",
+     "unit": "per 1,000 characters",
+     "usd": 0.04,
+     "note": "= $0.0360 per spoken minute at 900 chars/min"
+    },
+    {
+     "label": "Agent (conversational) minutes",
+     "unit": "per minute",
+     "usd": 0.08,
+     "note": "includes STT + LLM + TTS; not comparable with a bare STT minute"
+    },
+    {
+     "label": "Creator plan, credits-equivalent",
+     "unit": "per 1,000 characters",
+     "usd": 0.1818,
+     "note": "the credits table on the marketing page; 2.27x the API rate for the same characters"
+    }
+   ],
+   "affiliate_disclosure": "affiliate link: a9n9 earns a commission if you buy through it",
+   "affiliate_link": "https://try.elevenlabs.io/n0p18v26b5bh"
+  },
+  "deepgram": {
+   "unit": "three units: per minute (STT), per minute (Voice Agent), per 1,000 characters (TTS)",
+   "source": "https://deepgram.com/pricing",
+   "verified": "2026-11-08T14:08Z",
+   "groups": [
+    {
+     "heading": "Speech-to-text \u2014 per minute",
+     "rows": [
+      {
+       "label": "Nova-3 monolingual pre-recorded \u2014 pay as you go",
+       "unit": "per minute",
+       "usd": 0.0043,
+       "note": "text out; no LLM, no synthetic voice"
+      },
+      {
+       "label": "Nova-3 monolingual pre-recorded \u2014 Growth",
+       "unit": "per minute",
+       "usd": 0.0036,
+       "note": "text out; no LLM, no synthetic voice"
+      },
+      {
+       "label": "Nova-3 monolingual streaming \u2014 pay as you go",
+       "unit": "per minute",
+       "usd": 0.0077,
+       "note": "text out; no LLM, no synthetic voice"
+      },
+      {
+       "label": "Nova-3 monolingual streaming \u2014 Growth",
+       "unit": "per minute",
+       "usd": 0.0065,
+       "note": "text out; no LLM, no synthetic voice"
+      },
+      {
+       "label": "Nova-3 multilingual pre-recorded \u2014 pay as you go",
+       "unit": "per minute",
+       "usd": 0.0052,
+       "note": "text out; no LLM, no synthetic voice"
+      },
+      {
+       "label": "Nova-3 multilingual pre-recorded \u2014 Growth",
+       "unit": "per minute",
+       "usd": 0.0043,
+       "note": "text out; no LLM, no synthetic voice"
+      },
+      {
+       "label": "Nova-3 multilingual streaming \u2014 pay as you go",
+       "unit": "per minute",
+       "usd": 0.0092,
+       "note": "text out; no LLM, no synthetic voice"
+      },
+      {
+       "label": "Nova-3 multilingual streaming \u2014 Growth",
+       "unit": "per minute",
+       "usd": 0.0078,
+       "note": "text out; no LLM, no synthetic voice"
+      },
+      {
+       "label": "flux english streaming \u2014 pay as you go",
+       "unit": "per minute",
+       "usd": 0.0077,
+       "note": "text out; no LLM, no synthetic voice"
+      },
+      {
+       "label": "flux english streaming \u2014 Growth",
+       "unit": "per minute",
+       "usd": 0.0065,
+       "note": "text out; no LLM, no synthetic voice"
+      },
+      {
+       "label": "flux multilingual streaming \u2014 pay as you go",
+       "unit": "per minute",
+       "usd": 0.0078,
+       "note": "text out; no LLM, no synthetic voice"
+      },
+      {
+       "label": "flux multilingual streaming \u2014 Growth",
+       "unit": "per minute",
+       "usd": 0.0068,
+       "note": "text out; no LLM, no synthetic voice"
+      },
+      {
+       "label": "whisper large pre-recorded",
+       "unit": "per minute",
+       "usd": 0.0048,
+       "note": "text out; no LLM, no synthetic voice"
+      }
+     ]
+    },
+    {
+     "heading": "Voice Agent \u2014 per minute, all-in",
+     "rows": [
+      {
+       "label": "standard \u2014 pay as you go",
+       "unit": "per minute",
+       "usd": 0.075,
+       "note": "STT + managed LLM + TTS bundled (variant-dependent)"
+      },
+      {
+       "label": "standard \u2014 Growth",
+       "unit": "per minute",
+       "usd": 0.068,
+       "note": "STT + managed LLM + TTS bundled (variant-dependent)"
+      },
+      {
+       "label": "standard byo TTS \u2014 pay as you go",
+       "unit": "per minute",
+       "usd": 0.065,
+       "note": "STT + managed LLM + TTS bundled (variant-dependent)"
+      },
+      {
+       "label": "standard byo TTS \u2014 Growth",
+       "unit": "per minute",
+       "usd": 0.051,
+       "note": "STT + managed LLM + TTS bundled (variant-dependent)"
+      },
+      {
+       "label": "custom byo LLM \u2014 pay as you go",
+       "unit": "per minute",
+       "usd": 0.065,
+       "note": "STT + managed LLM + TTS bundled (variant-dependent)"
+      },
+      {
+       "label": "custom byo LLM \u2014 Growth",
+       "unit": "per minute",
+       "usd": 0.059,
+       "note": "STT + managed LLM + TTS bundled (variant-dependent)"
+      },
+      {
+       "label": "custom byo LLM TTS \u2014 pay as you go",
+       "unit": "per minute",
+       "usd": 0.05,
+       "note": "STT + managed LLM + TTS bundled (variant-dependent)"
+      },
+      {
+       "label": "custom byo LLM TTS \u2014 Growth",
+       "unit": "per minute",
+       "usd": 0.041,
+       "note": "STT + managed LLM + TTS bundled (variant-dependent)"
+      },
+      {
+       "label": "advanced \u2014 pay as you go",
+       "unit": "per minute",
+       "usd": 0.163,
+       "note": "STT + managed LLM + TTS bundled (variant-dependent)"
+      },
+      {
+       "label": "advanced \u2014 Growth",
+       "unit": "per minute",
+       "usd": 0.146,
+       "note": "STT + managed LLM + TTS bundled (variant-dependent)"
+      },
+      {
+       "label": "advanced byo TTS \u2014 pay as you go",
+       "unit": "per minute",
+       "usd": 0.122,
+       "note": "STT + managed LLM + TTS bundled (variant-dependent)"
+      },
+      {
+       "label": "advanced byo TTS \u2014 Growth",
+       "unit": "per minute",
+       "usd": 0.11,
+       "note": "STT + managed LLM + TTS bundled (variant-dependent)"
+      }
+     ]
+    },
+    {
+     "heading": "Text-to-speech \u2014 per 1,000 characters",
+     "rows": [
+      {
+       "label": "aura 2 \u2014 pay as you go",
+       "unit": "per 1,000 characters",
+       "usd": 0.03,
+       "note": "= $0.0270 per spoken minute at 900 chars/min"
+      },
+      {
+       "label": "aura 2 \u2014 Growth",
+       "unit": "per 1,000 characters",
+       "usd": 0.027,
+       "note": "= $0.0243 per spoken minute at 900 chars/min"
+      },
+      {
+       "label": "aura 1 \u2014 pay as you go",
+       "unit": "per 1,000 characters",
+       "usd": 0.015,
+       "note": "= $0.0135 per spoken minute at 900 chars/min"
+      },
+      {
+       "label": "aura 1 \u2014 Growth",
+       "unit": "per 1,000 characters",
+       "usd": 0.0135,
+       "note": "= $0.0121 per spoken minute at 900 chars/min"
+      },
+      {
+       "label": "flux TTS \u2014 pay as you go",
+       "unit": "per 1,000 characters",
+       "usd": 0.045,
+       "note": "= $0.0405 per spoken minute at 900 chars/min"
+      }
+     ]
+    }
+   ],
+   "affiliate_disclosure": "affiliate link: a9n9 earns a commission if you buy through it",
+   "affiliate_link": null
+  }
+ }
+}

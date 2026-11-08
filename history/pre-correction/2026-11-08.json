@@ -1,0 +1,120 @@
+{
+  "as_of": "2026-11-08",
+  "note": "Unit prices only, extracted from the vendors' own pricing pages. Every number carries the page it came from and the date it was read. This file is the data layer: the CLI, the MCP server and any page are renderers of it.",
+  "disclosure": "Links marked affiliate are a9n9's affiliate links: a9n9 earns a commission if you buy through them. Prices are the vendors' own and are not affected.",
+  "vendors": {
+    "firecrawl": {
+      "name": "Firecrawl",
+      "unit": "page scraped",
+      "source": "https://firecrawl.dev/pricing",
+      "verified": "2026-11-08T13:05Z",
+      "buyer_offer": "New users get 10% off their first purchase through the affiliate link (stated on partners.dub.co/firecrawl).",
+      "credit_rule": "1 credit = 1 page scraped or 1 crawl page. JSON format and prompt-injection checks add 4 credits per page.",
+      "plans": [
+        {
+          "name": "Free",
+          "usd_per_month": 0,
+          "pages_included": 1000,
+          "payg_batch_credits_per_5usd": null
+        },
+        {
+          "name": "Hobby",
+          "usd_per_month": 19,
+          "pages_included": 5000,
+          "annual_usd_per_month": 16,
+          "payg_batch_credits_per_5usd": 1000,
+          "payg_usd_per_1000_credits": 5.0
+        },
+        {
+          "name": "Standard",
+          "usd_per_month": 99,
+          "pages_included": 100000,
+          "payg_batch_credits_per_5usd": 2000,
+          "payg_usd_per_1000_credits": 2.5
+        },
+        {
+          "name": "Growth",
+          "usd_per_month": 399,
+          "pages_included": 500000,
+          "payg_batch_credits_per_5usd": 2500,
+          "payg_usd_per_1000_credits": 2.0
+        },
+        {
+          "name": "Scale",
+          "usd_per_month": 749,
+          "pages_included": 1000000,
+          "payg_batch_credits_per_5usd": 5000,
+          "payg_usd_per_1000_credits": 1.0
+        }
+      ],
+      "traps": [
+        "The '$16/month' figure is the annual-billed rate ($190/year), not the monthly price of $19.",
+        "Searches and pages share one credit balance; a search is 2 credits, so '5,000 credits' is 2,500 searches on Hobby."
+      ]
+    },
+    "elevenlabs": {
+      "name": "ElevenLabs",
+      "unit": "1,000 characters of speech (API billing)",
+      "source": "https://elevenlabs.io/pricing/api",
+      "verified": "2026-11-08T12:53Z",
+      "buyer_offer": null,
+      "chars_per_minute_default": 900,
+      "rates_usd_per_1000_chars": {
+        "multilingual_v4_api": 0.08,
+        "turbo_flash_api": 0.04,
+        "credits_equivalent_creator": 0.1818
+      },
+      "agent_usd_per_minute": 0.08,
+      "ladder": [
+        {
+          "usd": 6,
+          "chars": 75000
+        },
+        {
+          "usd": 22,
+          "chars": 275000
+        },
+        {
+          "usd": 99,
+          "chars": 1238000
+        },
+        {
+          "usd": 299,
+          "chars": 3738000
+        },
+        {
+          "usd": 990,
+          "chars": 12375000
+        }
+      ],
+      "traps": [
+        "Two price lists disagree ~2.3x: /pricing/api bills dollars per character ($0.08/1k), while the marketing FAQ describes credits (121,000 Creator for $22) which is $0.18/1k.",
+        "The API ladder is flat: $990/12.375M = $0.080/1k, i.e. no volume discount. Buying a bigger plan does not lower the unit price.",
+        "First-month promos (Starter $3, Creator $11) are not prices; list price is $6/$22."
+      ]
+    },
+    "deepgram": {
+      "name": "Deepgram",
+      "unit": "minute of speech-to-text",
+      "source": "https://deepgram.com/pricing",
+      "verified": "2026-11-08T12:53Z",
+      "buyer_offer": null,
+      "rates_usd_per_minute": {
+        "pay_as_you_go": 0.075,
+        "growth": 0.068
+      },
+      "byo_key_usd_per_minute": {
+        "pay_as_you_go": 0.05,
+        "growth": 0.041
+      },
+      "traps": [
+        "Deepgram's $200 credit is the free tier; it expires, so it is not a price.",
+        "Self-hosted/BYO-key rates are ~33% cheaper than the standard per-minute rate and are easy to miss."
+      ]
+    }
+  },
+  "computed_facts": {
+    "el_agent_vs_dg_standard": "ElevenLabs agent minutes cost $0.080 vs Deepgram $0.075 per minute: 6.7% more per agent minute, while per character ElevenLabs is 5.3x Deepgram Aura-1 ($0.015/1k) and 2.7x Aura-2 ($0.030/1k).",
+    "chars_per_minute_range": "Characters per spoken minute swings 600-1,000 depending on speaker and pacing: a 67% swing in any per-character estimate."
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "net.a9n9.agent002/firecrawl-elevenlabs-deepgram-cost-calculator",
+  "title": "API Cost Calculator (Firecrawl, ElevenLabs, Deepgram)",
+  "description": "AI-written by agent002 (a9n9). Monthly Firecrawl, ElevenLabs, Deepgram cost; dated prices.",
+  "version": "0.1.2",
+  "websiteUrl": "https://a9n9.net",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "costcalc-mcp",
+      "version": "0.1.2",
+      "transport": { "type": "stdio" },
+      "runtimeHint": "npx"
+    }
+  ]
+}

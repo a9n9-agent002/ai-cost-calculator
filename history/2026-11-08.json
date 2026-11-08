@@ -1,0 +1,151 @@
+{
+  "as_of": "2026-11-08",
+  "note": "Unit prices only, extracted from the vendors' own pricing pages. Every number carries the page it came from and the date it was read. This file is the data layer: the CLI, the MCP server and any page are renderers of it.",
+  "disclosure": "Links marked affiliate are a9n9's affiliate links: a9n9 earns a commission if you buy through them. Prices are the vendors' own and are not affected.",
+  "vendors": {
+    "firecrawl": {
+      "name": "Firecrawl",
+      "unit": "page scraped",
+      "source": "https://firecrawl.dev/pricing",
+      "verified": "2026-11-08T13:05Z",
+      "buyer_offer": "New users get 10% off their first purchase through the affiliate link (stated on partners.dub.co/firecrawl).",
+      "credit_rule": "1 credit = 1 page scraped or 1 crawl page. JSON format and prompt-injection checks add 4 credits per page.",
+      "plans": [
+        {
+          "name": "Free",
+          "usd_per_month": 0,
+          "pages_included": 1000,
+          "payg_batch_credits_per_5usd": null
+        },
+        {
+          "name": "Hobby",
+          "usd_per_month": 19,
+          "pages_included": 5000,
+          "annual_usd_per_month": 16,
+          "payg_batch_credits_per_5usd": 1000,
+          "payg_usd_per_1000_credits": 5.0
+        },
+        {
+          "name": "Standard",
+          "usd_per_month": 99,
+          "pages_included": 100000,
+          "payg_batch_credits_per_5usd": 2000,
+          "payg_usd_per_1000_credits": 2.5
+        },
+        {
+          "name": "Growth",
+          "usd_per_month": 399,
+          "pages_included": 500000,
+          "payg_batch_credits_per_5usd": 2500,
+          "payg_usd_per_1000_credits": 2.0
+        },
+        {
+          "name": "Scale",
+          "usd_per_month": 749,
+          "pages_included": 1000000,
+          "payg_batch_credits_per_5usd": 5000,
+          "payg_usd_per_1000_credits": 1.0
+        }
+      ],
+      "traps": [
+        "The '$16/month' figure is the annual-billed rate ($190/year), not the monthly price of $19.",
+        "Searches and pages share one credit balance; a search is 2 credits, so '5,000 credits' is 2,500 searches on Hobby."
+      ]
+    },
+    "elevenlabs": {
+      "name": "ElevenLabs",
+      "unit": "1,000 characters of speech (API billing)",
+      "source": "https://elevenlabs.io/pricing/api",
+      "verified": "2026-11-08T12:53Z",
+      "buyer_offer": null,
+      "chars_per_minute_default": 900,
+      "rates_usd_per_1000_chars": {
+        "multilingual_v4_api": 0.08,
+        "turbo_flash_api": 0.04,
+        "credits_equivalent_creator": 0.1818
+      },
+      "agent_usd_per_minute": 0.08,
+      "ladder": [
+        {
+          "usd": 6,
+          "chars": 75000
+        },
+        {
+          "usd": 22,
+          "chars": 275000
+        },
+        {
+          "usd": 99,
+          "chars": 1238000
+        },
+        {
+          "usd": 299,
+          "chars": 3738000
+        },
+        {
+          "usd": 990,
+          "chars": 12375000
+        }
+      ],
+      "traps": [
+        "Two price lists disagree ~2.3x: /pricing/api bills dollars per character ($0.08/1k), while the marketing FAQ describes credits (121,000 Creator for $22) which is $0.18/1k.",
+        "The API ladder is flat: $990/12.375M = $0.080/1k, i.e. no volume discount. Buying a bigger plan does not lower the unit price.",
+        "First-month promos (Starter $3, Creator $11) are not prices; list price is $6/$22."
+      ]
+    },
+    "deepgram": {
+      "name": "Deepgram",
+      "unit": "three units: per minute (STT), per minute (Voice Agent), per 1,000 characters (TTS)",
+      "source": "https://deepgram.com/pricing",
+      "verified": "2026-11-08T14:08Z",
+      "buyer_offer": null,
+      "stt_usd_per_minute": {
+        "nova3_monolingual_prerecorded_payg": 0.0043,
+        "nova3_monolingual_prerecorded_growth": 0.0036,
+        "nova3_monolingual_streaming_payg": 0.0077,
+        "nova3_monolingual_streaming_growth": 0.0065,
+        "nova3_multilingual_prerecorded_payg": 0.0052,
+        "nova3_multilingual_prerecorded_growth": 0.0043,
+        "nova3_multilingual_streaming_payg": 0.0092,
+        "nova3_multilingual_streaming_growth": 0.0078,
+        "flux_english_streaming_payg": 0.0077,
+        "flux_english_streaming_growth": 0.0065,
+        "flux_multilingual_streaming_payg": 0.0078,
+        "flux_multilingual_streaming_growth": 0.0068,
+        "whisper_large_prerecorded": 0.0048
+      },
+      "voice_agent_usd_per_minute": {
+        "standard_payg": 0.075,
+        "standard_growth": 0.068,
+        "standard_byo_tts_payg": 0.065,
+        "standard_byo_tts_growth": 0.051,
+        "custom_byo_llm_payg": 0.065,
+        "custom_byo_llm_growth": 0.059,
+        "custom_byo_llm_tts_payg": 0.05,
+        "custom_byo_llm_tts_growth": 0.041,
+        "advanced_payg": 0.163,
+        "advanced_growth": 0.146,
+        "advanced_byo_tts_payg": 0.122,
+        "advanced_byo_tts_growth": 0.11
+      },
+      "tts_usd_per_1000_chars": {
+        "aura_2_payg": 0.03,
+        "aura_2_growth": 0.027,
+        "aura_1_payg": 0.015,
+        "aura_1_growth": 0.0135,
+        "flux_tts_payg": 0.045
+      },
+      "traps": [
+        "The $0.075 per minute headline on this page is the Voice Agent (STT + managed LLM + TTS), NOT speech-to-text. Speech-to-text alone is $0.0043-$0.0092 per minute by model and tier, i.e. 8-17x cheaper than the number usually quoted. Reading the agent rate as an STT rate makes Deepgram look ~17x more expensive than it is.",
+        "Deepgram's $200 credit is the free tier; it expires, so it is not a price.",
+        "Aura-2 is $0.030/1k characters pay-as-you-go and $0.027 on Growth; Aura-1 is $0.015/$0.0135. The TTS side does have a tier ladder even though the STT headline does not."
+      ]
+    }
+  },
+  "computed_facts": {
+    "el_agent_vs_dg_agent": "All-in agent minutes: ElevenLabs Agents $0.080 vs Deepgram Voice Agent Standard $0.075 pay-as-you-go ($0.068 Growth). ElevenLabs is 6.7% more on PAYG and 17.6% more against Growth, and on ElevenLabs' two Realtime tiers the LLM is billed separately.",
+    "el_tts_vs_dg_tts": "Per character: ElevenLabs v4 $0.080/1k vs Deepgram Aura-2 $0.030/1k (2.7x) and Aura-1 $0.015/1k (5.3x). At 900 chars per spoken minute that is $0.072 vs $0.027 vs $0.0135 per minute of synthesized speech.",
+    "dg_stt_vs_dg_agent": "Deepgram's own STT ($0.0043-$0.0092/min) is 8-17x cheaper per minute than its Voice Agent ($0.075/min), because the agent minute bundles a managed LLM and TTS.",
+    "chars_per_minute_range": "Characters per spoken minute swings 600-1,000 depending on speaker and pacing: a 67% swing in any per-character estimate."
+  }
+}

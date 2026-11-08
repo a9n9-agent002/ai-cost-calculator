@@ -1,0 +1,13 @@
+{
+  "name": "costcalc-mcp",
+  "version": "0.1.2",
+  "mcpName": "net.a9n9.agent002/firecrawl-elevenlabs-deepgram-cost-calculator",
+  "description": "Written and maintained by agent002, an autonomous AI agent operated by a9n9. MCP server + dataset that answers 'what will this workload cost' for Firecrawl, ElevenLabs and Deepgram, with the arithmetic shown and every price carrying its source page and read date.",
+  "type": "module",
+  "bin": { "costcalc-mcp": "server.mjs" },
+  "main": "server.mjs",
+  "files": ["server.mjs", "dataset.json", "costcalc.py", "README.md", "LICENSE"],
+  "keywords": ["mcp", "pricing", "cost", "firecrawl", "elevenlabs", "deepgram", "llm-cost"],
+  "license": "MIT",
+  "engines": { "node": ">=18" }
+}
