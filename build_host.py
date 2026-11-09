@@ -235,11 +235,14 @@ def q_elevenlabs_pricing_per_minute(d):
         f"page prints its own allowance: the ${money(el['ladder'][2]['usd'])} Creator plan includes "
         f"<strong>{creator_chars:,} characters</strong>, which at ${money(plan_rate, 4)} per 1,000 is the "
         f"pay-as-you-go rate to four decimals — the ladder is flat, so buying a plan does not lower the unit "
-        f"price. The Creative plans page advertises <strong>{credits:,} credits</strong> for the same $22; "
-        f"credits are a different unit on a different product, so reading that number as characters gives "
-        f"${money(r['credits_equivalent_creator'], 4)} per 1,000 — <strong>2.27× the API rate</strong>. That "
-        "2.27× is a units error, not a price difference: it is the arithmetic a buyer published in a YouTube "
-        "comment measured on 2026-11-08, and the reason this page exists.</p>",
+        f"price. The Creative plans page advertises <strong>{credits:,} credits</strong> for the same $22. "
+        "Whether that is the same quantity in a different unit or a different allowance is <strong>not "
+        "settled by the vendor's own text</strong>: its FAQ says one text character equals one credit on "
+        "the V2 Multilingual models, which would make the two figures 121,000 characters against 275,000 "
+        "for the same money, while this page's API plan prints characters and its FAQ says API usage is "
+        "billed in dollars, not credits. Both numbers are quoted here as dated; neither is converted into "
+        "the other. A buyer comparing the studio plan with the API plan should read both pages before "
+        "subscribing.</p>",
         "<p>Read from " + esc(el["source"]) + " on " + esc(el["verified"]) + ".</p>",
         DISCLOSURE,
         "<p>" + labelled("elevenlabs", d) + "</p>",
@@ -463,6 +466,233 @@ def q_elevenlabs_free_tier(d):
         "API column's characters, not the Creative page's credits.</p>",
         DISCLOSURE,
         "<p>" + labelled("elevenlabs", d, "ElevenLabs free plan and pricing — affiliate link") + "</p>",
+    ]
+    return "".join(body)
+
+
+def q_elevenlabs_credits_per_minute(d):
+    """Run 100: ElevenLabs credits, priced in minutes.
+
+    Read live at 2026-11-09T01:32Z from elevenlabs.io/pricing, whose own FAQ prints both the
+    per-product credit cost and the monthly plan quotas on one page: Text to Speech 1 credit a
+    character, Speech to Text 330 a minute, Eleven Music 900, Voice Changer and Voice Isolator
+    1,000, Dubbing 2,000 to 10,000 a minute depending on mode — all from one shared pool. So
+    "how many minutes do I get" has eight answers per plan, and this page is that arithmetic:
+    minutes = quota / credits-per-minute, dollars-per-minute = plan price / those minutes.
+    Every figure is computed from dataset.json (credit_costs), never typed.
+    """
+    el = d["vendors"]["elevenlabs"]
+    cc = el["credit_costs"]
+    quotas = {q["plan"]: q for q in cc["quotas"]}
+    creator = quotas["Creator"]
+    starter = quotas["Starter"]
+    free = quotas["Free"]
+    items = cc["items"]
+    per_min = [i for i in items if i["unit"] == "per minute"]
+    cpm_basis = el["vendor_minutes_basis"]
+    # Text to Speech is sold per character; at the vendor's own 1,000-characters-a-minute basis a
+    # spoken minute is 1,000 credits on the V2 models (0.5-1 credit a character on Flash/Turbo).
+    tts_cpm = cpm_basis * next(i["credits"] for i in items if i["product"] == "Text to Speech")
+    spread = max(i["credits"] for i in per_min) / min(i["credits"] for i in per_min)
+    per_credit = creator["usd"] / creator["credits"]
+    studio = next(i for i in per_min if i["product"] == "Dubbing Studio without watermark")
+
+    def mins(quota, per_minute):
+        return quota / per_minute
+
+    def per_k(v):
+        """Dollars per 1,000 credits: never print '$0.2' when the point is cents."""
+        s = f"{v:.4f}"
+        while s.endswith("0") and len(s.split(".")[1]) > 2:
+            s = s[:-1]
+        return s
+
+    # Text to Speech is priced per character, so it is not in `per_min`; at the vendor's own
+    # 1,000-characters-a-minute basis it is 1,000 credits a minute and belongs in this table.
+    tts_row = ("<tr><td>Text to Speech (V2 models)</td>"
+               "<td>1 credit a character, so 1,000 a minute</td>"
+               f"<td>{mins(free['credits'], tts_cpm):,.0f} min</td>"
+               f"<td>{mins(creator['credits'], tts_cpm):,.0f} min</td>"
+               f"<td>${money(tts_cpm * per_credit, 2)}</td></tr>")
+    rows = tts_row + "".join(
+        f"<tr><td>{esc(i['product'])}</td><td>{i['credits']:,} credits</td>"
+        f"<td>{mins(free['credits'], i['credits']):,.0f} min</td>"
+        f"<td>{mins(creator['credits'], i['credits']):,.1f} min</td>"
+        f"<td>${money(i['credits'] * per_credit, 2)}</td></tr>"
+        for i in per_min)
+    quota_rows = "".join(
+        f"<tr><td>{esc(q['plan'])}</td><td>{'$' + money(q['usd'], 2) if q['usd'] else '$0'}</td>"
+        f"<td>{q['credits']:,}</td>"
+        f"<td>{'n/a' if not q['credits'] or not q['usd'] else '$' + per_k(q['usd'] / q['credits'] * 1000)}</td>"
+        f"<td>{q['credits'] / tts_cpm:,.0f} min</td>"
+        f"<td>{q['credits'] / next(i['credits'] for i in per_min if i['product'] == 'Speech to Text'):,.0f} min</td></tr>"
+        for q in cc["quotas"])
+    per_k_values = [q["usd"] / q["credits"] * 1000 for q in cc["quotas"] if q["usd"]]
+    ladder_range = max(per_k_values) / min(per_k_values)
+
+    body = [
+        "<h1>ElevenLabs credits per minute: the same 121,000 credits are 366 minutes of "
+        "transcription, 121 of speech or 12 of studio dubbing</h1>",
+        "<p class=\"lede\">Credits are not a currency of \"voice\": they are one pool that every "
+        "product draws on, at rates the vendor publishes per product. Read off elevenlabs.io/pricing "
+        f"on {esc(cc['verified'])}, a minute costs <strong>330 credits</strong> of transcription, "
+        f"<strong>900</strong> of music, <strong>1,000</strong> of speech or voice isolation and "
+        f"<strong>10,000</strong> of Dubbing Studio without a watermark — a <strong>{spread:.1f}×</strong> "
+        "spread inside a single balance. So \"how many minutes is my plan\" has eight answers, and "
+        f"on the $22 Creator plan ({creator['credits']:,} credits) one credit is "
+        f"${money(per_credit, 6)}.</p>",
+        "<h2>Credits per minute, by product</h2>",
+        "<table><tr><th>product</th><th>vendor's credit cost</th><th>minutes from the Free plan "
+        f"({free['credits']:,} credits)</th><th>minutes from Creator ({creator['credits']:,})</th>"
+        "<th>cost of one minute on Creator</th></tr>" + rows + "</table>",
+        f"<p><strong>{spread:.1f}× is the whole point.</strong> A buyer who reads \"121,000 credits\" as "
+        "\"121,000 minutes\" is wrong twice over: on Text to Speech a minute is 1,000 credits, so the "
+        f"quota is <strong>{mins(creator['credits'], tts_cpm):,.0f} minutes</strong>, and on Dubbing "
+        f"Studio it is <strong>{mins(creator['credits'], studio['credits']):,.1f} minutes</strong>. The "
+        "cheapest minute in the pool is transcription at $"
+        f"{money(min(i['credits'] for i in per_min) * per_credit, 2)} — the dearest is $"
+        f"{money(max(i['credits'] for i in per_min) * per_credit, 2)} on Creator's per-credit rate.</p>",
+        "<h2>Why \"10,000 credits\" is 10 minutes or 20 depending on the model</h2>",
+        f"<p>{esc(cc['char_rule'])} So at the vendor's {cpm_basis:,}-characters-per-minute basis a "
+        f"spoken minute is <strong>{tts_cpm:,} credits</strong> on the V2 models and "
+        f"<strong>{tts_cpm // 2:,}</strong> on the Flash/Turbo models that bill half a credit a "
+        f"character — the same free {free['credits']:,} credits is 10 minutes of v4 or 20 minutes of "
+        "v4 Turbo. That is the one place the number doubles, and it is a model choice, not a plan.</p>",
+        "<h2>The plan quotas, and what a credit costs on each</h2>",
+        "<table><tr><th>plan</th><th>price / month</th><th>credits / month</th><th>$ per 1,000 credits</th>"
+        "<th>minutes of speech</th><th>minutes of transcription</th></tr>" + quota_rows + "</table>",
+        f"<p>The per-credit price barely moves: Starter's credits cost "
+        f"${per_k(starter['usd'] / starter['credits'] * 1000)} per 1,000 and the cheapest plan's cost "
+        f"${per_k(min(per_k_values))}, so the whole published ladder moves the unit price by "
+        f"<strong>{ladder_range:.2f}×</strong>. What the bigger plans buy is the studio features listed "
+        "beside them and the credit quota — not a discount on the credit itself. A buyer choosing "
+        "between Starter and Creator is choosing 30,000 against 121,000 credits, not a better rate.</p>",
+        "<h2>Rollover: a balance can reach 3× the monthly quota, once</h2>",
+        f"<p>{esc(cc['rollover'])}</p>",
+        "<p>That is the only place a credit can be worth more than the month it was bought in: let a "
+        "month's allowance pile up and the next big job can spend three months at once. The catch is "
+        "the forfeit rule — the rollover is a property of staying subscribed, not of the credits.</p>",
+        "<h2>\"Free Tier usage disabled\": what the vendor says it means</h2>",
+        f"<p>{esc(cc['free_tier_disabled_note'])} This is the vendor's own wording in its Help Center "
+        "index, so it is worth reading literally: the message is an abuse-detector verdict, not a "
+        "quota error, and the documented trigger is a proxy or VPN. A free-tier user on a VPN who sees "
+        "their usage disabled has not run out of credits.</p>",
+        "<p><strong>Which page you actually want:</strong> if you are buying text-to-speech through "
+        "the API rather than the studio, the credits table is the wrong ladder — API usage is billed "
+        "per character in dollars on a different page of the same site, and this site prices that "
+        "separately. If you are choosing between the studio and the API, read both before you "
+        "subscribe: the two pages print different allowances for the same plan price.</p>",
+        f"<p>Credit costs, quotas and rollover rules read from {esc(cc['source'])} on "
+        f"{esc(cc['verified'])}. Nothing here was bought; these are list prices.</p>",
+        DISCLOSURE,
+        "<p>" + labelled("elevenlabs", d, "ElevenLabs plans and credits — affiliate link") + "</p>",
+    ]
+    return "".join(body)
+
+
+def load_bandwidth():
+    with open(os.path.join(HERE, "data", "do-bandwidth.json"), encoding="utf-8") as f:
+        return json.load(f)
+
+
+def q_do_bandwidth(d, x):
+    """Run 100: DigitalOcean's bandwidth bill, which is where a Droplet stops being $6.
+
+    Read live at 2026-11-09T01:31Z from docs.digitalocean.com/products/billing/bandwidth/ (the page
+    is dated "Last verified 5 Nov 2026"): outbound past a plan's allowance is $0.01/GiB, inbound is
+    free, the allowance is pooled at team level and does not roll over, and — the part that
+    surprises people — the allowance accrues per second at 1/2,419,200 of the plan's allowance, so a
+    Droplet that only exists for a week has a quarter of its monthly allowance to spend.
+    Every number is computed from data/do-bandwidth.json + the Droplet table, never typed.
+    """
+    bw = load_bandwidth()
+    plans = x["droplets"]["plans"]
+    rate = bw["droplet_overage_usd_per_gib"]
+    denom = bw["accrual"]["denominator_seconds"]
+    six = next(p for p in plans if p["family"] == "Basic" and p["memory_gib"] == 1.0 and p["vcpus"] == 1)
+    smallest = min(plans, key=lambda p: p["usd_per_month"])
+    biggest = max(plans, key=lambda p: p["usd_per_month"])
+    week_s = 7 * 86400
+    week_share = week_s / denom
+    six_week_allowance = six["transfer_gib"] * week_share
+    burst = 500.0
+    burst_over = max(0.0, burst - six_week_allowance)
+    # served volumes: 2 TiB and 10 TiB a month, on the $4, $6 and $12 Basic plans
+    served = [(2048.0, "2 TiB"), (10240.0, "10 TiB")]
+    pick = [smallest, six, next(p for p in plans if p["family"] == "Basic" and p["memory_gib"] == 2.0)]
+    rows = ""
+    for p in pick:
+        cells = ""
+        for gib, label in served:
+            ov = max(0.0, gib - p["transfer_gib"])
+            cells += (f"<td>{ov:,.0f} GiB over = ${money2(ov * rate)}</td>"
+                      f"<td>${money2(p['usd_per_month'] + ov * rate)} "
+                      f"({(p['usd_per_month'] + ov * rate) / p['usd_per_month']:.1f}× the plan)</td>")
+        rows += (f"<tr><td>{p['memory_gib']:g} GiB / {p['vcpus']} vCPU</td>"
+                 f"<td>${money2(p['usd_per_month'])}</td><td>{p['transfer_gib']:,.0f} GiB</td>"
+                 f"{cells}</tr>")
+    doubling_gib = six["transfer_gib"] + six["usd_per_month"] / rate
+    included_rate = six["usd_per_month"] / six["transfer_gib"]
+    body = [
+        f"<h1>DigitalOcean droplet bandwidth pricing: {six['transfer_gib']:,.0f} GiB included, then "
+        f"${money(rate, 2)} a GiB — and the allowance accrues by the second</h1>",
+        "<p class=\"lede\">The $6 Droplet's transfer allowance is real and it is not the number people "
+        f"think: <strong>{six['transfer_gib']:,.0f} GiB of outbound transfer a month</strong>, after "
+        f"which DigitalOcean bills ${money(rate, 2)} per GiB. Serve 2 TiB and the $6 Droplet costs "
+        f"<strong>${money2(six['usd_per_month'] + max(0.0, 2048 - six['transfer_gib']) * rate)}</strong> "
+        "that month; the bandwidth line is the larger of the two. Inbound transfer is free.</p>",
+        "<h2>What a heavy month costs on the three basic plans</h2>",
+        "<table><tr><th>plan</th><th>price / month</th><th>outbound included</th>"
+        "<th>2 TiB served: overage</th><th>2 TiB: total bill</th>"
+        "<th>10 TiB served: overage</th><th>10 TiB: total bill</th></tr>" + rows + "</table>",
+        f"<p><strong>The included transfer is worth more per GiB than the overage costs.</strong> A $6 "
+        f"Droplet's {six['transfer_gib']:,.0f} GiB work out to ${money(included_rate, 4)} a GiB inside "
+        f"the plan, against ${money(rate, 2)} a GiB for anything past it — so the allowance is worth "
+        f"buying a plan for, and the shape of the bill is \"cheap until you cross the line, then "
+        f"1.7× dearer\". Serving {doubling_gib:,.0f} GiB in a month doubles a $6 Droplet's bill.</p>",
+        "<h2>The part the price page does not say: the allowance accrues per second</h2>",
+        f"<p>From the same billing page: \"{esc(bw['accrual']['rule'])}\" The denominator is "
+        f"<strong>{denom:,} seconds</strong>, which is {bw['accrual']['max_days_per_cycle']} days — so "
+        f"a Droplet that exists for one week has accrued <strong>{week_share * 100:.0f}%</strong> of its "
+        f"monthly allowance, not all of it. A $6 Droplet alive for those 7 days can therefore send "
+        f"<strong>{six_week_allowance:,.0f} GiB</strong> before the meter starts; a "
+        f"{burst:,.0f} GiB burst in that week costs "
+        f"<strong>${money2(burst_over * rate)}</strong> in overage on a plan the marketing copy calls "
+        f"\"{six['transfer_gib']:,.0f} GiB included\". Short-lived Droplets, blue-green deploys and CI "
+        "runners are exactly the case where the marketing number and the accrued number differ.</p>",
+        "<h2>What does not count</h2>",
+        "<ul>" + "".join(f"<li>{esc(c)}</li>" for c in bw["free_cases"]) + "</ul>",
+        "<p>The VPC line matters most for anyone running more than one Droplet: app-to-database "
+        "traffic over the private interface is not billed, while the same bytes over public addresses "
+        "would be. A firewall rule that drops traffic also drops the charge — the page says outbound "
+        "transfer \"that we determine is dropped by a DigitalOcean firewall rule\" is not billed.</p>",
+        "<h2>The team pool, and what it does not do</h2>",
+        "<p>Transfer is pooled across every Droplet on the team: the allowance of a mostly idle Droplet "
+        f"covers the overage of a busy one. DigitalOcean's own example: \"{esc(bw['quote_pool_example'])}\" "
+        f"The limits are that the pool does not roll over between months and cannot move between teams, "
+        "so a quiet month cannot bank transfer for a launch month.</p>",
+        "<h2>Two other products bill bandwidth differently</h2>",
+        "<table><tr><th>product</th><th>included outbound</th><th>overage</th><th>note</th></tr>"
+        + "".join(
+            f"<tr><td>{esc(o['product'])}</td>"
+            f"<td>{'%s GiB' % format(o['included_gib'], ',') if o['included_gib'] else 'per plan'}</td>"
+            f"<td>${money(o['overage_usd_per_gib'], 2)}/GiB</td><td>{esc(o['note'])}</td></tr>"
+            for o in bw["other_products"]) + "</table>",
+        f"<p>App Platform is the one to notice: <strong>${money(2 * rate, 2)} a GiB</strong>, twice the "
+        "Droplet rate for the same bytes. A workload with a big outbound share can be cheaper on a "
+        "Droplet for that reason alone.</p>",
+        "<h2>How to see your own number</h2>",
+        "<p>The billing page has a Droplet Transfer (Bandwidth) Overview with a projection based on "
+        "your daily averages, and a Bandwidth Detail CSV (Beta) export. Read it before you resize: the "
+        f"projection assumes your current daily average holds to the end of the cycle, which is exactly "
+        "the assumption a launch month breaks. The Droplet plans themselves are on the droplet pricing "
+        f"page ({esc(x['sources']['droplets']['read'])}), and the {biggest['transfer_gib']:,.0f} GiB "
+        f"allowance on the ${money2(biggest['usd_per_month'])} plan is the largest in this dataset.</p>",
+        f"<p>Bandwidth rates and rules read from {esc(bw['source'])} (vendor-dated "
+        f"{esc(bw['vendor_last_verified'])}) on {esc(bw['read'])}; plan allowances from the Droplet "
+        "price list. Nothing here was bought.</p>",
+        DISCLOSURE,
+        "<p>" + aff_link(x, "digitalocean", "DigitalOcean Droplet pricing — affiliate link") + "</p>",
     ]
     return "".join(body)
 
@@ -1786,6 +2016,19 @@ QUESTIONS = [
     # takes characters from the API column and never converts the Creative page's credits.
     ("elevenlabs-free-tier", "ElevenLabs free tier: 10,000 characters a month, worth $0.80",
      lambda d, x: q_elevenlabs_free_tier(d)),
+    # Run 100 (probe100.json, 2026-11-09 01:2xZ; controls `elevenlabs pricing` 10, `firecrawl pricing`
+    # 10, `digitalocean droplet pricing` 10): `elevenlabs credits` returns 10 completions including
+    # `elevenlabs credits per minute`, `... credits cost` and `... credits reset`, and the vendor's own
+    # /pricing FAQ prints the per-product credit costs and the plan quotas on one page. Every figure is
+    # computed in q_elevenlabs_credits_per_minute from dataset.json's credit_costs block (read 01:32Z).
+    ("elevenlabs-credits-per-minute", "ElevenLabs credits per minute",
+     lambda d, x: q_elevenlabs_credits_per_minute(d)),
+    # Run 100, second page: `digitalocean bandwidth pricing` and `digitalocean droplet bandwidth
+    # pricing / limit / overage` each return 10 completions (probe100.json). The rates and the
+    # per-second accrual rule are read from docs.digitalocean.com (vendor-dated 2026-11-05) into
+    # data/do-bandwidth.json; the plan allowances come from the Droplet table already in dataset_ext.
+    ("digitalocean-droplet-bandwidth-pricing", "DigitalOcean droplet bandwidth pricing",
+     q_do_bandwidth),
     ("deepgram-pricing-per-minute", "Deepgram pricing per minute: speech to text", lambda d, x: q_deepgram_stt(d)),
     ("deepgram-voice-agent-pricing", "Deepgram voice agent pricing per minute", lambda d, x: q_deepgram_agent(d)),
     ("api-cost-calculator", "API cost calculator: what this workload costs", lambda d, x: q_workload(d)),
@@ -1880,6 +2123,12 @@ DESCRIPTIONS = {
     "elevenlabs-credits-to-minutes":
         "275,000 characters on the Creator plan is about 306 finished minutes at 900 characters a "
         "minute, not the 275 the vendor's own credits column suggests.",
+    "elevenlabs-credits-per-minute":
+        "121,000 credits buy 366 minutes of transcription, 121 of speech or 12 of studio dubbing: one "
+        "pool, eight burn rates.",
+    "digitalocean-droplet-bandwidth-pricing":
+        "A $6 Droplet includes 1,000 GiB outbound, then $0.01 a GiB, and a Droplet alive 7 days "
+        "accrues only 250 GiB of that allowance.",
     "elevenlabs-pricing-per-minute":
         "$0.08 per 1,000 characters is $0.072 a finished minute at 900 characters; the $22 plan's "
         "275,000 characters is the same rate, so the ladder is flat.",
@@ -1980,7 +2229,15 @@ RELATED = {
     "elevenlabs-startup-grant": ["elevenlabs-plan-minutes", "elevenlabs-pricing-per-minute",
                                  "api-cost-calculator"],
     "elevenlabs-free-tier": ["elevenlabs-startup-grant", "elevenlabs-plan-minutes",
-                             "elevenlabs-pricing-per-minute"],
+                             "elevenlabs-credits-per-minute", "elevenlabs-pricing-per-minute"],
+    # run 100: the credits page is the "how many minutes do I get" answer, so it points at the free
+    # tier (what the free allowance really buys), the plan ladder and the per-minute API prices.
+    "elevenlabs-credits-per-minute": ["elevenlabs-free-tier", "elevenlabs-plan-minutes",
+                                      "elevenlabs-pricing-per-minute"],
+    # run 100: bandwidth is the next line on a Droplet bill after the plan price, so it links from
+    # the price page and back to the droplet table and the signup credit.
+    "digitalocean-droplet-bandwidth-pricing": ["digitalocean-droplet-pricing", "digitalocean-free-credit",
+                                               "digitalocean-vs-hetzner"],
     "deepgram-pricing-per-minute": ["deepgram-voice-agent-pricing", "elevenlabs-pricing-per-minute",
                                     "deepgram-vs-elevenlabs"],
     "deepgram-voice-agent-pricing": ["deepgram-pricing-per-minute", "elevenlabs-agent-pricing"],
@@ -1989,6 +2246,7 @@ RELATED = {
     "api-cost-calculator": ["firecrawl-cost-per-page", "elevenlabs-plan-minutes",
                             "deepgram-pricing-per-minute", "digitalocean-droplet-pricing"],
     "digitalocean-droplet-pricing": ["digitalocean-free-credit", "h100-price-per-hour",
+                                     "digitalocean-droplet-bandwidth-pricing",
                                      "api-cost-calculator"],
     # run 89: the signup-credit page is where the buying decision happens, so it points at what the
     # credit buys (droplet plans, H100 hours) rather than only at another calculation.
@@ -2212,7 +2470,7 @@ def _check_in(scratch, written, d, failures):
     expect = money(el["rates_usd_per_1000_chars"]["multilingual_v4_api"] / 1000 * el["chars_per_minute_default"], 4)
     if expect not in q:
         failures.append(f"ElevenLabs per-minute page missing expected ${expect}")
-    for needed in ("275,000", "not a character rate", "units error"):
+    for needed in ("275,000", "not a character rate", "121,000"):
         if needed not in q:
             failures.append(f"ElevenLabs per-minute page lost {needed!r}: the credits-vs-characters correction")
     # Run 99: the startup-grant page. The three figures that make it worth reading must be recomputable:
@@ -2243,6 +2501,34 @@ def _check_in(scratch, written, d, failures):
                          "the Starter step-up")):
         if needed not in fq:
             failures.append(f"free-tier page lost {needed!r} ({why})")
+    # Run 100: the credits page. The spread and the studio-dubbing minutes are the reason it exists;
+    # recompute both from dataset.json so a data edit cannot leave a stale sentence behind.
+    cc = el["credit_costs"]
+    creator_q = next(q for q in cc["quotas"] if q["plan"] == "Creator")
+    per_min_items = [i for i in cc["items"] if i["unit"] == "per minute"]
+    spread = max(i["credits"] for i in per_min_items) / min(i["credits"] for i in per_min_items)
+    studio = next(i for i in per_min_items if i["product"] == "Dubbing Studio without watermark")
+    cq = open(os.path.join(scratch, "q", "elevenlabs-credits-per-minute.html"), encoding="utf-8").read()
+    for needed, why in ((f"{spread:.1f}×", "the credits-per-minute spread"),
+                        (f"{creator_q['credits'] / studio['credits']:,.1f} min", "studio dubbing minutes"),
+                        (f"{creator_q['credits']:,}", "the Creator quota"),
+                        (f"${money(creator_q['usd'] / creator_q['credits'], 6)}", "the per-credit price")):
+        if needed not in cq:
+            failures.append(f"credits page lost {needed!r} ({why})")
+    # Run 100: the bandwidth page. 7 days is a quarter of the 28-day accrual window, so a $6
+    # Droplet's accrued allowance is 250 GiB — the claim the page is built on.
+    bwd = load_bandwidth()
+    x = load_ext()
+    six = next(p for p in x["droplets"]["plans"]
+               if p["family"] == "Basic" and p["memory_gib"] == 1.0 and p["vcpus"] == 1)
+    week_allow = six["transfer_gib"] * 7 * 86400 / bwd["accrual"]["denominator_seconds"]
+    bwq = open(os.path.join(scratch, "q", "digitalocean-droplet-bandwidth-pricing.html"),
+               encoding="utf-8").read()
+    for needed, why in ((f"{week_allow:,.0f} GiB", "the 7-day accrued allowance"),
+                        (f"${money(bwd['droplet_overage_usd_per_gib'], 2)}", "the overage rate"),
+                        ("28 days", "the accrual window")):
+        if needed not in bwq:
+            failures.append(f"bandwidth page lost {needed!r} ({why})")
     dgq = open(os.path.join(scratch, "q", "deepgram-pricing-per-minute.html"), encoding="utf-8").read()
     if "$0.0043" not in dgq or "$0.075" not in dgq:
         failures.append("Deepgram STT page lost its floor or its agent-rate warning")

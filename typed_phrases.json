@@ -14,6 +14,7 @@
   "probe92_autocomplete.json",
   "probe95b.json",
   "probe99.json",
+  "probe100.json",
   "suggest78.json"
  ],
  "phrases": [
@@ -27,10 +28,12 @@
   "deepseek v4 flash pricing",
   "deepseek v4 pro pricing",
   "deepseek v4.1 flash 1017 pricing",
+  "digitalocean droplet bandwidth pricing",
   "digitalocean droplet pricing",
   "digitalocean free credit",
   "digitalocean vs hetzner",
   "elevenlabs agent pricing",
+  "elevenlabs credits per minute",
   "elevenlabs credits to minutes",
   "elevenlabs plans and pricing",
   "elevenlabs startup grant",

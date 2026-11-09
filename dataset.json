@@ -124,8 +124,36 @@
     "paid_step_chars": 75000,
     "note": "The plan column prints 'Characters included' and its own minute column beside each model: 10,000 ~10 min on v4 at $0.08/1,000, 20,000 ~20 min on v4 Turbo at $0.04/1,000. The Creative plans page states the same free allowance as 10k credits; on the API column the unit is characters."
    },
+   "credit_costs": {
+    "source": "https://elevenlabs.io/pricing",
+    "verified": "2026-11-09T01:32Z",
+    "shared_pool": true,
+    "pool_note": "All products draw from one shared monthly credit pool, so the same credits can be spent on any of them and using one leaves fewer for the others.",
+    "char_rule": "For V2 Multilingual models, 1 text character equals 1 credit. For V2 Flash/Turbo English and V2.5 Flash/Turbo Multilingual models, discounted pricing applies for API usage, costing between 0.5 and 1 credit per character.",
+    "items": [
+     {"product": "Text to Speech", "credits": 1, "unit": "per character"},
+     {"product": "Speech to Text", "credits": 330, "unit": "per minute"},
+     {"product": "Eleven Music", "credits": 900, "unit": "per minute"},
+     {"product": "Sound Effects", "credits": 200, "unit": "per generation"},
+     {"product": "Voice Changer and Voice Isolator", "credits": 1000, "unit": "per minute"},
+     {"product": "Dubbing, automatic with watermark", "credits": 2000, "unit": "per minute"},
+     {"product": "Dubbing, automatic without watermark", "credits": 3000, "unit": "per minute"},
+     {"product": "Dubbing Studio with watermark", "credits": 5000, "unit": "per minute"},
+     {"product": "Dubbing Studio without watermark", "credits": 10000, "unit": "per minute"}
+    ],
+    "quotas": [
+     {"plan": "Free", "usd": 0, "credits": 10000},
+     {"plan": "Starter", "usd": 6, "credits": 30000},
+     {"plan": "Creator", "usd": 22, "credits": 121000},
+     {"plan": "Pro", "usd": 99, "credits": 600000},
+     {"plan": "Scale", "usd": 299, "credits": 1800000},
+     {"plan": "Business", "usd": 990, "credits": 6000000}
+    ],
+    "rollover": "Your credit allowance resets at the start of each billing cycle. Unused credits roll over for up to two months — up to 2x your monthly quota — so a balance can reach at most 3x the monthly quota, as long as the paid subscription stays active and is not downgraded or cancelled. Rollover does not apply to the Free plan, and downgrading or cancelling forfeits unused credits.",
+    "free_tier_disabled_note": "ElevenLabs' own Help Center lists the message \"Unusual activity detected. Free Tier usage disabled. If you are using proxy/VPN you might need to purchase a paid plan to not trigger our abuse detectors\" — so the free tier can be switched off by the vendor's abuse detector, and its stated cause is proxy or VPN use."
+   },
    "traps": [
-    "Two different products show two different allowance numbers for the same $22: the API page's Creator plan includes 275,000 characters (exactly $0.080 per 1,000, the same as pay-as-you-go), while the Creative plans page advertises 121,000 credits. Credits are not characters: reading 121,000 as characters gives $0.1818 per 1,000, 2.27x the API rate, which is a units error and not a price. Re-read 2026-11-09T00:25Z.",
+    "Two of the vendor's own pages print two different allowances for the same $22 Creator plan: /pricing/api lists 275,000 characters, while /pricing lists 121,000 credits. Its FAQ says 1 text character equals 1 credit for V2 Multilingual models, which would make those the same quantity at $0.1818 per 1,000 characters — 2.27x the API page's $0.080 — yet the API page's own FAQ says API usage is billed in US dollars, not credits. Re-read 2026-11-09T01:3xZ: the two pages are not reconcilable from their own text, so both numbers are quoted as dated and neither is converted into the other. Settle it before repeating either rate as 'the' ElevenLabs price.",
     "The API ladder is flat: $990/12.375M = $0.080/1k, i.e. no volume discount. Buying a bigger plan does not lower the unit price.",
     "First-month promos (Starter $1, Creator $11, advertised as ending 2026-11-16) are not prices; list price is $6/$22."
    ],

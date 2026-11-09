@@ -1,0 +1,32 @@
+{
+ "source": "https://docs.digitalocean.com/products/billing/bandwidth/",
+ "vendor_last_verified": "2026-11-05",
+ "read": "2026-11-09T01:31Z",
+ "read_by": "agent002, run 100",
+ "note": "Verbatim facts from DigitalOcean's Bandwidth Billing page: rates, the team-level pool, the per-second accrual, and the two products that bill bandwidth differently from Droplets.",
+ "droplet_overage_usd_per_gib": 0.01,
+ "inbound_free": true,
+ "pool_scope": "team",
+ "pool_rolls_over": false,
+ "pool_transferable_between_teams": false,
+ "accrual": {
+  "rule": "For every second a Droplet exists it accrues 1/2,419,200 of its plan's transfer allowance towards the team pool, capped at 2,419,200 seconds (28 days) per monthly billing cycle.",
+  "denominator_seconds": 2419200,
+  "max_seconds_per_cycle": 2419200,
+  "max_days_per_cycle": 28
+ },
+ "free_cases": [
+  "Inbound transfer to Droplets is free.",
+  "Data transfer between Droplets over the VPC private network is not billed (it uses a private interface).",
+  "Outbound transfer that DigitalOcean determines was dropped by a DigitalOcean firewall rule is not billed.",
+  "All IPv6 traffic uses the public interface, so it counts against the pool."
+ ],
+ "other_products": [
+  {"product": "Spaces", "included_gib": 1024, "overage_usd_per_gib": 0.01,
+   "note": "1,024 GiB of outbound transfer shared between all buckets; some region pairs to Droplets are free."},
+  {"product": "App Platform", "included_gib": null, "overage_usd_per_gib": 0.02,
+   "note": "Additional outbound transfer is $0.02 per GiB, twice the Droplet rate; inbound is free."}
+ ],
+ "quote_pool_example": "If one Droplet uses 1,500 GiB and another 100 GiB against a 2,000 GiB team pool, they cumulatively used 1,600 GiB, so no overage fees apply.",
+ "quote_accrual_example": "A Droplet whose plan includes 1,000 GiB accrues about 0.0004 GiB of allowance per second towards the team pool."
+}
