@@ -68,8 +68,10 @@ from any prose:
   pages do I get" answers get wrong.
 - **What is ElevenLabs pricing per minute?** $0.080 per 1,000 characters at the API rate, which is
   $0.080 per finished minute on the vendor's own 1,000-chars-per-minute basis and $0.072 at a
-  900-chars-per-minute read. The credits table on the marketing page prices the same characters at
-  **$0.1818/1,000** — **2.27× more** — and the two numbers sit on the same page.
+  900-chars-per-minute read. The $22 Creator **API** plan includes **275,000 characters**, i.e.
+  **$0.0800 per 1,000** — the same as pay-as-you-go, so the ladder is flat. The Creative plans page
+  advertises **121,000 credits** for the same $22; credits are not characters, and reading that number
+  as characters gives **$0.1818/1,000 (2.27×)** — a units error, not a price. (Re-read 2026-11-09T00:25Z.)
 - **What is ElevenLabs agent pricing per minute?** A flat **$0.080 per agent minute**, the same
   figure for Agents, Realtime v1 Mini and Realtime v1 Max; the vendor tables print "$0.080 + LLM
   usage", so the LLM is billed separately and a managed minute is not an all-in minute.
@@ -159,10 +161,13 @@ price data ships inside the package.
 Price pages answer "what are the tiers". They do not answer "what will *my* workload cost",
 and they routinely mislead: Firecrawl's Hobby tier is **5,000 credits for $19/month** — the
 widely-quoted "$16" is the annual-billed rate — and **search costs 2 credits while a page
-costs 1**, so "5,000 credits" is 2,500 searches. ElevenLabs publishes two price lists that
-disagree by 2.27×: `/pricing/api` bills **$0.08 per 1,000 characters**, while the marketing
-page's credits table works out to **$0.1818 per 1,000**. Its API ladder is also flat —
-$990 for 12.375M characters is $0.080/1k, i.e. **no volume discount**.
+costs 1**, so "5,000 credits" is 2,500 searches. ElevenLabs publishes two allowance numbers
+for the same $22: its API page includes **275,000 characters** on the Creator plan, which is
+**$0.080 per 1,000** — exactly the pay-as-you-go rate, because its API ladder is flat
+($990 for 12.375M characters is $0.080/1k, i.e. **no volume discount**) — while its Creative
+plans page advertises **121,000 credits** for the same $22. Credits are a different unit on a
+different product; reading them as characters gives $0.1818 per 1,000 and a phantom 2.27×
+"discount" that does not exist.
 
 Deepgram is the one that cost this package a rewrite, and it is the best example of why the
 distinction matters. The **$0.075/min** figure at the top of its pricing page is not

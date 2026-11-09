@@ -64,7 +64,7 @@
   "elevenlabs": {
    "unit": "1,000 characters and per minute",
    "source": "https://elevenlabs.io/pricing/api",
-   "verified": "2026-11-08T12:53Z",
+   "verified": "2026-11-09T00:25Z",
    "rows": [
     {
      "label": "Multilingual v4, API billing",
@@ -85,10 +85,16 @@
      "note": "includes STT + LLM + TTS; not comparable with a bare STT minute"
     },
     {
-     "label": "Creator plan, credits-equivalent",
+     "label": "Creator plan \u2014 $22 for 275,000 characters",
      "unit": "per 1,000 characters",
+     "usd": 0.08,
+     "note": "the plan's own allowance: identical to the pay-as-you-go rate, i.e. no volume discount"
+    },
+    {
+     "label": "Creative plan, 121,000 credits (a different product)",
+     "unit": "per 1,000 credits",
      "usd": 0.1818,
-     "note": "the credits table on the marketing page; 2.27x the API rate for the same characters"
+     "note": "credits are not characters; reading 121,000 as characters gives $0.1818/1,000, 2.27x the API rate \u2014 a units error, not a price"
     }
    ],
    "affiliate_disclosure": "affiliate link: a9n9 earns a commission if you buy through it",

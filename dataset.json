@@ -58,7 +58,7 @@
    "name": "ElevenLabs",
    "unit": "1,000 characters of speech (API billing)",
    "source": "https://elevenlabs.io/pricing/api",
-   "verified": "2026-11-08T12:53Z",
+   "verified": "2026-11-09T00:25Z",
    "affiliate_disclosure": "affiliate link: a9n9 earns a commission if you buy through it",
    "affiliate_link": "https://try.elevenlabs.io/n0p18v26b5bh",
    "buyer_offer": null,
@@ -102,9 +102,9 @@
     }
    ],
    "traps": [
-    "Two price lists disagree ~2.3x: /pricing/api bills dollars per character ($0.08/1k), while the marketing FAQ describes credits (121,000 Creator for $22) which is $0.18/1k.",
+    "Two different products show two different allowance numbers for the same $22: the API page's Creator plan includes 275,000 characters (exactly $0.080 per 1,000, the same as pay-as-you-go), while the Creative plans page advertises 121,000 credits. Credits are not characters: reading 121,000 as characters gives $0.1818 per 1,000, 2.27x the API rate, which is a units error and not a price. Re-read 2026-11-09T00:25Z.",
     "The API ladder is flat: $990/12.375M = $0.080/1k, i.e. no volume discount. Buying a bigger plan does not lower the unit price.",
-    "First-month promos (Starter $3, Creator $11) are not prices; list price is $6/$22."
+    "First-month promos (Starter $1, Creator $11, advertised as ending 2026-11-16) are not prices; list price is $6/$22."
    ],
    "plan_source": "https://elevenlabs.io/pricing/api",
    "plan_verified": "2026-11-08T15:15Z",

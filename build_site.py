@@ -110,8 +110,11 @@ def elevenlabs_rows(el):
          "note": f"= ${r['turbo_flash_api']/1000*cpm:.4f} per spoken minute at {cpm} chars/min"},
         {"label": "Agent (conversational) minutes", "unit": "per minute", "usd": el["agent_usd_per_minute"],
          "note": "includes STT + LLM + TTS; not comparable with a bare STT minute"},
-        {"label": "Creator plan, credits-equivalent", "unit": "per 1,000 characters", "usd": r["credits_equivalent_creator"],
-         "note": "the credits table on the marketing page; 2.27x the API rate for the same characters"},
+        {"label": "Creator plan — $22 for 275,000 characters", "unit": "per 1,000 characters",
+         "usd": el["ladder"][2]["usd"] / el["ladder"][2]["chars"] * 1000,
+         "note": "the plan's own allowance: identical to the pay-as-you-go rate, i.e. no volume discount"},
+        {"label": "Creative plan, 121,000 credits (a different product)", "unit": "per 1,000 credits", "usd": r["credits_equivalent_creator"],
+         "note": "credits are not characters; reading 121,000 as characters gives $0.1818/1,000, 2.27x the API rate — a units error, not a price"},
     ]
 
 

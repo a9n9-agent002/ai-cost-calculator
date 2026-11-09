@@ -211,21 +211,35 @@ def q_elevenlabs_pricing_per_minute(d):
     el = d["vendors"]["elevenlabs"]
     r = el["rates_usd_per_1000_chars"]
     read_cpm = el["chars_per_minute_default"]
+    creator_chars = el["ladder"][2]["chars"]
+    credits = 121000
+    plan_rate = el["ladder"][2]["usd"] / creator_chars * 1000     # $22 / 275,000 characters
     body = [
         "<h1>ElevenLabs pricing per minute</h1>",
         "<p class=\"lede\">At the API rate, <strong>$" + money(r["multilingual_v4_api"], 3) +
         " per 1,000 characters</strong> — about <strong>$" + money(r["multilingual_v4_api"] / 1000 * read_cpm, 3) +
         f"</strong> per finished minute at a {read_cpm}-characters-per-minute read, and $0.080 at the "
         "vendor's own 1,000-characters basis.</p>",
-        "<h2>The three rates on the rate card</h2>",
-        "<table><tr><th>rate</th><th>$ / 1,000 chars</th><th>$ / spoken minute @"
-        f"{read_cpm} chars</th></tr>" + "".join(
-            f"<tr><td>{esc(k.replace('_', ' '))}</td><td>${money(v, 4)}</td>"
-            f"<td>${money(v / 1000 * read_cpm, 4)}</td></tr>" for k, v in r.items()) + "</table>",
-        "<p><strong>2.27×.</strong> The credits table prices the same characters at "
-        f"${money(r['credits_equivalent_creator'], 4)}/1,000 against the API's "
-        f"${money(r['multilingual_v4_api'], 4)}/1,000 — two numbers on the same pricing page, and the gap "
-        "is the plan's bundled-minute discount, not a cheaper rate.</p>",
+        "<h2>The rates on the rate card</h2>",
+        "<table><tr><th>rate</th><th>unit</th><th>USD</th><th>$ / spoken minute @"
+        f"{read_cpm} chars</th></tr>"
+        f"<tr><td>Multilingual v4, API</td><td>per 1,000 characters</td><td>${money(r['multilingual_v4_api'], 4)}</td>"
+        f"<td>${money(r['multilingual_v4_api'] / 1000 * read_cpm, 4)}</td></tr>"
+        f"<tr><td>Turbo Flash, API</td><td>per 1,000 characters</td><td>${money(r['turbo_flash_api'], 4)}</td>"
+        f"<td>${money(r['turbo_flash_api'] / 1000 * read_cpm, 4)}</td></tr>"
+        f"<tr><td>Creator API plan — $22 for {creator_chars:,} characters</td><td>per 1,000 characters</td>"
+        f"<td>${money(plan_rate, 4)}</td><td>${money(plan_rate / 1000 * read_cpm, 4)}</td></tr>"
+        f"<tr><td>Creative plans page — {credits:,} credits for $22</td><td>per 1,000 credits</td>"
+        f"<td>${money(r['credits_equivalent_creator'], 4)}</td><td>not a character rate</td></tr></table>",
+        "<p><strong>The plan is not a discount, and the credits column is not characters.</strong> The API "
+        f"page prints its own allowance: the ${money(el['ladder'][2]['usd'])} Creator plan includes "
+        f"<strong>{creator_chars:,} characters</strong>, which at ${money(plan_rate, 4)} per 1,000 is the "
+        f"pay-as-you-go rate to four decimals — the ladder is flat, so buying a plan does not lower the unit "
+        f"price. The Creative plans page advertises <strong>{credits:,} credits</strong> for the same $22; "
+        f"credits are a different unit on a different product, so reading that number as characters gives "
+        f"${money(r['credits_equivalent_creator'], 4)} per 1,000 — <strong>2.27× the API rate</strong>. That "
+        "2.27× is a units error, not a price difference: it is the arithmetic a buyer published in a YouTube "
+        "comment measured on 2026-11-08, and the reason this page exists.</p>",
         "<p>Read from " + esc(el["source"]) + " on " + esc(el["verified"]) + ".</p>",
         DISCLOSURE,
         "<p>" + labelled("elevenlabs", d) + "</p>",
@@ -1399,13 +1413,14 @@ def q_deepgram_vs_elevenlabs(d, x):
         "<h2>What this page cannot tell you</h2>",
         "<p>It cannot tell you which voice sounds better, which is the actual buying decision, and it "
         "cannot price latency, concurrency limits, language coverage or word-error rate — the numbers "
-        "that decide whether a transcription bill is cheap or merely small. It also cannot reconcile the "
-        "two price lists ElevenLabs publishes: its API page bills "
-        f"${money(el_v4, 3)} per 1,000 characters ({el['ladder'][2]['chars']:,} characters on the "
-        f"${money2(el['ladder'][2]['usd'])} Creator plan), while its marketing pages quote "
-        "121,000 credits for the same plan, which works out to "
-        f"${money(el['rates_usd_per_1000_chars']['credits_equivalent_creator'], 4)} per 1,000 — about "
-        "2.3× the API rate. If a comparison uses the credits column, it is comparing a different unit. "
+        "that decide whether a transcription bill is cheap or merely small. It also cannot price across "
+        "ElevenLabs&rsquo; two products: its API page includes "
+        f"<strong>{el['ladder'][2]['chars']:,} characters</strong> on the "
+        f"${money2(el['ladder'][2]['usd'])} Creator plan — exactly ${money(el_v4, 3)} per 1,000, the "
+        "pay-as-you-go rate, because the ladder is flat — while its Creative plans page advertises "
+        "<strong>121,000 credits</strong> for the same $22. Credits are not characters: read the credits "
+        f"number as characters and you get ${money(el['rates_usd_per_1000_chars']['credits_equivalent_creator'], 4)} "
+        "per 1,000, <strong>2.27× the API rate</strong>, which is a units error and not a price. "
         "All prices here are list prices read on the dates on this page, not invoices, and neither "
         "vendor&rsquo;s free-tier credit is counted as a price.</p>",
         "<p class=\\\"merit\\\">Disclosure of interest, stated plainly: ElevenLabs is an affiliate partner "
@@ -1719,8 +1734,8 @@ DESCRIPTIONS = {
         "275,000 characters on the Creator plan is about 306 finished minutes at 900 characters a "
         "minute, not the 275 the vendor's own credits column suggests.",
     "elevenlabs-pricing-per-minute":
-        "$0.08 per 1,000 characters is $0.072 a finished minute at 900 characters and $0.080 at the "
-        "vendor's 1,000 — a 2.27× gap against the plan's credits column.",
+        "$0.08 per 1,000 characters is $0.072 a finished minute at 900 characters; the $22 plan's "
+        "275,000 characters is the same rate, so the ladder is flat.",
     "elevenlabs-agent-pricing":
         "$0.08 per managed agent minute plus LLM usage, billed as a separate line: the agent minute is "
         "not an all-in minute, and the vendor's table says so.",
@@ -2039,8 +2054,9 @@ def _check_in(scratch, written, d, failures):
     expect = money(el["rates_usd_per_1000_chars"]["multilingual_v4_api"] / 1000 * el["chars_per_minute_default"], 4)
     if expect not in q:
         failures.append(f"ElevenLabs per-minute page missing expected ${expect}")
-    if "2.27" not in q:
-        failures.append("ElevenLabs rate-gap ratio 2.27 no longer on the page")
+    for needed in ("275,000", "not a character rate", "units error"):
+        if needed not in q:
+            failures.append(f"ElevenLabs per-minute page lost {needed!r}: the credits-vs-characters correction")
     dgq = open(os.path.join(scratch, "q", "deepgram-pricing-per-minute.html"), encoding="utf-8").read()
     if "$0.0043" not in dgq or "$0.075" not in dgq:
         failures.append("Deepgram STT page lost its floor or its agent-rate warning")

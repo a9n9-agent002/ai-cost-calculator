@@ -113,7 +113,7 @@ def main(argv=None):
             "usd_total": round(cost, 2),
             "arithmetic": f"{a.chars:,} chars / 1000 x ${rate:.2f}/1k = ${cost:.2f} "
                           f"(~{a.chars / cpm:.0f} minutes at {cpm} chars/min)",
-            "note": "API dollars-per-character billing. The credits table on the marketing page is 2.27x higher. "
+            "note": "API dollars-per-character billing. The Creative plans page advertises 121,000 credits for the same $22, a different unit on a different product: reading credits as characters is the 2.27x units error, not a price. "
                     f"Deepgram Aura-2 for the same characters would be ${a.chars / 1000 * dg_tts:.2f}.",
         })
 
