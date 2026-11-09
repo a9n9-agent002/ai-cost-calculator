@@ -335,6 +335,76 @@ def q_elevenlabs_plan_minutes(d):
     return "".join(body)
 
 
+def q_elevenlabs_startup_grant(d):
+    """Run 99: the one buyer-side offer in the ElevenLabs programme that no page mentioned.
+
+    Read live at 2026-11-09T01:20Z from elevenlabs.io/startup-grants: "Scale for 12 months",
+    "33,000,000 characters", "That's over 680 hours of Agents usage. More than $5,500+ in value."
+    Every figure below is derived from those claims and from the ladder already in dataset.json,
+    so the page can be recomputed, not believed.
+    """
+    el = d["vendors"]["elevenlabs"]
+    g = el["startup_grant"]
+    scale = next(r for r in el["ladder"] if r.get("name") == "Scale")
+    months_of_scale = g["chars"] / scale["chars"]
+    per_month = g["chars"] / g["months"]
+    shortfall = (1 - per_month / scale["chars"]) * 100
+    tts_rate = el["rates_usd_per_1000_chars"]["multilingual_v4_api"]
+    tts_value = g["chars"] / 1000 * tts_rate
+    agent_minutes = g["agent_hours"] * 60
+    agent_value = agent_minutes * el["agent_usd_per_minute"]
+    hours_at_basis = g["chars"] / el["vendor_minutes_basis"] / 60
+    cpm_implied = g["chars"] / agent_minutes
+    vs_tts = g["value_claimed_usd"] / tts_value
+    vs_agent = g["value_claimed_usd"] / agent_value
+    scale_year = g["months"] * scale["usd"]
+    body = [
+        "<h1>ElevenLabs startup grant: 33M characters is 8.83 months of Scale, not 12</h1>",
+        "<p class=\"lede\">The grant is described as <strong>\"Scale for 12 months\"</strong>, and it is "
+        f"<strong>{g['chars']:,} characters</strong>. Scale's own monthly allowance is "
+        f"{scale['chars']:,} characters, so the grant is <strong>{months_of_scale:.2f} months of Scale "
+        f"credit delivered across {g['months']}</strong> — <strong>{per_month:,.0f} characters a month, "
+        f"{shortfall:.1f}% less than the plan it is named after</strong>.</p>",
+        f"<p>Terms as printed on {esc(g['source'])} (read {esc(g['verified'])}): "
+        f"{g['months']} months of Scale access, {g['chars']:,} characters, \"over {g['agent_hours']} hours "
+        f"of Agents usage\", and \"more than ${g['value_claimed_usd']:,}+ in value\". Applying is free; "
+        f"it is an application, not a coupon.</p>",
+        "<h2>What the same 33,000,000 characters is worth at ElevenLabs' own rates</h2>",
+        "<table><tr><th>priced as</th><th>arithmetic</th><th>value</th></tr>"
+        f"<tr><td>v4 speech, API rate</td><td>{g['chars']:,} ÷ 1,000 × ${money(tts_rate, 3)}</td>"
+        f"<td>${money2(tts_value)}</td></tr>"
+        f"<tr><td>managed agent minutes at ${money(el['agent_usd_per_minute'], 2)}</td>"
+        f"<td>{agent_minutes:,} min ({g['agent_hours']} h × 60)</td><td>${money2(agent_value)}</td></tr>"
+        f"<tr><td>the grant page's own claim</td><td>—</td>"
+        f"<td>more than ${g['value_claimed_usd']:,}</td></tr></table>",
+        f"<p><strong>None of the vendor's own rate lines reaches the ${g['value_claimed_usd']:,} figure.</strong> "
+        f"At the ${money(tts_rate, 3)} v4 rate the characters are <strong>${money2(tts_value)}</strong> — the "
+        f"claim is <strong>{vs_tts:.2f}×</strong> that. Priced entirely as agent minutes the same grant is "
+        f"<strong>${money2(agent_value)}</strong>, and the claim is <strong>{vs_agent:.2f}×</strong> that. "
+        f"Twelve months of Scale at list price is ${scale_year:,}; the grant's characters are worth "
+        f"${money2(tts_value)} of it, because the ladder is flat — the discount is the free year, not a "
+        "cheaper character.</p>",
+        "<h2>The hours claim is on a slower reading rate than the plan table</h2>",
+        f"<p>The grant page says {g['chars']:,} characters is \"over {g['agent_hours']} hours of Agents "
+        f"usage\". At the {el['vendor_minutes_basis']:,}-characters-per-spoken-minute basis the plan table "
+        f"uses, the same characters are <strong>{hours_at_basis:,.0f} hours</strong> "
+        f"({g['chars']:,} ÷ {el['vendor_minutes_basis']:,} ÷ 60). To reach {g['agent_hours']} hours the "
+        f"read has to be <strong>{cpm_implied:,.0f} characters a minute</strong>. Both numbers are the "
+        f"vendor's; they are answering different questions — a plan's speech allowance and a "
+        f"conversational agent's audio. Budget the {per_month:,.0f} characters a month "
+        f"(about {per_month / el['vendor_minutes_basis']:,.0f} finished minutes) and the hours take care "
+        "of themselves.</p>",
+        "<p><strong>Who should apply:</strong> the programme is aimed at early-stage startups putting "
+        "voice into a product, and the application is the gate — there is no code to paste. If you are "
+        "prototyping voice on a personal card, the 12 free months are worth more than any plan discount "
+        "this site prices, and they cost nothing to ask for. If you are already past that stage, the "
+        "ladder above is the number that matters.</p>",
+        DISCLOSURE,
+        "<p>" + labelled("elevenlabs", d, "ElevenLabs pricing and startup grants — affiliate link") + "</p>",
+    ]
+    return "".join(body)
+
+
 def q_deepgram_stt(d):
     dg = d["vendors"]["deepgram"]
     stt = dg["stt_usd_per_minute"]
@@ -1639,6 +1709,14 @@ QUESTIONS = [
     ("elevenlabs-pricing-per-minute", "ElevenLabs pricing per minute", lambda d, x: q_elevenlabs_pricing_per_minute(d)),
     ("elevenlabs-agent-pricing", "ElevenLabs agent pricing per minute", lambda d, x: q_elevenlabs_agent_pricing(d)),
     ("elevenlabs-plan-minutes", "ElevenLabs plans and pricing: minutes per plan", lambda d, x: q_elevenlabs_plan_minutes(d)),
+    # Run 99: `elevenlabs startup grant` is a measured Autocomplete suggestion with 8 tails, inside a
+    # 10-suggestion `elevenlabs startup` list that also carries `elevenlabs startup credits` (probe99.py,
+    # 2026-11-09 01:1xZ; controls `elevenlabs pricing` 10 and `vultr vs` 10). The grant is the only
+    # buyer-side offer in this programme besides the first-month promo: 12 months of Scale, 33,000,000
+    # characters, read live from elevenlabs.io/startup-grants at 01:20Z. Every figure on the page is
+    # recomputed from those terms against the ladder in dataset.json.
+    ("elevenlabs-startup-grant", "ElevenLabs startup grant: 33M characters is 8.83 months of Scale, not 12",
+     lambda d, x: q_elevenlabs_startup_grant(d)),
     ("deepgram-pricing-per-minute", "Deepgram pricing per minute: speech to text", lambda d, x: q_deepgram_stt(d)),
     ("deepgram-voice-agent-pricing", "Deepgram voice agent pricing per minute", lambda d, x: q_deepgram_agent(d)),
     ("api-cost-calculator", "API cost calculator: what this workload costs", lambda d, x: q_workload(d)),
@@ -1742,6 +1820,9 @@ DESCRIPTIONS = {
     "elevenlabs-plan-minutes":
         "Both 300 and 1,238 finished minutes cost $99 — the ladder is block-priced, so the 25th minute "
         "past Creator costs the whole $77 step-up, or $3.08 a minute.",
+    "elevenlabs-startup-grant":
+        "33,000,000 characters is 8.83 months of Scale credit over 12 — 2,750,000 a month — and $2,640 "
+        "at the $0.08 v4 rate, not the $5,500 claimed.",
     "deepgram-pricing-per-minute":
         "$0.0036 to $0.0092 a minute for speech to text. The $0.075 usually quoted is the Voice Agent, "
         "8.2× the cheapest STT minute on the same page.",
@@ -1822,7 +1903,10 @@ RELATED = {
                                       "elevenlabs-plan-minutes"],
     "elevenlabs-agent-pricing": ["elevenlabs-pricing-per-minute", "deepgram-voice-agent-pricing",
                                  "api-cost-calculator"],
-    "elevenlabs-plan-minutes": ["elevenlabs-credits-to-minutes", "elevenlabs-pricing-per-minute"],
+    "elevenlabs-plan-minutes": ["elevenlabs-credits-to-minutes", "elevenlabs-pricing-per-minute",
+                                "elevenlabs-startup-grant"],
+    "elevenlabs-startup-grant": ["elevenlabs-plan-minutes", "elevenlabs-pricing-per-minute",
+                                 "api-cost-calculator"],
     "deepgram-pricing-per-minute": ["deepgram-voice-agent-pricing", "elevenlabs-pricing-per-minute",
                                     "deepgram-vs-elevenlabs"],
     "deepgram-voice-agent-pricing": ["deepgram-pricing-per-minute", "elevenlabs-agent-pricing"],
@@ -2057,6 +2141,21 @@ def _check_in(scratch, written, d, failures):
     for needed in ("275,000", "not a character rate", "units error"):
         if needed not in q:
             failures.append(f"ElevenLabs per-minute page lost {needed!r}: the credits-vs-characters correction")
+    # Run 99: the startup-grant page. The three figures that make it worth reading must be recomputable:
+    # 33M / 3.738M = 8.83 Scale-months, 33M / 12 = 2,750,000 a month, and 33M chars at $0.080/1k = $2,640.
+    g = el["startup_grant"]
+    scale = next(r for r in el["ladder"] if r.get("name") == "Scale")
+    gq = open(os.path.join(scratch, "q", "elevenlabs-startup-grant.html"), encoding="utf-8").read()
+    for needed, why in (
+            (f"{g['chars'] / scale['chars']:.2f}", "the Scale-month conversion"),
+            (f"{g['chars'] / g['months']:,.0f}", "the per-month character allowance"),
+            (f"${money2(g['chars'] / 1000 * el['rates_usd_per_1000_chars']['multilingual_v4_api'])}",
+             "the v4-rate value of the grant"),
+            (f"{g['chars'] / (g['agent_hours'] * 60):,.0f}", "the character rate the 680-hour claim implies")):
+        if needed not in gq:
+            failures.append(f"startup-grant page lost {needed!r} ({why})")
+    if "$5,500" not in gq or "8.83 months" not in gq:
+        failures.append("startup-grant page lost its headline comparison")
     dgq = open(os.path.join(scratch, "q", "deepgram-pricing-per-minute.html"), encoding="utf-8").read()
     if "$0.0043" not in dgq or "$0.075" not in dgq:
         failures.append("Deepgram STT page lost its floor or its agent-rate warning")

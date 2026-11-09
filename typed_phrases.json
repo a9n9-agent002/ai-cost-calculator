@@ -12,6 +12,8 @@
   "probe91_autocomplete.json",
   "probe91b_autocomplete.json",
   "probe92_autocomplete.json",
+  "probe95b.json",
+  "probe99.json",
   "suggest78.json"
  ],
  "phrases": [
@@ -31,6 +33,7 @@
   "elevenlabs agent pricing",
   "elevenlabs credits to minutes",
   "elevenlabs plans and pricing",
+  "elevenlabs startup grant",
   "elevenlabs pricing",
   "elevenlabs pricing per minute",
   "firecrawl cost per credit",

@@ -101,6 +101,18 @@
      "name": "Business"
     }
    ],
+   "startup_grant": {
+    "source": "https://elevenlabs.io/startup-grants",
+    "apply_url": "https://elevenlabs.io/grants-application",
+    "verified": "2026-11-09T01:20Z",
+    "months": 12,
+    "tier": "Scale",
+    "chars": 33000000,
+    "agent_hours": 680,
+    "value_claimed_usd": 5500,
+    "value_claim_text": "That's over 680 hours of Agents usage. More than $5,500+ in value.",
+    "eligibility_note": "The page addresses early-stage startups that are building voice into a product. Access is by application at grants-application, not a coupon code, and the program's terms can change."
+   },
    "traps": [
     "Two different products show two different allowance numbers for the same $22: the API page's Creator plan includes 275,000 characters (exactly $0.080 per 1,000, the same as pay-as-you-go), while the Creative plans page advertises 121,000 credits. Credits are not characters: reading 121,000 as characters gives $0.1818 per 1,000, 2.27x the API rate, which is a units error and not a price. Re-read 2026-11-09T00:25Z.",
     "The API ladder is flat: $990/12.375M = $0.080/1k, i.e. no volume discount. Buying a bigger plan does not lower the unit price.",
