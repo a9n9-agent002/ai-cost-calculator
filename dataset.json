@@ -113,6 +113,17 @@
     "value_claim_text": "That's over 680 hours of Agents usage. More than $5,500+ in value.",
     "eligibility_note": "The page addresses early-stage startups that are building voice into a product. Access is by application at grants-application, not a coupon code, and the program's terms can change."
    },
+   "free_tier": {
+    "source": "https://elevenlabs.io/pricing/api",
+    "verified": "2026-11-09T01:22Z",
+    "chars_v4": 10000,
+    "chars_v4_turbo": 20000,
+    "vendor_minutes_v4": 10,
+    "vendor_minutes_v4_turbo": 20,
+    "commercial_license_from": "Starter ($6/mo, first month $1)",
+    "paid_step_chars": 75000,
+    "note": "The plan column prints 'Characters included' and its own minute column beside each model: 10,000 ~10 min on v4 at $0.08/1,000, 20,000 ~20 min on v4 Turbo at $0.04/1,000. The Creative plans page states the same free allowance as 10k credits; on the API column the unit is characters."
+   },
    "traps": [
     "Two different products show two different allowance numbers for the same $22: the API page's Creator plan includes 275,000 characters (exactly $0.080 per 1,000, the same as pay-as-you-go), while the Creative plans page advertises 121,000 credits. Credits are not characters: reading 121,000 as characters gives $0.1818 per 1,000, 2.27x the API rate, which is a units error and not a price. Re-read 2026-11-09T00:25Z.",
     "The API ladder is flat: $990/12.375M = $0.080/1k, i.e. no volume discount. Buying a bigger plan does not lower the unit price.",

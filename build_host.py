@@ -405,6 +405,68 @@ def q_elevenlabs_startup_grant(d):
     return "".join(body)
 
 
+def q_elevenlabs_free_tier(d):
+    """Run 99 (second page): the free tier, priced as the dollar allowance it actually is.
+
+    Read live at 2026-11-09T01:22Z from elevenlabs.io/pricing/api, whose plan column prints
+    "Characters included" and its own minute column per model: Free / v4 = 10,000 ~10 min,
+    Free / v4 Turbo = 20,000 ~20 min. Both multiply out to $0.80 at each model's rate, which is the
+    finding: the free tier is a fixed dollar allowance, and the "characters" it prints change with the
+    model. Run 95's unit discipline applies — this page takes the unit from the API column, not from
+    the Creative page's credits.
+    """
+    el = d["vendors"]["elevenlabs"]
+    ft = el["free_tier"]
+    r = el["rates_usd_per_1000_chars"]
+    starter = next(x for x in el["ladder"] if x.get("name") == "Starter")
+    v4_value = ft["chars_v4"] / 1000 * r["multilingual_v4_api"]
+    turbo_value = ft["chars_v4_turbo"] / 1000 * r["turbo_flash_api"]
+    step_multiple = starter["chars"] / ft["chars_v4"]
+    body = [
+        "<h1>ElevenLabs free tier: 10,000 characters a month, worth $0.80</h1>",
+        "<p class=\"lede\">Yes, there is a free plan, and it is small: <strong>10,000 characters a "
+        "month</strong> of v4 speech, which the vendor's own minute column prints as <strong>~10 "
+        "minutes</strong>. On v4 Turbo the same free plan lists <strong>20,000 characters</strong> and "
+        "~20 minutes, because that model's rate is half. Both allowances are the same money: "
+        f"<strong>${money2(v4_value)} a month</strong> at the vendor's own rates.</p>",
+        "<h2>The free allowance, per model</h2>",
+        "<table><tr><th>model</th><th>rate per 1,000 characters</th><th>characters included free</th>"
+        "<th>the vendor's own column</th><th>worth at that rate</th></tr>"
+        f"<tr><td>v4</td><td>${money(r['multilingual_v4_api'], 3)}</td><td>{ft['chars_v4']:,}</td>"
+        f"<td>~{ft['vendor_minutes_v4']} min</td><td>${money2(v4_value)}</td></tr>"
+        f"<tr><td>v4 Turbo</td><td>${money(r['turbo_flash_api'], 3)}</td><td>{ft['chars_v4_turbo']:,}</td>"
+        f"<td>~{ft['vendor_minutes_v4_turbo']} min</td><td>${money2(turbo_value)}</td></tr></table>",
+        f"<p><strong>The free tier is a ${money2(v4_value)} credit, printed as whatever number of "
+        "characters that buys on the model you pick.</strong> Both rows multiply out to the same "
+        "dollar figure, which is why the characters column doubles when the rate halves — and why "
+        "\"the free plan gives you 10,000 characters\" is only true on the dearer model. At the "
+        f"{el['chars_per_minute_default']}-characters-per-minute read this site uses elsewhere, the same "
+        f"10,000 characters is about {ft['chars_v4'] / el['chars_per_minute_default']:.0f} finished "
+        f"minutes — the vendor's ~10 assumes exactly 1,000 characters a minute — and that is the whole "
+        "free month.</p>",
+        "<h2>What the free plan does not include</h2>",
+        "<p>The paid plans' own feature lists answer this without interpretation: <strong>Commercial "
+        f"License</strong> and <strong>Instant Voice Cloning</strong> are listed as \"Everything in "
+        f"free, plus\" on Starter, so neither is part of free. Starter is ${money(starter['usd'], 2)} a "
+        "month billed monthly — the plan card prints <strong>first month $1</strong> — and it includes "
+        f"<strong>{starter['chars']:,} characters</strong>, <strong>{step_multiple:.1f}×</strong> the "
+        f"free allowance for a dollar. Creator is ${money(el['ladder'][2]['usd'], 2)} "
+        f"(first month ${money(el['ladder'][2]['usd'] / 2, 2)}) for {el['ladder'][2]['chars']:,}.</p>",
+        "<p><strong>Where the free tier stops being enough:</strong> a 10-minute-a-month allowance is "
+        "one short video, or a single demo call. Anything that runs monthly — a narration series, an "
+        "agent in staging, an audiobook — crosses into the paid ladder immediately, and the ladder is "
+        "block-priced, so the plan you pick should be chosen from finished minutes, not from the plan "
+        "nearest your budget. If the product is a startup rather than a test, the 12-month grant is a "
+        "different decision and a much larger number.</p>",
+        "<p>Plan column read from " + esc(ft["source"]) + " on " + esc(ft["verified"]) + "; the same "
+        "page prints \"API usage is billed in US dollars, not credits\", so the unit taken here is the "
+        "API column's characters, not the Creative page's credits.</p>",
+        DISCLOSURE,
+        "<p>" + labelled("elevenlabs", d, "ElevenLabs free plan and pricing — affiliate link") + "</p>",
+    ]
+    return "".join(body)
+
+
 def q_deepgram_stt(d):
     dg = d["vendors"]["deepgram"]
     stt = dg["stt_usd_per_minute"]
@@ -1717,6 +1779,13 @@ QUESTIONS = [
     # recomputed from those terms against the ladder in dataset.json.
     ("elevenlabs-startup-grant", "ElevenLabs startup grant: 33M characters is 8.83 months of Scale, not 12",
      lambda d, x: q_elevenlabs_startup_grant(d)),
+    # Run 99 (second page): `elevenlabs free tier` is a 10-completion stem (probe99.py; `elevenlabs free
+    # tier limits`, `… free tier usage disabled` among its tails) and `is elevenlabs free` a 10-completion
+    # one. Deferred once in this same run until the unit question was settled: /pricing/api's own FAQ says
+    # "API usage is billed in US dollars, not credits" while its plan column prints characters, so the page
+    # takes characters from the API column and never converts the Creative page's credits.
+    ("elevenlabs-free-tier", "ElevenLabs free tier: 10,000 characters a month, worth $0.80",
+     lambda d, x: q_elevenlabs_free_tier(d)),
     ("deepgram-pricing-per-minute", "Deepgram pricing per minute: speech to text", lambda d, x: q_deepgram_stt(d)),
     ("deepgram-voice-agent-pricing", "Deepgram voice agent pricing per minute", lambda d, x: q_deepgram_agent(d)),
     ("api-cost-calculator", "API cost calculator: what this workload costs", lambda d, x: q_workload(d)),
@@ -1823,6 +1892,9 @@ DESCRIPTIONS = {
     "elevenlabs-startup-grant":
         "33,000,000 characters is 8.83 months of Scale credit over 12 — 2,750,000 a month — and $2,640 "
         "at the $0.08 v4 rate, not the $5,500 claimed.",
+    "elevenlabs-free-tier":
+        "The Free plan's 10,000 characters is $0.80 of v4 speech, about 10 minutes; on v4 Turbo the same "
+        "plan prints 20,000 characters and 20 minutes for $0.80 again.",
     "deepgram-pricing-per-minute":
         "$0.0036 to $0.0092 a minute for speech to text. The $0.075 usually quoted is the Voice Agent, "
         "8.2× the cheapest STT minute on the same page.",
@@ -1907,6 +1979,8 @@ RELATED = {
                                 "elevenlabs-startup-grant"],
     "elevenlabs-startup-grant": ["elevenlabs-plan-minutes", "elevenlabs-pricing-per-minute",
                                  "api-cost-calculator"],
+    "elevenlabs-free-tier": ["elevenlabs-startup-grant", "elevenlabs-plan-minutes",
+                             "elevenlabs-pricing-per-minute"],
     "deepgram-pricing-per-minute": ["deepgram-voice-agent-pricing", "elevenlabs-pricing-per-minute",
                                     "deepgram-vs-elevenlabs"],
     "deepgram-voice-agent-pricing": ["deepgram-pricing-per-minute", "elevenlabs-agent-pricing"],
@@ -2156,6 +2230,19 @@ def _check_in(scratch, written, d, failures):
             failures.append(f"startup-grant page lost {needed!r} ({why})")
     if "$5,500" not in gq or "8.83 months" not in gq:
         failures.append("startup-grant page lost its headline comparison")
+    # Run 99, second page: the free tier. Both model rows must multiply out to the same $0.80, and the
+    # first paid step must be 7.5x the free allowance — recomputed, not typed.
+    ft = el["free_tier"]
+    fq = open(os.path.join(scratch, "q", "elevenlabs-free-tier.html"), encoding="utf-8").read()
+    for needed, why in ((f"${money2(ft['chars_v4'] / 1000 * el['rates_usd_per_1000_chars']['multilingual_v4_api'])}",
+                         "the v4 value of the free allowance"),
+                        (f"${money2(ft['chars_v4_turbo'] / 1000 * el['rates_usd_per_1000_chars']['turbo_flash_api'])}",
+                         "the v4 Turbo value of the same allowance"),
+                        (f"{ft['chars_v4_turbo']:,}", "the doubled Turbo allowance"),
+                        (f"{next(x for x in el['ladder'] if x.get('name') == 'Starter')['chars'] / ft['chars_v4']:.1f}×",
+                         "the Starter step-up")):
+        if needed not in fq:
+            failures.append(f"free-tier page lost {needed!r} ({why})")
     dgq = open(os.path.join(scratch, "q", "deepgram-pricing-per-minute.html"), encoding="utf-8").read()
     if "$0.0043" not in dgq or "$0.075" not in dgq:
         failures.append("Deepgram STT page lost its floor or its agent-rate warning")
