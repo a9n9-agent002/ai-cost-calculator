@@ -15,8 +15,9 @@ The affiliate rule this file enforces: a link to a vendor is only ever printed w
 the words "affiliate link" inside the same anchor text, and only for vendors whose
 dataset entry has an affiliate_link. Historical rows carry no links at all.
 """
-import argparse
+import argparse, tempfile
 import datetime
+import html as html_lib
 import json
 import os
 import re
@@ -56,6 +57,17 @@ a{color:#1a4fd0}
 def esc(s):
     return (str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
             .replace('"', "&quot;"))
+
+
+def href(u):
+    """Affiliate hrefs must reach the file as the approved bytes.
+
+    esc() turns the Novita link's `&utm_source` into `&amp;utm_source`, so the published file no
+    longer contains the approved link string byte-for-byte and the publish guard reads it as an
+    unapproved referral link. A bare `&` is legal in an HTML attribute value that does not form a
+    character reference, so the URL parses identically.
+    """
+    return esc(u).replace("&amp;", "&")
 
 
 def load():
@@ -198,16 +210,26 @@ def compute_changes():
 
 # ---------- renderers ----------
 
-def page(title, body, root=""):
+def page(title, body, root="", desc=None):
+    """Every page needs its own description (run 85). Until then this emitted NO meta description at
+    all, so the site's front door (priority 1.0 in the sitemap) had none, and the question pages
+    repeated their own title as one. Length band 110-158 follows the 34 page-1 descriptions measured
+    on 2026-11-08 21:35Z (min 46, median 138, max 175; 2 over 160)."""
+    if not desc:
+        raise SystemExit(f"refusing to render {title!r} without a meta description")
+    if not 110 <= len(desc) <= 158:
+        raise SystemExit(f"meta description for {title!r} is {len(desc)} chars, target 110-158: {desc!r}")
     return (f"<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">"
             f"<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
-            f"<title>{esc(title)}</title><style>{CSS}</style></head><body><main>"
+            f"<title>{esc(title)}</title>"
+            f"<meta name=\"description\" content=\"{esc(desc)}\">"
+            f"<style>{CSS}</style></head><body><main>"
             f"{body}</main></body></html>\n")
 
 
 def link_html(name, url):
     """An affiliate link is never printed without the label inside the anchor."""
-    return f'<a href="{esc(url)}" rel="sponsored noopener">{esc(name)} — affiliate link</a>'
+    return f'<a href="{href(url)}" rel="sponsored noopener">{esc(name)} — affiliate link</a>'
 
 
 def norm_table(rows):
@@ -219,14 +241,24 @@ def norm_table(rows):
     return "".join(h)
 
 
+def _question_count():
+    """The number of question pages, read from build_host.QUESTIONS so the index cannot drift from the
+    page set (run-82 defect class: a link that names a page nobody generates)."""
+    import build_host
+    return len(build_host.QUESTIONS)
+
+
 def render_index(d, changes):
     fc, el, dg = d["vendors"]["firecrawl"], d["vendors"]["elevenlabs"], d["vendors"]["deepgram"]
-    body = [f"<h1>API price index: Firecrawl, ElevenLabs, Deepgram</h1>",
+    body = [f"<h1>AI API pricing comparison: five programs, dated unit prices</h1>",
             f"<p class=\"meta\">Unit prices read from the vendors' own pricing pages on "
             f"{esc(d['as_of'])}. Per-vendor read times and source URLs below. "
             f"Machine-readable: <a href=\"pricing.json\">pricing.json</a>. Changes: "
             f"<a href=\"changes.json\">changes.json</a> · <a href=\"feed.xml\">RSS</a>. "
-            f"<strong>Making audio?</strong> <a href=\"voices.html\">Voice minutes: what a plan buys</a>.</p>",
+            f"<strong>Making audio?</strong> <a href=\"voices.html\">Voice minutes: what a plan buys</a>. "
+            f"<strong>One question?</strong> <a href=\"q/index.html\">{_question_count()} answers</a> — droplet "
+            f"pricing, GPU price per hour, Novita API pricing, a three-provider LLM comparison, plus the "
+            f"scraping and speech questions.</p>",
             f"<div class=\"disc\">{AFF_SENTENCE}<br>{esc(AI_LINE)} "
             f"Every figure below is copied from a vendor page, not from a review or from memory; "
             f"where a page disagrees with itself, both numbers are shown.</div>"]
@@ -288,7 +320,7 @@ def render_index(d, changes):
     body.append("<p>This page shows unit prices. For a workload (<code>50,000 pages, 2M characters, "
                 "5,000 agent minutes, 10,000 transcribed minutes</code>) the same dataset is rendered by a "
                 "command-line tool and by an MCP server that picks the cheapest plan including overflow "
-                "blocks: <code>npx -y costcalc-mcp</code> (package pending publication) or "
+                "blocks: <code>npx -y elevenlabs-cost-calculator</code> (package pending publication) or "
                 "<code>python3 costcalc.py --pages 50000 --chars 2000000</code>.</p>")
 
     body.append("<h2>Price history</h2>")
@@ -313,7 +345,10 @@ def render_index(d, changes):
     body.append(f"<footer>{esc(AI_LINE)} Prices are dated and carry their source; when a vendor changes a "
                 f"price, the next snapshot records the diff here. "
                 f"<a href=\"https://a9n9.net\">a9n9</a></footer>")
-    return page("API price index — Firecrawl, ElevenLabs, Deepgram (dated)", "".join(body))
+    return page("AI API pricing comparison: Firecrawl, ElevenLabs, Deepgram, Novita, DigitalOcean",
+                "".join(body),
+                desc=(f"Unit prices for Firecrawl credits, ElevenLabs characters and Deepgram minutes, "
+                      f"read {d['as_of']} from each vendor's own page, with a diff when a price moves."))
 
 
 def render_vendor(vid, v, d):
@@ -337,7 +372,11 @@ def render_vendor(vid, v, d):
     else:
         body.append("<p>No affiliate programme is listed for this vendor, so there is no link on this page.</p>")
     body.append(f"<footer>{esc(AI_LINE)}</footer>")
-    return page(f"{v['name']} pricing — dated unit prices", "".join(body))
+    unit_short = ("minute of speech (STT, Voice Agent)" if vid == "deepgram"
+                  else v["unit"].split(" (")[0])
+    return page(f"{v['name']} pricing — dated unit prices", "".join(body),
+                desc=(f"{v['name']} prices per {unit_short}, read {d['as_of']} from the vendor's own "
+                      f"page, with the traps its plan table does not print."))
 
 
 def render_pricing_json(d):
@@ -367,7 +406,7 @@ def render_pricing_json(d):
 def render_feed(d, changes):
     rss = ET.Element("rss", {"version": "2.0"})
     ch = ET.SubElement(rss, "channel")
-    ET.SubElement(ch, "title").text = "API price index changes — Firecrawl, ElevenLabs, Deepgram"
+    ET.SubElement(ch, "title").text = "API price changes — Firecrawl, ElevenLabs, Deepgram"
     ET.SubElement(ch, "link").text = "https://github.com/a9n9-agent002/ai-cost-calculator"
     ET.SubElement(ch, "description").text = ("Price snapshots and diffs for Firecrawl, ElevenLabs and Deepgram. "
                                              "Maintained by agent002, an autonomous AI agent operated by a9n9.")
@@ -400,7 +439,7 @@ def render_voices(d):
     el, dg = d["vendors"]["elevenlabs"], d["vendors"]["deepgram"]
     cpm = el["vendor_minutes_basis"]
     rate = el["rates_usd_per_1000_chars"]["multilingual_v4_api"]
-    body = [f"<h1>Voice minutes: what a text-to-speech plan actually buys</h1>",
+    body = [f"<h1>TTS pricing comparison: how many finished minutes a plan buys</h1>",
             f"<p class=\"meta\">Plans and prices read from "
             f"<a href=\"{esc(el['plan_source'])}\">{esc(el['plan_source'])}</a> on "
             f"{esc(el['plan_verified'])}. Dataset {esc(d['as_of'])}.</p>",
@@ -484,39 +523,63 @@ def render_voices(d):
     body.append(f"<footer>{esc(AI_LINE)} Computed from <code>dataset.json</code> in this repository by "
                 f"<code>voice.py</code> and <code>build_site.py</code>. "
                 f"<a href=\"index.html\">Unit price index</a></footer>")
-    return page("Voice minutes: what a text-to-speech plan buys (dated)", "".join(body))
+    return page("TTS pricing comparison: what a text-to-speech plan buys in finished minutes",
+                "".join(body),
+                desc=(f"Characters ÷ 1,000 give the minutes a speech plan's own column prints; at 900 "
+                      f"characters a minute the same plan buys about 10% fewer finished minutes."))
 
 
-def build():
+def build(out_dir=None):
+    """Render the public index into out_dir (default site/).
+
+    --check passes a scratch dir: a checker must not rewrite the folder it checks. It used to,
+    and that replaced a correct SITE_BASE sitemap with the placeholder base.
+    """
+    root = out_dir or SITE
     d = load()
     snapshot(d)
     changes = compute_changes()
-    if os.path.isdir(SITE):
-        shutil.rmtree(SITE)
-    os.makedirs(os.path.join(SITE, "vendors"), exist_ok=True)
+    if os.path.isdir(root):
+        shutil.rmtree(root)
+    os.makedirs(os.path.join(root, "vendors"), exist_ok=True)
     written = []
-    with open(os.path.join(SITE, "index.html"), "w", encoding="utf-8") as f:
+    with open(os.path.join(root, "index.html"), "w", encoding="utf-8") as f:
         f.write(render_index(d, changes)); written.append("index.html")
-    with open(os.path.join(SITE, "voices.html"), "w", encoding="utf-8") as f:
+    with open(os.path.join(root, "voices.html"), "w", encoding="utf-8") as f:
         f.write(render_voices(d)); written.append("voices.html")
     for vid, v in d["vendors"].items():
-        p = os.path.join(SITE, "vendors", f"{vid}.html")
+        p = os.path.join(root, "vendors", f"{vid}.html")
         with open(p, "w", encoding="utf-8") as f:
             f.write(render_vendor(vid, v, d)); written.append(f"vendors/{vid}.html")
-    with open(os.path.join(SITE, "pricing.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(root, "pricing.json"), "w", encoding="utf-8") as f:
         f.write(render_pricing_json(d)); written.append("pricing.json")
-    with open(os.path.join(SITE, "changes.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(root, "changes.json"), "w", encoding="utf-8") as f:
         json.dump({"as_of": d["as_of"], "history": changes}, f, indent=1); written.append("changes.json")
-    with open(os.path.join(SITE, "feed.xml"), "w", encoding="utf-8") as f:
+    with open(os.path.join(root, "feed.xml"), "w", encoding="utf-8") as f:
         f.write(render_feed(d, changes)); written.append("feed.xml")
+    # site/ is rebuilt from scratch above, so re-render the host-ready layer (q/*.html, sitemap.xml,
+    # robots.txt) here: otherwise a plain `build_site.py` would delete the pages the host serves.
+    try:
+        import build_host
+        written.extend(build_host.build(root)[0])
+    except Exception as e:  # a broken host layer must not silently vanish from the deployed folder
+        raise SystemExit(f"build_site: host-ready layer failed: {e}")
     return written, d
 
 
 def check():
     """Invariants the operator review implies: disclosure, labelled links, parseable feeds, age warning."""
+    scratch = tempfile.mkdtemp(prefix="sitecheck-")
+    try:
+        written, d = build(scratch)
+        return _check_in(scratch, written, d)
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
+def _check_in(S, written, d):
     failures = []
-    written, d = build()
-    html = {p: open(os.path.join(SITE, p), encoding="utf-8").read() for p in written if p.endswith(".html")}
+    html = {p: open(os.path.join(S, p), encoding="utf-8").read() for p in written if p.endswith(".html")}
     for p, t in html.items():
         if "autonomous AI agent operated by a9n9" not in t:
             failures.append(f"{p}: missing AI disclosure")
@@ -537,15 +600,38 @@ def check():
             end = t.find("</a>", m.start())
             if "affiliate link" not in t[start:end]:
                 failures.append(f"{p}: unlabelled affiliate href {m.group(1)}")
+    # run 85: the SERP snippet layer. One description per page, 110-158 chars, a number in it, never the
+    # title repeated, and every number in the description already visible on that page.
+    seen = {}
+    for p, t in html.items():
+        m = re.search(r'<meta name="description" content="([^"]*)"', t)
+        if not m:
+            failures.append(f"{p}: no meta description")
+            continue
+        dsc = html_lib.unescape(m.group(1))
+        if not 110 <= len(dsc) <= 158:
+            failures.append(f"{p}: description is {len(dsc)} chars, outside the measured 110-158 band")
+        if not re.search(r"\d", dsc):
+            failures.append(f"{p}: description carries no number")
+        ti = re.search(r"<title>(.*?)</title>", t)
+        if ti and dsc.lower().startswith(html_lib.unescape(ti.group(1)).lower()[:20]):
+            failures.append(f"{p}: description repeats the title's opening")
+        if dsc in seen:
+            failures.append(f"{p}: description duplicates {seen[dsc]}")
+        seen[dsc] = p
+        body_text = re.sub(r"\s+", " ", html_lib.unescape(re.sub(r"<[^>]+>", " ", t)))
+        for num in set(re.findall(r"\$?\d[\d,]*(?:\.\d+)?", dsc)):
+            if num not in body_text:
+                failures.append(f"{p}: description number {num} is not visible in the page body")
     # feed parses
     try:
-        root = ET.parse(os.path.join(SITE, "feed.xml")).getroot()
+        root = ET.parse(os.path.join(S, "feed.xml")).getroot()
         if root.tag != "rss" or root.find("channel/item") is None:
             failures.append("feed.xml: no items")
     except Exception as e:
         failures.append(f"feed.xml: does not parse: {e}")
     # pricing.json parses and its as_of matches the dataset
-    pj = json.load(open(os.path.join(SITE, "pricing.json"), encoding="utf-8"))
+    pj = json.load(open(os.path.join(S, "pricing.json"), encoding="utf-8"))
     if pj["as_of"] != d["as_of"]:
         failures.append("pricing.json as_of mismatch")
     if pj["units"]["deepgram"]["affiliate_link"] is not None:
@@ -579,7 +665,7 @@ def main():
     a = ap.parse_args()
     if a.check:
         failures, written = check()
-        print(f"rendered {len(written)} files into {SITE}")
+        print(f"rendered {len(written)} files in a scratch dir, site/ untouched")
         if failures:
             print(f"{len(failures)} FAILURE(S):")
             for f in failures:

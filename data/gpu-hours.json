@@ -1,0 +1,349 @@
+{
+ "dataset": "gpu-hour-prices",
+ "built_at": "2026-11-08T15:43:37Z",
+ "month_hours": 730,
+ "providers": {
+  "novita": {
+   "source": "https://novita.ai/gpus",
+   "read_at": "2026-11-08T15:47:00Z",
+   "extraction": "client-rendered price table transcribed from the page's own innerText; raw capture in snapshots/novita-gpus-2026-11-08T1547Z.txt",
+   "billing": {
+    "granularity": "per-second billing (page: \"Per-second billing\")",
+    "spot": "interruptible (page: \"Spot Instance Info\"); the page states savings \"up to 50%\" but not a preemption notice period",
+    "powered_off": "not stated on this page - unknown, do not assume",
+    "specs_per_gpu": "not published on this page (no vCPU/RAM/disk per GPU type); instance-list API requires a key"
+   }
+  },
+  "digitalocean": {
+   "source": "https://www.digitalocean.com/pricing/gpu-droplets",
+   "read_at": "2026-11-08T15:43:01Z",
+   "extraction": "parsed from the page HTML by parse_do_gpu.py",
+   "billing": {
+    "granularity": "per second, 5-minute minimum billing period",
+    "powered_off": "still billed while powered off; charges continue until the Droplet is destroyed",
+    "monthly_hours_reference": 672,
+    "spot": "interruptible; at least 2 hours notice intended, sometimes less; price locked at creation for the Droplet's life",
+    "reserved_12mo": "contractual 12-month commitment via sales; per GPU hour"
+   }
+  }
+ },
+ "gpus": [
+  {
+   "family": "B300",
+   "vram_gb": null,
+   "offers": [
+    {
+     "provider": "digitalocean",
+     "name": "NVIDIA HGX B300",
+     "tier": "reserved_12mo",
+     "usd_per_gpu_hour": 7.94,
+     "interruptible": false,
+     "commitment_months": 12,
+     "specs": {}
+    },
+    {
+     "provider": "digitalocean",
+     "name": "NVIDIA HGX B300",
+     "tier": "spot",
+     "usd_per_gpu_hour": 6.17,
+     "interruptible": true,
+     "commitment_months": 0,
+     "specs": {}
+    }
+   ]
+  },
+  {
+   "family": "H100",
+   "vram_gb": 80,
+   "offers": [
+    {
+     "provider": "digitalocean",
+     "name": "NVIDIA HGX H100",
+     "tier": "on_demand",
+     "usd_per_gpu_hour": 4.41,
+     "interruptible": false,
+     "commitment_months": 0,
+     "specs": {
+      "gpus_per_droplet": "Choose between 1 or 8 GPU's per droplet",
+      "gpu_memory": "80 GB",
+      "droplet_memory": "240 GiB",
+      "vcpus": "20",
+      "boot_disk": "720 GiB NVMe",
+      "scratch_disk": "5 TiB NVMe",
+      "transfer": "15,000 GiB"
+     }
+    },
+    {
+     "provider": "digitalocean",
+     "name": "NVIDIA HGX H100",
+     "tier": "reserved_12mo",
+     "usd_per_gpu_hour": 3.26,
+     "interruptible": false,
+     "commitment_months": 12,
+     "specs": {}
+    },
+    {
+     "provider": "novita",
+     "name": "H100 SXM 80GB",
+     "tier": "on_demand",
+     "usd_per_gpu_hour": 3.39,
+     "interruptible": false,
+     "commitment_months": 0
+    },
+    {
+     "provider": "novita",
+     "name": "H100 SXM 80GB",
+     "tier": "spot",
+     "usd_per_gpu_hour": 1.7,
+     "interruptible": true,
+     "commitment_months": 0
+    }
+   ]
+  },
+  {
+   "family": "H200",
+   "vram_gb": 141,
+   "offers": [
+    {
+     "provider": "digitalocean",
+     "name": "NVIDIA HGX H200",
+     "tier": "on_demand",
+     "usd_per_gpu_hour": 4.47,
+     "interruptible": false,
+     "commitment_months": 0,
+     "specs": {
+      "gpus_per_droplet": "Choose between 1 or 8 GPU's per droplet",
+      "gpu_memory": "141 GB",
+      "droplet_memory": "240 GiB",
+      "vcpus": "24",
+      "boot_disk": "720 GiB NVMe",
+      "scratch_disk": "5 TiB NVMe",
+      "transfer": "15,000 GiB"
+     }
+    },
+    {
+     "provider": "digitalocean",
+     "name": "NVIDIA HGX H200",
+     "tier": "reserved_12mo",
+     "usd_per_gpu_hour": 3.4,
+     "interruptible": false,
+     "commitment_months": 12,
+     "specs": {}
+    }
+   ]
+  },
+  {
+   "family": "L40S",
+   "vram_gb": 48,
+   "offers": [
+    {
+     "provider": "digitalocean",
+     "name": "NVIDIA L40S",
+     "tier": "on_demand",
+     "usd_per_gpu_hour": 1.57,
+     "interruptible": false,
+     "commitment_months": 0,
+     "specs": {
+      "gpus_per_droplet": "1",
+      "gpu_memory": "48 GB",
+      "droplet_memory": "64 GiB",
+      "vcpus": "8",
+      "boot_disk": "500 GiB NVMe",
+      "scratch_disk": "Transfer"
+     }
+    },
+    {
+     "provider": "novita",
+     "name": "NVIDIA L40S 48GB",
+     "tier": "on_demand",
+     "usd_per_gpu_hour": 0.55,
+     "interruptible": false,
+     "commitment_months": 0
+    }
+   ]
+  },
+  {
+   "family": "MI300X",
+   "vram_gb": 192,
+   "offers": [
+    {
+     "provider": "digitalocean",
+     "name": "AMD Instinct\u2122 MI300X",
+     "tier": "on_demand",
+     "usd_per_gpu_hour": 2.59,
+     "interruptible": false,
+     "commitment_months": 0,
+     "specs": {
+      "gpus_per_droplet": "Choose between 1 or 8 GPU's per droplet",
+      "gpu_memory": "192 GB",
+      "droplet_memory": "240 GiB",
+      "vcpus": "20",
+      "boot_disk": "720 GiB NVMe",
+      "scratch_disk": "5 TiB NVMe",
+      "transfer": "15,000 GiB"
+     }
+    },
+    {
+     "provider": "digitalocean",
+     "name": "AMD Instinct\u2122 MI300X",
+     "tier": "reserved_12mo",
+     "usd_per_gpu_hour": 1.91,
+     "interruptible": false,
+     "commitment_months": 12,
+     "specs": {}
+    }
+   ]
+  },
+  {
+   "family": "MI325X",
+   "vram_gb": 256,
+   "offers": [
+    {
+     "provider": "digitalocean",
+     "name": "AMD Instinct\u2122 MI325X",
+     "tier": "on_demand",
+     "usd_per_gpu_hour": 3.8,
+     "interruptible": false,
+     "commitment_months": 0,
+     "specs": {
+      "gpus_per_droplet": "Choose between 1 or 8 GPU's per droplet",
+      "gpu_memory": "256 GB",
+      "droplet_memory": "164 GiB",
+      "vcpus": "20",
+      "boot_disk": "720 GiB NVMe",
+      "scratch_disk": "5 TiB NVMe",
+      "transfer": "15,000 GiB"
+     }
+    },
+    {
+     "provider": "digitalocean",
+     "name": "AMD Instinct\u2122 MI325X",
+     "tier": "reserved_12mo",
+     "usd_per_gpu_hour": 2.88,
+     "interruptible": false,
+     "commitment_months": 12,
+     "specs": {}
+    }
+   ]
+  },
+  {
+   "family": "MI350X",
+   "vram_gb": null,
+   "offers": [
+    {
+     "provider": "digitalocean",
+     "name": "AMD Instinct\u2122 MI350X",
+     "tier": "reserved_12mo",
+     "usd_per_gpu_hour": 4.76,
+     "interruptible": false,
+     "commitment_months": 12,
+     "specs": {}
+    },
+    {
+     "provider": "digitalocean",
+     "name": "AMD Instinct\u2122 MI350X",
+     "tier": "spot",
+     "usd_per_gpu_hour": 3.0,
+     "interruptible": true,
+     "commitment_months": 0,
+     "specs": {}
+    }
+   ]
+  },
+  {
+   "family": "MI355X",
+   "vram_gb": null,
+   "offers": [
+    {
+     "provider": "digitalocean",
+     "name": "AMD Instinct\u2122 MI355X",
+     "tier": "spot",
+     "usd_per_gpu_hour": 4.5,
+     "interruptible": true,
+     "commitment_months": 0,
+     "specs": {}
+    }
+   ]
+  },
+  {
+   "family": "RTX 4000 Ada",
+   "vram_gb": 20,
+   "offers": [
+    {
+     "provider": "digitalocean",
+     "name": "NVIDIA RTX 4000 Ada Generation",
+     "tier": "on_demand",
+     "usd_per_gpu_hour": 0.76,
+     "interruptible": false,
+     "commitment_months": 0,
+     "specs": {
+      "gpus_per_droplet": "1",
+      "gpu_memory": "20 GB",
+      "droplet_memory": "32 GiB",
+      "vcpus": "8",
+      "boot_disk": "500 GiB NVMe",
+      "scratch_disk": "Transfer"
+     }
+    }
+   ]
+  },
+  {
+   "family": "RTX 4090",
+   "vram_gb": 24,
+   "offers": [
+    {
+     "provider": "novita",
+     "name": "RTX 4090 24GB",
+     "tier": "on_demand",
+     "usd_per_gpu_hour": 0.67,
+     "interruptible": false,
+     "commitment_months": 0
+    },
+    {
+     "provider": "novita",
+     "name": "RTX 4090 24GB",
+     "tier": "spot",
+     "usd_per_gpu_hour": 0.34,
+     "interruptible": true,
+     "commitment_months": 0
+    }
+   ]
+  },
+  {
+   "family": "RTX 5090",
+   "vram_gb": 32,
+   "offers": [
+    {
+     "provider": "novita",
+     "name": "NVIDIA GeForce RTX 5090 32GB",
+     "tier": "on_demand",
+     "usd_per_gpu_hour": 0.56,
+     "interruptible": false,
+     "commitment_months": 0
+    }
+   ]
+  },
+  {
+   "family": "RTX 6000 Ada",
+   "vram_gb": 48,
+   "offers": [
+    {
+     "provider": "digitalocean",
+     "name": "NVIDIA RTX 6000 Ada Generation",
+     "tier": "on_demand",
+     "usd_per_gpu_hour": 1.57,
+     "interruptible": false,
+     "commitment_months": 0,
+     "specs": {
+      "gpus_per_droplet": "1",
+      "gpu_memory": "48 GB",
+      "droplet_memory": "64 GiB",
+      "vcpus": "8",
+      "boot_disk": "500 GiB NVMe",
+      "scratch_disk": "Transfer"
+     }
+    }
+   ]
+  }
+ ]
+}

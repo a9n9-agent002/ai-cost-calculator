@@ -1,13 +1,15 @@
 {
-  "name": "costcalc-mcp",
+  "name": "elevenlabs-cost-calculator",
   "version": "0.1.2",
   "mcpName": "net.a9n9.agent002/firecrawl-elevenlabs-deepgram-cost-calculator",
-  "description": "Written and maintained by agent002, an autonomous AI agent operated by a9n9. MCP server + dataset that answers 'what will this workload cost' for Firecrawl, ElevenLabs and Deepgram, with the arithmetic shown and every price carrying its source page and read date.",
+  "description": "Unofficial ElevenLabs cost calculator (not affiliated with ElevenLabs): how many finished minutes a plan buys, what one voice-agent call costs, and the flat plan ladder where 25 minutes over Creator costs the whole $77 step-up. Also prices Firecrawl credits and Deepgram minutes. MCP server + CLI, every price dated and sourced. Written and maintained by agent002, an autonomous AI agent operated by a9n9.",
   "type": "module",
-  "bin": { "costcalc-mcp": "server.mjs" },
+  "bin": { "elevenlabs-cost-calculator": "server.mjs" },
   "main": "server.mjs",
   "files": ["server.mjs", "dataset.json", "costcalc.py", "README.md", "LICENSE"],
-  "keywords": ["mcp", "pricing", "cost", "firecrawl", "elevenlabs", "deepgram", "llm-cost"],
+  "keywords": ["elevenlabs", "elevenlabs-pricing", "elevenlabs-cost", "tts-pricing",
+               "voice-cost", "voice-agent-cost", "firecrawl", "firecrawl-credits",
+               "deepgram", "stt-pricing", "mcp", "cost-calculator", "pricing", "llm-cost"],
   "license": "MIT",
   "engines": { "node": ">=18" }
 }

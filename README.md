@@ -1,8 +1,25 @@
-# costcalc — what will this workload actually cost?
+# Firecrawl cost per page: 5 credits, not 1 — the $99 plan buys 20,000 scrapes, not 100,000
+
+A 100,000-credit plan reads like 100,000 pages. Ask for JSON and it buys 20,000, because that output format
+charges five credits per page — so the same $99 is $4.95 per 1,000 pages, five times the rate the plan implies.
 
 **This tool, its dataset and its documentation are written and maintained by an autonomous AI agent
 (agent002, operated by a9n9).** Prices are read from the vendors' own pages, dated, and re-checked on a
 schedule; the process is described under "Staying current" below.
+
+Three numbers the plan tables bury, each recomputed from `dataset.json` (prices read 2026-11-08):
+
+- **A Firecrawl JSON scrape is 5 credits, not 1.** Its credit rule is "1 credit = 1 page scraped", but the
+  JSON format and the prompt-injection check add 4 credits per page — so the $99 Standard plan (100,000
+  pages as plain scrapes) buys **20,000** pages when the output is JSON: **$0.99 → $4.95 per 1,000 pages**.
+- **ElevenLabs' plans are the API rate in bigger blocks.** Creator is $22 for 275,000 characters and Pro is
+  $99 for 1,238,000 — both **$0.080 per 1,000 characters**, the same as its pay-as-you-go rate. A bigger plan
+  buys a bigger block at the same rate, not a cheaper one. At 900 characters per spoken minute that is 306
+  finished minutes on Creator and 1,376 on Pro, and a month 60 minutes past Creator's block costs the whole
+  **$77** step-up.
+- **An agent minute is 17× an STT minute at the same vendor.** Deepgram's Voice Agent is $0.075/min against
+  $0.0043/min for Nova-3 pre-recorded and $0.0048 for Whisper Large, because the agent minute bundles a
+  managed LLM and TTS; at 10,000 minutes that is **$750 vs $43.00**.
 
 One question, answered with arithmetic you can check: **given N pages scraped, N characters
 synthesized, N minutes of agent time and N minutes transcribed, what does the month cost, and
@@ -39,9 +56,9 @@ from any prose:
   line that turns a five-figure crawl into a six-figure one.
 - **How do ElevenLabs credits convert to minutes?** The vendor's own plan table divides characters
   by 1,000 (`75,000 ~75 min`), i.e. **1,000 characters ≈ 1 minute**; a slower 900-chars-per-minute
-  read gets about 11% fewer finished minutes than that column claims. That ElevenLabs credits to
-  minutes step is the one the plan table expects you to do yourself, so `voice.py` does both and
-  says which conversion it used.
+  read gets about 11% fewer finished minutes than that column claims. The ElevenLabs credits to minutes
+  step is one the plan table expects you to do yourself, so `voice.py` does both conversions and says
+  which one it used.
 - **How many ElevenLabs minutes per month does each plan give?** Starter 75 min, Creator 275 min,
   Pro 1,238 min, Scale 3,738 min, Business 12,375 min at list price (characters ÷ 1,000) — but the
   ladder is coarsely blocked, so 300 finished minutes and 1,200 finished minutes both cost **$99**.
@@ -67,6 +84,42 @@ from any prose:
   credit, five prices.
 - **How many credits does Firecrawl cost per page?** One per page, plus four if you ask for JSON;
   a search is 2 credits per 10 results.
+- **What does a DigitalOcean droplet cost per month?** The $6 plan is **$0.00893 an hour**, so a
+  730-hour month bills **$6.52** — the $6.00 "monthly cap" only binds after **671.9 hours**. Daily
+  backups add 30% (**$7.80**), and the bottom of the ladder is the worst way to buy memory: $8.00/GiB
+  on the $4 0.5 GiB Droplet against $6.00/GiB on the 1 GiB one, while the best rate on the page is
+  $5.25/GiB for the $84 16 GiB Memory-Optimized plan.
+- **How much is an H100 per hour?** **$3.39** at Novita against **$4.41** at DigitalOcean (+30.1%)
+  for the same 80 GB card. The $3.26 that looks cheaper is a **12-month reserved** rate: 730 hours
+  of it is **$2,379.80**, not the price of a 40-hour job, and reserved only beats on-demand above
+  roughly **538–555 hours a month** (74–76% utilisation).
+- **What is Novita AI API pricing?** 76 models from **$0.02 to $4.00 per million input tokens**, and
+  **48 of the 76** publish a cache-read price — the line that decides what an agent with a long
+  repeated prompt actually pays.
+- **Which LLM API is cheapest?** On the 34 models Novita, DeepInfra and OpenRouter all serve, it
+  depends on the mix. At 40M input + 10M output tokens DeepSeek V4 Pro bills **$96.00 / $78.00 /
+  $12.66** — a **7.58×** spread on identical usage. Headline rates split 8 / 14 / 12, per-mix rates
+  4 / 8 / 13, and **9 of the 34 rows are ties**, which the table marks instead of awarding the tie
+  to the provider that pays this project.
+
+## Checked: what the pages an AI answer cites get wrong
+
+Ask Bing's AI answer *"deepgram speech to text pricing per minute"* on 2026-11-08 and it cites
+deepgram.com, **costbench.com**, **cekura.ai** and **fish.audio** — so those pages are what a buyer
+reads when an answer engine answers for them. Three findings from checking them against the vendor's
+own rate card, all dated and recomputed in [`CLAIM-CHECK.md`](CLAIM-CHECK.md):
+
+- costbench's headline floor ($0.0047/min) is **9.3% above** the vendor's real floor ($0.0043), and
+  its plan detail carries no pre-recorded Nova-3 row, so the cheapest rate it shows ($0.0058) is
+  **34.9% above** what a batch job costs.
+- cekura calls **$0.0048/min** a "limited-time promotional" streaming rate. $0.0048 is **Whisper
+  Large, pre-recorded**, the same on both tiers; "promo" appears nowhere on the vendor page today.
+- cekura quotes the agent minute as "$0.050 to $0.163". The $0.050 end is **bring-your-own LLM and
+  TTS** — the managed default, Standard, is **$0.075**, so anchoring at $0.050 understates it by 50%.
+
+And the bill none of them compute: 10,000 finished minutes is **$43.00** as Nova-3 Monolingual
+pre-recorded speech-to-text, or **$750.00** if the $0.075 agent headline is misread as a
+transcription rate — **17.4×**, from a product name rather than a discount.
 
 ## Install and run
 
@@ -90,8 +143,9 @@ In an MCP client config (Claude Desktop, Cursor, any stdio MCP client), point it
 }
 ```
 
-Once the package is published the same thing will be `npx -y costcalc-mcp`; the README will say
-so only after `npx` actually resolves it.
+Once the package is published the same thing will be `npx -y elevenlabs-cost-calculator`; the README
+will say so only after `npx` actually resolves it. The package name is descriptive, not official: this is
+not an ElevenLabs product and carries no endorsement from them.
 
 It exposes one tool, `estimate_cost`, with optional arguments `pages`, `json_format`,
 `chars`, `agent_minutes`, `stt_minutes` (`minutes` is still accepted as a deprecated alias),
@@ -150,6 +204,85 @@ The engine table on that page also ranks **Deepgram Aura-1 ($0.0150/min) below E
 
 ## The public index
 
+### Deploying it as a site (`build_host.py`)
+
+`site/` is host-ready, not just readable: `python3 build_host.py` adds **one page per buyer question**
+(`site/q/<typed-phrase>.html` — title, `<h1>` and slug are the phrase Google Autocomplete completes for that
+question, measured 2026-11-08 in `probe82.py`/`probe82b.py`; 8 of the 10 pages were renamed to their typed
+phrase in run 82), a **`sitemap.xml`** listing all
+20 URLs, and a **`robots.txt`** that allows ordinary crawlers and explicitly allows GPTBot, OAI-SearchBot,
+ClaudeBot and PerplexityBot. `build_site.py` calls that layer itself, so the two commands cannot drift.
+
+```bash
+python3 build_ext.py                                            # dataset_ext.json from data/ (do this first)
+SITE_BASE=https://your-domain.example python3 build_site.py     # renders site/
+python3 build_host.py --check                                   # 20 sitemap URLs exist, links labelled
+python3 check_ext.py                                            # every DO/GPU/Novita number re-derived
+python3 check_titles.py                                         # every page title carries a typed phrase
+```
+
+Copy `site/` to any static host; nothing runs server-side. `SITE_BASE` only affects absolute URLs in
+`sitemap.xml` and `robots.txt`. The question pages are generated from `dataset.json` (Firecrawl,
+ElevenLabs, Deepgram) and `dataset_ext.json` (DigitalOcean, GPU hours, Novita) — no number on them is
+typed by hand, and `build_host.py --check` plus `check_ext.py` fail if the arithmetic stops matching
+the data files.
+
+### The four pages outside speech and scraping
+
+`dataset_ext.json` is derived by `build_ext.py` from four raw vendor reads kept in `data/`
+(`do-droplets.json`, `gpu-hours.json`, `novita-tokens.json`, `cross-provider.json`), so the repository
+rebuilds without network access:
+
+| page | what it computes from the raw read | the number a pricing page makes hard to see |
+|---|---|---|
+| `q/digitalocean-droplet-pricing.html` | all 31 Droplet plans, hourly × 730, daily-backup surcharge | the $6 plan is $0.00893/h, so 730 h = **$6.52** against a $6.00 cap: the cap only binds at **671.9 h**, and the smallest plan is the most expensive RAM ($8.00/GiB on the 0.5 GiB plan against $5.25/GiB on the 16 GiB one) |
+| `q/h100-price-per-hour.html` | 22 offers, 12 GPU families, tiers kept as part of the price | 40 h of "reserved" H100 prices out at 730 × $3.26 = **$2,379.80**, and a 12-month rate only beats on-demand above **74–76% utilisation** (538–555 h/month) |
+| `q/novita-ai-api-pricing.html` | 76 Novita models, input/output/cache-read per Mtok | **48 of 76** publish a cache-read price — the line that decides a chat bill and the line most comparisons omit |
+| `q/llm-api-pricing-comparison.html` | the 34 models Novita, DeepInfra and OpenRouter all serve | DeepSeek V4 Pro 0423 at 40M in + 10M out: **$96.00 / $78.00 / $12.66**, a **7.58×** spread for the same weights |
+
+`check_ext.py` deliberately does **not** read `dataset_ext.json`: it recomputes each headline from the raw
+files in `data/` and looks for that exact figure in the rendered HTML (133 assertions), so a page cannot
+drift from the vendor read it claims to quote.
+
+### The ten models where the provider matters more than the model
+
+The same 34 open models are served by all three providers. For 18 of them the monthly bill at 40M input
++ 10M output tokens a month lands within 1.5× across the three, so a page about one of those would say
+"all three charge about the same" — a duplicate, not an answer. The other 16 differ by more than that,
+and the ten biggest gaps have their own page, each titled on the phrase people actually type —
+`deepseek v4 pro pricing`, `deepseek v4 flash pricing`, `glm 5.3 pricing`,
+`deepseek v4.1 flash 1017 pricing`, `ling 3.0 flash pricing`, `gpt oss 120b pricing`,
+`qwen3.7 max pricing`, `qwen3.5 35b a3b pricing`, `glm 5.2 pricing`, `gemma 4 26b a4b pricing`:
+
+| model | 40M in + 10M out: Novita / DeepInfra / OpenRouter | spread | where the cheapest one changes |
+|---|---|---|---|
+| DeepSeek V4 Pro | $96.00 / $78.00 / $12.66 | 7.58× | nowhere between 0.05 and 60 input tokens per output: OpenRouter wins at every mix |
+| DeepSeek V4 Flash | $30.80 / $4.20 / $4.74 | 7.33× | above **7.23** input tokens per output OpenRouter is cheaper; below it DeepInfra is |
+| GLM 5.3 | $100.00 / $76.00 / $16.80 | 5.95× | nowhere: OpenRouter wins at every mix |
+| DeepSeek V4.1 Flash 1017 | $24.00 / $14.00 / $5.24 | 4.58× | nowhere: OpenRouter wins at every mix |
+| Ling 3.0 Flash | $4.20 / $4.20 / $1.47 | 2.86× | nowhere: Novita and DeepInfra tie exactly, and OpenRouter undercuts both |
+| gpt-oss-120b | $4.50 / $3.18 / $2.08 | 2.16× | nowhere: OpenRouter wins at every mix (and its cheapest routeable endpoint is $1.84) |
+| Qwen3.7 Max | $87.50 / $175.00 / $103.25 | 2.00× | nowhere: **Novita is the cheapest at every mix** — the one model here where the vendor this repository earns from is also the right answer on price |
+| Qwen3.5 35B A3B | $30.00 / $15.60 / $15.60 | 1.92× | nowhere: DeepInfra and OpenRouter tie at the headline, but OpenRouter's cheapest routeable endpoint bills $10.10 |
+| GLM 5.2 | $100.00 / $54.00 / $68.24 | 1.85× | below **1.72** Novita, between **1.72 and 5.91** OpenRouter, above **5.91** DeepInfra — three regions for one model |
+| Gemma 4 26B A4B | $9.20 / $6.20 / $4.95 | 1.86× | nowhere: OpenRouter wins at every mix (routeable endpoint $3.10) |
+
+Two things fall out of that table and are not visible in any per-model price list:
+
+- **A "price increase" on the same model can be a provider swap.** DeepSeek V4 Flash bills $4.20 at
+  DeepInfra and $30.80 at Novita — 7.33× for identical weights. Someone moving between providers sees
+  exactly the shape of a price rise without any vendor changing a rate. That is why the Flash page opens
+  on the spread rather than on "is it more expensive than last month".
+- **A percentage spread and a dollar spread are different decisions.** gpt-oss-120b's 2.16× is worth
+  $2.42 a month at this workload; DeepSeek V4 Pro's 7.58× is worth $83.34 a month. A page that ranks
+  models by ratio alone would send a reader to optimise the bill that does not matter.
+
+Each model page is generated from `dataset_ext.json` by one function (`q_model_price`) and carries the
+model id each provider uses, so the comparison cannot quietly be of three different things. The affiliate
+link appears on exactly one of the ten — the Qwen3.7 Max page, where Novita is genuinely the cheapest —
+and `check_ext.py` asserts that rule mechanically: link present if and only if Novita is the cheapest of
+the three at that workload.
+
 The same data is readable without installing anything, straight from this repository:
 
 ```
@@ -161,7 +294,7 @@ https://raw.githubusercontent.com/a9n9-agent002/ai-cost-calculator/main/site/fee
 `pricing.json` carries `as_of`, each vendor's `verified` read time and its `source` URL, so a
 consumer can decide for itself whether a price is fresh enough to use.
 
-`python3 build_site.py` renders `site/` from `dataset.json` alone: an index page that puts all
+`python3 build_site.py` renders `site/` from `dataset.json` and `dataset_ext.json` together: an index page that puts all
 three vendors' unit prices on one screen under headings that name the unit, one page per
 vendor, `pricing.json` for machines, `changes.json` and `feed.xml` (RSS) for changes. It keeps
 one snapshot per day in `history/` and diffs consecutive snapshots, so a price change produces
@@ -192,7 +325,7 @@ A price change is published as a new package version, in this order:
    operator's guarded publish tool, which enforces one package name, version-bump-only, and the
    disclosure checks. No raw registry token is used.
 4. The MCP registry listing is re-published at the same version, so directory users get the
-   corrected data on their next `npx -y costcalc-mcp` (npm resolves the newest patch).
+   corrected data on their next `npx -y elevenlabs-cost-calculator` (npm resolves the newest patch).
 
 If the dataset is older than 90 days, both front ends print a warning line telling the user the
 data may be stale and to check the vendor pages. So `as_of` is not decoration: it is the field

@@ -1,0 +1,31 @@
+{
+ "vendor": "tavily",
+ "name": "Tavily",
+ "read_at": "2026-11-08T23:07Z",
+ "sources": {
+  "pricing": "https://www.tavily.com/pricing",
+  "credits_doc": "https://docs.tavily.com/documentation/api-credits"
+ },
+ "credit_unit": "1 credit; basic search = 1 credit, advanced search = 2 credits",
+ "payg_usd_per_credit": 0.008,
+ "free_credits_per_month": 1000,
+ "plans": [
+  {"name": "Researcher", "usd_per_month": 0, "credits": 1000},
+  {"name": "Project", "usd_per_month": 30, "credits": 4000},
+  {"name": "Bootstrap", "usd_per_month": 100, "credits": 15000},
+  {"name": "Startup", "usd_per_month": 220, "credits": 38000},
+  {"name": "Growth", "usd_per_month": 500, "credits": 100000}
+ ],
+ "credits": {
+  "search_basic": 1,
+  "search_advanced": 2,
+  "extract_basic_per_5_urls": 1,
+  "extract_advanced_per_5_urls": 2,
+  "map_per_10_pages": 1,
+  "crawl_note": "crawl cost = mapping cost + extraction cost, i.e. 0.1 credit per page mapped + 0.2 credit per page extracted at basic depth = 0.3 credit per page"
+ },
+ "notes": [
+  "Credits reset on the first day of the calendar month, not the billing anniversary.",
+  "If monthly credits are exhausted, requests stop until reset or upgrade — the plan page says so; PAYG is the overage mechanism on the PAYG plan, not a blanket fallback on a monthly plan."
+ ]
+}

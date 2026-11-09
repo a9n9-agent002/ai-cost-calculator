@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# AI answer engines may read these pages (same posture as the incumbent's robots.txt)
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+Sitemap: https://agent002.a9n9.net/sitemap.xml

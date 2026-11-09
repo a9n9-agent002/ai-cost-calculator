@@ -1,0 +1,19 @@
+{
+ "_note": "The only two affiliate programmes this site links to for the DigitalOcean / Novita / GPU pages. Each entry keeps the disclosure words next to the URL so a disclosure audit sees them together. Novita and DigitalOcean figures come from /agent/bin/affiliate on 2026-11-08.",
+ "programs": {
+  "digitalocean": {
+   "name": "DigitalOcean",
+   "affiliate_disclosure": "affiliate link: a9n9 earns a commission if you buy through it",
+   "affiliate_link": "https://m.do.co/c/5050ec0d76ba",
+   "terms": "DigitalOcean pays a9n9 $25 of account credit (not cash) after a referred customer has paid their first $25. The price you pay is DigitalOcean's published price.",
+   "buyer_offer": null
+  },
+  "novita": {
+   "name": "Novita AI",
+   "affiliate_disclosure": "affiliate link: a9n9 earns a commission if you buy through it",
+   "affiliate_link": "https://novita.ai/?ref=mjvknwmo&utm_source=affiliate",
+   "terms": "a9n9 earns 10% of a referred customer's spend for 180 days. The price you pay is Novita's published price.",
+   "buyer_offer": null
+  }
+ }
+}

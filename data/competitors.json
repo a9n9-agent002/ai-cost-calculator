@@ -1,0 +1,47 @@
+{
+  "as_of": "2026-11-08",
+  "note": "Third-party list prices read by the agent on 2026-11-08, typed from the pages named in `sources`. Hetzner prices are in EUR and exclude VAT; Vultr prices are in USD. Nothing here is a quote or an invoice.",
+  "fx": {
+    "usd_per_eur": 1.1165,
+    "date": "2026-11-06",
+    "source": "https://api.frankfurter.app/latest?from=EUR&to=USD (ECB reference rates, read 2026-11-08)"
+  },
+  "sources": {
+    "hetzner": ["https://www.hetzner.com/cloud/cost-optimized/", "https://www.hetzner.com/cloud/regular-performance/"],
+    "vultr": ["https://www.vultr.com/pricing/"],
+    "read": "2026-11-08T22:50Z"
+  },
+  "hetzner": {
+    "currency": "EUR",
+    "vat": "excluded",
+    "traffic_tb_eu": 20,
+    "cap_policy": "The pricing page states the bill will never exceed the monthly price cap; a deleted server is billed hourly only.",
+    "plans": [
+      {"id": "cx23", "family": "Cost-Optimized", "vcpus": 2, "memory_gib": 4, "disk_gib": 40, "disk": "NVMe", "cpu": "Intel/AMD", "eur_per_month": 5.99, "eur_per_hour": 0.0096, "traffic_tb": 20},
+      {"id": "cax11", "family": "Cost-Optimized", "vcpus": 2, "memory_gib": 4, "disk_gib": 40, "disk": "NVMe", "cpu": "Ampere", "eur_per_month": 6.49, "eur_per_hour": 0.0104, "traffic_tb": 20},
+      {"id": "cx33", "family": "Cost-Optimized", "vcpus": 4, "memory_gib": 8, "disk_gib": 80, "disk": "NVMe", "cpu": "Intel/AMD", "eur_per_month": 8.99, "eur_per_hour": 0.0144, "traffic_tb": 20},
+      {"id": "cx43", "family": "Cost-Optimized", "vcpus": 8, "memory_gib": 16, "disk_gib": 160, "disk": "NVMe", "cpu": "Intel/AMD", "eur_per_month": 16.49, "eur_per_hour": 0.0264, "traffic_tb": 20},
+      {"id": "cpx02", "family": "Regular Performance", "vcpus": 1, "memory_gib": 1, "disk_gib": 20, "disk": "NVMe", "cpu": "AMD", "eur_per_month": 6.49, "eur_per_hour": 0.0104, "traffic_tb": 20},
+      {"id": "cpx12", "family": "Regular Performance", "vcpus": 1, "memory_gib": 2, "disk_gib": 40, "disk": "NVMe", "cpu": "AMD", "eur_per_month": 11.99, "eur_per_hour": 0.0192, "traffic_tb": 20},
+      {"id": "cpx22", "family": "Regular Performance", "vcpus": 2, "memory_gib": 4, "disk_gib": 80, "disk": "NVMe", "cpu": "AMD", "eur_per_month": 19.99, "eur_per_hour": 0.0320, "traffic_tb": 20}
+    ]
+  },
+  "vultr": {
+    "currency": "USD",
+    "plans": [
+      {"id": "vc1-0.5", "family": "Cloud Compute Regular", "vcpus": 1, "memory_gib": 0.5, "disk_gib": 10, "traffic_tb": 0.5, "usd_per_month": 2.50, "usd_per_hour": 0.004, "note": "IPv6 only; $3.50 with IPv4"},
+      {"id": "vc1-1", "family": "Cloud Compute Regular", "vcpus": 1, "memory_gib": 1, "disk_gib": 25, "traffic_tb": 1.0, "usd_per_month": 5.00, "usd_per_hour": 0.007},
+      {"id": "vc1-2", "family": "Cloud Compute Regular", "vcpus": 1, "memory_gib": 2, "disk_gib": 55, "traffic_tb": 2.0, "usd_per_month": 10.00, "usd_per_hour": 0.015},
+      {"id": "vc2-2", "family": "Cloud Compute Regular", "vcpus": 2, "memory_gib": 2, "disk_gib": 65, "traffic_tb": 3.0, "usd_per_month": 15.00, "usd_per_hour": 0.022},
+      {"id": "vc2-4", "family": "Cloud Compute Regular", "vcpus": 2, "memory_gib": 4, "disk_gib": 80, "traffic_tb": 3.0, "usd_per_month": 20.00, "usd_per_hour": 0.030},
+      {"id": "vc4-8", "family": "Cloud Compute Regular", "vcpus": 4, "memory_gib": 8, "disk_gib": 160, "traffic_tb": 4.0, "usd_per_month": 40.00, "usd_per_hour": 0.060},
+      {"id": "vc6-16", "family": "Cloud Compute Regular", "vcpus": 6, "memory_gib": 16, "disk_gib": 320, "traffic_tb": 5.0, "usd_per_month": 80.00, "usd_per_hour": 0.110}
+    ],
+    "vx1": {
+      "note": "VX1 is Vultr's dedicated-vCPU line, billed on actual hours used each month and not capped at 672 hours (its own pricing page says so).",
+      "plans": [
+        {"id": "vx1-2-8", "vcpus": 2, "memory_gib": 8, "traffic_tb": 5.0, "usd_per_hour": 0.060}
+      ]
+    }
+  }
+}

@@ -1,0 +1,1458 @@
+{
+ "generated": "2026-11-08T14:48Z",
+ "unit": "USD per million tokens",
+ "sources": {
+  "novita": "https://api.novita.ai/openai/v1/models",
+  "deepinfra": "https://api.deepinfra.com/v1/openai/models",
+  "openrouter": "https://openrouter.ai/api/v1/models",
+  "openrouter_routing": "https://openrouter.ai/api/v1/models/<id>/endpoints"
+ },
+ "matching": "model ids normalised to lower case, vendor prefix and date/quant suffixes stripped; the same name may be served at different quantisations, contexts or rate limits \u2014 each provider's own id and context are recorded per row.",
+ "openrouter_has_two_prices": "The model-level `pricing` is NOT the cheapest endpoint price: in 20 of these 34 models some listed endpoint is cheaper, by up to 11.5x on input. `input`/`output` are the model-level headline; `floor_input`/`floor_output` are the cheapest listed endpoint, with its name in openrouter_routing.",
+ "counts": {
+  "novita": 94,
+  "deepinfra": 91,
+  "openrouter": 452,
+  "in_all_three": 34
+ },
+ "cheapest_output_headline": {
+  "novita": 8,
+  "deepinfra": 14,
+  "openrouter": 12
+ },
+ "cheapest_output_floor": {
+  "novita": 4,
+  "deepinfra": 9,
+  "openrouter": 21
+ },
+ "openrouter_headline_over_floor": [
+  [
+   10.71,
+   "qwen3.8-27b"
+  ],
+  [
+   10.0,
+   "qwen3.6-35b-a3b"
+  ],
+  [
+   8.5,
+   "deepseek-v4.1-flash"
+  ],
+  [
+   5.6,
+   "kimi-k3.1-pro"
+  ],
+  [
+   2.15,
+   "qwen3.5-35b-a3b"
+  ],
+  [
+   2.0,
+   "gemma-4-31b"
+  ],
+  [
+   1.88,
+   "glm-4.7"
+  ],
+  [
+   1.69,
+   "gemma-4-26b-a4b"
+  ],
+  [
+   1.67,
+   "kimi-k2.6"
+  ],
+  [
+   1.6,
+   "qwen3.6-27b"
+  ],
+  [
+   1.4,
+   "mimo-v2.6-flash"
+  ],
+  [
+   1.34,
+   "minimax-m3"
+  ],
+  [
+   1.33,
+   "qwen3.5-27b"
+  ],
+  [
+   1.33,
+   "mimo-v2.6-pro"
+  ],
+  [
+   1.28,
+   "qwen3.5-397b-a17b"
+  ],
+  [
+   1.25,
+   "glm-4.6"
+  ],
+  [
+   1.25,
+   "gemma-3-12b"
+  ],
+  [
+   1.21,
+   "kimi-k3"
+  ],
+  [
+   1.12,
+   "gpt-oss-120b"
+  ],
+  [
+   1.11,
+   "deepseek-v4-pro-0813"
+  ]
+ ],
+ "novita_output_premium_vs_best_rival_floor": [
+  [
+   1.05,
+   "kimi-k3"
+  ],
+  [
+   1.16,
+   "deepseek-r1-0528"
+  ],
+  [
+   1.17,
+   "qwen3-vl-30b-a3b"
+  ],
+  [
+   1.18,
+   "gemma-4-31b"
+  ],
+  [
+   1.2,
+   "qwen3.6-27b"
+  ],
+  [
+   1.22,
+   "ling-3.0-flash-vl"
+  ],
+  [
+   1.23,
+   "qwen3.8-flash"
+  ],
+  [
+   1.25,
+   "gemma-3-27b"
+  ],
+  [
+   1.26,
+   "kimi-k3.1-pro"
+  ],
+  [
+   1.33,
+   "mimo-v2.6-pro"
+  ],
+  [
+   1.36,
+   "minimax-m3"
+  ],
+  [
+   1.38,
+   "glm-4.6"
+  ],
+  [
+   1.52,
+   "deepseek-v4-pro-0813"
+  ],
+  [
+   1.54,
+   "qwen3.5-27b"
+  ],
+  [
+   1.54,
+   "qwen3.5-397b-a17b"
+  ],
+  [
+   1.57,
+   "glm-4.7"
+  ],
+  [
+   1.83,
+   "glm-5.2"
+  ],
+  [
+   1.89,
+   "kimi-k2.6"
+  ],
+  [
+   2.4,
+   "deepseek-v4.1-flash"
+  ],
+  [
+   2.4,
+   "deepseek-v4.1-flash-1017"
+  ],
+  [
+   2.67,
+   "gemma-4-26b-a4b"
+  ],
+  [
+   2.67,
+   "qwen3.5-35b-a3b"
+  ],
+  [
+   2.84,
+   "gpt-oss-120b"
+  ],
+  [
+   2.86,
+   "ling-3.0-flash"
+  ],
+  [
+   3.14,
+   "glm-5.3"
+  ],
+  [
+   3.86,
+   "qwen3.8-27b"
+  ],
+  [
+   6.02,
+   "glm-5.3-flash"
+  ],
+  [
+   7.33,
+   "deepseek-v4-flash-0731"
+  ],
+  [
+   7.64,
+   "deepseek-v4-pro"
+  ],
+  [
+   16.14,
+   "qwen3.6-35b-a3b"
+  ]
+ ],
+ "rows": [
+  {
+   "key": "deepseek-r1-0528",
+   "display": "R1 0528",
+   "novita": {
+    "id": "deepseek/deepseek-r1-0528",
+    "input": 0.7,
+    "output": 2.5,
+    "cache_read": 0.35,
+    "context": 163840
+   },
+   "deepinfra": {
+    "id": "deepseek-ai/DeepSeek-R1-0528",
+    "input": 0.5,
+    "output": 2.15,
+    "cache_read": 0.35,
+    "context": 163840
+   },
+   "openrouter": {
+    "id": "deepseek/deepseek-r1-0528",
+    "input": 0.5,
+    "output": 2.1500000000000004,
+    "cache_read": 0.35,
+    "context": 163840,
+    "name": "DeepSeek: R1 0528",
+    "floor_input": 0.5,
+    "floor_output": 2.1500000000000004
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "DeepInfra | deepseek/deepseek-r1-0528",
+    "endpoints_listed": 3,
+    "endpoints_with_price": null,
+    "headline_matches_floor": true
+   },
+   "cheapest_output_headline": "deepinfra",
+   "cheapest_output_floor": "deepinfra"
+  },
+  {
+   "key": "deepseek-v4-flash-0731",
+   "display": "DeepSeek V4 Flash 0731",
+   "novita": {
+    "id": "deepseek/deepseek-v4-flash-0731",
+    "input": 0.44,
+    "output": 1.32,
+    "cache_read": 0.028,
+    "context": 1048576
+   },
+   "deepinfra": {
+    "id": "deepseek-ai/DeepSeek-V4-Flash-0731",
+    "input": 0.060000000000000005,
+    "output": 0.18,
+    "cache_read": 0.015000000000000001,
+    "context": 1048576
+   },
+   "openrouter": {
+    "id": "deepseek/deepseek-v4-flash-0731",
+    "input": 0.0434,
+    "output": 0.3,
+    "cache_read": 0.035,
+    "context": 1048576,
+    "name": "DeepSeek: DeepSeek V4 Flash 0731",
+    "floor_input": 0.0434,
+    "floor_output": 0.3
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Wafer | deepseek/deepseek-v4-flash-20260731",
+    "endpoints_listed": 29,
+    "endpoints_with_price": null,
+    "headline_matches_floor": true
+   },
+   "cheapest_output_headline": "deepinfra",
+   "cheapest_output_floor": "deepinfra"
+  },
+  {
+   "key": "deepseek-v4-pro",
+   "display": "DeepSeek V4 Pro 0423",
+   "novita": {
+    "id": "deepseek/deepseek-v4-pro",
+    "input": 1.6,
+    "output": 3.2,
+    "cache_read": 0.135,
+    "context": 1048576
+   },
+   "deepinfra": {
+    "id": "deepseek-ai/DeepSeek-V4-Pro",
+    "input": 1.2999999999999998,
+    "output": 2.5999999999999996,
+    "cache_read": 0.10000000399999999,
+    "context": 1048576
+   },
+   "openrouter": {
+    "id": "deepseek/deepseek-v4-pro",
+    "input": 0.211062,
+    "output": 0.422124,
+    "cache_read": 0.0175885,
+    "context": 1048576,
+    "name": "DeepSeek: DeepSeek V4 Pro 0423",
+    "floor_input": 0.20956,
+    "floor_output": 0.41912
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Baidu | deepseek/deepseek-v4-pro-20260423",
+    "endpoints_listed": 14,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "openrouter",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "deepseek-v4-pro-0813",
+   "display": "DeepSeek V4 Pro 0813",
+   "novita": {
+    "id": "deepseek/deepseek-v4-pro-0813",
+    "input": 1.32,
+    "output": 3.96,
+    "cache_read": 0.044,
+    "context": 1048576
+   },
+   "deepinfra": {
+    "id": "deepseek-ai/DeepSeek-V4-Pro-0813",
+    "input": 1.2999999999999998,
+    "output": 2.5999999999999996,
+    "cache_read": 0.10000000399999999,
+    "context": 1048576
+   },
+   "openrouter": {
+    "id": "deepseek/deepseek-v4-pro-0813",
+    "input": 0.111,
+    "output": 4.4399999999999995,
+    "cache_read": 0.09699999999999999,
+    "context": 1048576,
+    "name": "DeepSeek: DeepSeek V4 Pro 0813",
+    "floor_input": 0.0999,
+    "floor_output": 8.0
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Relace | deepseek/deepseek-v4-pro-20260813",
+    "endpoints_listed": 25,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "deepinfra",
+   "cheapest_output_floor": "deepinfra"
+  },
+  {
+   "key": "deepseek-v4.1-flash",
+   "display": "DeepSeek V4.1 Flash",
+   "novita": {
+    "id": "deepseek/deepseek-v4.1-flash",
+    "input": 0.3,
+    "output": 1.2,
+    "cache_read": 0.006,
+    "context": 1048576
+   },
+   "deepinfra": {
+    "id": "deepseek-ai/DeepSeek-V4.1-Flash",
+    "input": 0.2,
+    "output": 0.6,
+    "cache_read": 0.006,
+    "context": 1048576
+   },
+   "openrouter": {
+    "id": "deepseek/deepseek-v4.1-flash",
+    "input": 0.051,
+    "output": 0.5670000000000001,
+    "cache_read": 0.018,
+    "context": 1048576,
+    "name": "DeepSeek: DeepSeek V4.1 Flash",
+    "floor_input": 0.006,
+    "floor_output": 0.5
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Relace | deepseek/deepseek-v4.1-flash-20260910",
+    "endpoints_listed": 39,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "openrouter",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "deepseek-v4.1-flash-1017",
+   "display": "DeepSeek V4.1 Flash 1017",
+   "novita": {
+    "id": "deepseek/deepseek-v4.1-flash-1017",
+    "input": 0.3,
+    "output": 1.2,
+    "cache_read": 0.006,
+    "context": 1048576
+   },
+   "deepinfra": {
+    "id": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+    "input": 0.2,
+    "output": 0.6,
+    "cache_read": 0.006,
+    "context": 1048576
+   },
+   "openrouter": {
+    "id": "deepseek/deepseek-v4.1-flash-1017",
+    "input": 0.006,
+    "output": 0.5,
+    "cache_read": 0.005,
+    "context": 1048576,
+    "name": "DeepSeek: DeepSeek V4.1 Flash 1017",
+    "floor_input": 0.006,
+    "floor_output": 0.5
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Relace | deepseek/deepseek-v4.1-flash-20261017",
+    "endpoints_listed": 51,
+    "endpoints_with_price": null,
+    "headline_matches_floor": true
+   },
+   "cheapest_output_headline": "openrouter",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "gemma-3-12b",
+   "display": "Gemma 3 12B",
+   "novita": {
+    "id": "google/gemma-3-12b-it",
+    "input": 0.05,
+    "output": 0.1,
+    "cache_read": null,
+    "context": 131072
+   },
+   "deepinfra": {
+    "id": "google/gemma-3-12b-it",
+    "input": 0.05,
+    "output": 0.15,
+    "cache_read": null,
+    "context": 131072
+   },
+   "openrouter": {
+    "id": "google/gemma-3-12b-it",
+    "input": 0.049999999999999996,
+    "output": 0.15,
+    "cache_read": null,
+    "context": 131072,
+    "name": "Google: Gemma 3 12B",
+    "floor_input": 0.04,
+    "floor_output": 0.12
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "DeepInfra | google/gemma-3-12b-it",
+    "endpoints_listed": 4,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "novita",
+   "cheapest_output_floor": "novita"
+  },
+  {
+   "key": "gemma-3-27b",
+   "display": "Gemma 3 27B",
+   "novita": {
+    "id": "google/gemma-3-27b-it",
+    "input": 0.119,
+    "output": 0.2,
+    "cache_read": null,
+    "context": 98304
+   },
+   "deepinfra": {
+    "id": "google/gemma-3-27b-it",
+    "input": 0.08,
+    "output": 0.16,
+    "cache_read": null,
+    "context": 131072
+   },
+   "openrouter": {
+    "id": "google/gemma-3-27b-it",
+    "input": 0.08,
+    "output": 0.35,
+    "cache_read": 0.04,
+    "context": 131072,
+    "name": "Google: Gemma 3 27B",
+    "floor_input": 0.08,
+    "floor_output": 0.16
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "DeepInfra | google/gemma-3-27b-it",
+    "endpoints_listed": 4,
+    "endpoints_with_price": null,
+    "headline_matches_floor": true
+   },
+   "cheapest_output_headline": "deepinfra",
+   "cheapest_output_floor": "deepinfra"
+  },
+  {
+   "key": "gemma-4-26b-a4b",
+   "display": "Gemma 4 26B A4B ",
+   "novita": {
+    "id": "google/gemma-4-26b-a4b-it",
+    "input": 0.13,
+    "output": 0.4,
+    "cache_read": null,
+    "context": 262144
+   },
+   "deepinfra": {
+    "id": "google/gemma-4-26B-A4B-it",
+    "input": 0.07,
+    "output": 0.33999999999999997,
+    "cache_read": null,
+    "context": 262144
+   },
+   "openrouter": {
+    "id": "google/gemma-4-26b-a4b-it",
+    "input": 0.0675,
+    "output": 0.22499999999999998,
+    "cache_read": 0.0375,
+    "context": 262144,
+    "name": "Google: Gemma 4 26B A4B ",
+    "floor_input": 0.04,
+    "floor_output": 0.15
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Darkbloom | google/gemma-4-26b-a4b-it-20260403",
+    "endpoints_listed": 15,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "openrouter",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "gemma-4-31b",
+   "display": "Gemma 4 31B",
+   "novita": {
+    "id": "google/gemma-4-31b-it",
+    "input": 0.14,
+    "output": 0.4,
+    "cache_read": null,
+    "context": 262144
+   },
+   "deepinfra": {
+    "id": "google/gemma-4-31B-it",
+    "input": 0.2,
+    "output": 0.4,
+    "cache_read": null,
+    "context": 262144
+   },
+   "openrouter": {
+    "id": "google/gemma-4-31b-it",
+    "input": 0.19999999999999998,
+    "output": 0.39999999999999997,
+    "cache_read": null,
+    "context": 262144,
+    "name": "Google: Gemma 4 31B",
+    "floor_input": 0.09999999999999999,
+    "floor_output": 0.33999999999999997
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "CoreWeave | google/gemma-4-31b-it-20260402",
+    "endpoints_listed": 19,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "openrouter",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "glm-4.6",
+   "display": "GLM 4.6",
+   "novita": {
+    "id": "zai-org/glm-4.6",
+    "input": 0.55,
+    "output": 2.2,
+    "cache_read": 0.11,
+    "context": 204800
+   },
+   "deepinfra": {
+    "id": "zai-org/GLM-4.6",
+    "input": 0.5,
+    "output": 2.0,
+    "cache_read": 0.1,
+    "context": 202752
+   },
+   "openrouter": {
+    "id": "z-ai/glm-4.6",
+    "input": 0.5,
+    "output": 2.0,
+    "cache_read": 0.09999999999999999,
+    "context": 204800,
+    "name": "Z.ai: GLM 4.6",
+    "floor_input": 0.39999999999999997,
+    "floor_output": 1.5999999999999999
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "DeepInfra | z-ai/glm-4.6",
+    "endpoints_listed": 5,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "deepinfra",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "glm-4.7",
+   "display": "GLM 4.7",
+   "novita": {
+    "id": "zai-org/glm-4.7",
+    "input": 0.6,
+    "output": 2.2,
+    "cache_read": 0.11,
+    "context": 204800
+   },
+   "deepinfra": {
+    "id": "zai-org/GLM-4.7",
+    "input": 0.4,
+    "output": 1.75,
+    "cache_read": 0.08000000000000002,
+    "context": 202752
+   },
+   "openrouter": {
+    "id": "z-ai/glm-4.7",
+    "input": 0.6,
+    "output": 2.2,
+    "cache_read": 0.11,
+    "context": 204800,
+    "name": "Z.ai: GLM 4.7",
+    "floor_input": 0.32,
+    "floor_output": 1.4
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "DeepInfra | z-ai/glm-4.7-20251222",
+    "endpoints_listed": 6,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "deepinfra",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "glm-5.2",
+   "display": "GLM 5.2",
+   "novita": {
+    "id": "zai-org/glm-5.2",
+    "input": 1.4,
+    "output": 4.4,
+    "cache_read": 0.26,
+    "context": 1048576
+   },
+   "deepinfra": {
+    "id": "zai-org/GLM-5.2",
+    "input": 0.7499999999999999,
+    "output": 2.4,
+    "cache_read": 0.1400000025,
+    "context": 1048576
+   },
+   "openrouter": {
+    "id": "z-ai/glm-5.2",
+    "input": 0.006,
+    "output": 6.8,
+    "cache_read": 0.005,
+    "context": 1048576,
+    "name": "Z.ai: GLM 5.2",
+    "floor_input": 0.006,
+    "floor_output": 6.8
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Wafer | z-ai/glm-5.2-20260616",
+    "endpoints_listed": 33,
+    "endpoints_with_price": null,
+    "headline_matches_floor": true
+   },
+   "cheapest_output_headline": "deepinfra",
+   "cheapest_output_floor": "deepinfra"
+  },
+  {
+   "key": "glm-5.3",
+   "display": "GLM 5.3",
+   "novita": {
+    "id": "zai-org/glm-5.3",
+    "input": 1.4,
+    "output": 4.4,
+    "cache_read": 0.26,
+    "context": 1048576
+   },
+   "deepinfra": {
+    "id": "zai-org/GLM-5.3",
+    "input": 0.9,
+    "output": 4.0,
+    "cache_read": 0.199999998,
+    "context": 1048576
+   },
+   "openrouter": {
+    "id": "z-ai/glm-5.3",
+    "input": 0.0699,
+    "output": 1.4,
+    "cache_read": 0.0689,
+    "context": 1048576,
+    "name": "Z.ai: GLM 5.3",
+    "floor_input": 0.0699,
+    "floor_output": 1.4
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Wafer | z-ai/glm-5.3-20260816",
+    "endpoints_listed": 47,
+    "endpoints_with_price": null,
+    "headline_matches_floor": true
+   },
+   "cheapest_output_headline": "openrouter",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "glm-5.3-flash",
+   "display": "GLM 5.3 Flash",
+   "novita": {
+    "id": "zai-org/glm-5.3-flash",
+    "input": 0.15,
+    "output": 0.5,
+    "cache_read": 0.03,
+    "context": 1048576
+   },
+   "deepinfra": {
+    "id": "zai-org/GLM-5.3-Flash",
+    "input": 0.15,
+    "output": 0.5,
+    "cache_read": 0.03,
+    "context": 1048576
+   },
+   "openrouter": {
+    "id": "z-ai/glm-5.3-flash",
+    "input": 0.0335,
+    "output": 0.083,
+    "cache_read": 0.03,
+    "context": 1048576,
+    "name": "Z.ai: GLM 5.3 Flash",
+    "floor_input": 0.0335,
+    "floor_output": 0.083
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Relace | z-ai/glm-5.3-flash-20260826",
+    "endpoints_listed": 41,
+    "endpoints_with_price": null,
+    "headline_matches_floor": true
+   },
+   "cheapest_output_headline": "openrouter",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "gpt-oss-120b",
+   "display": "gpt-oss-120b",
+   "novita": {
+    "id": "openai/gpt-oss-120b",
+    "input": 0.05,
+    "output": 0.25,
+    "cache_read": null,
+    "context": 131072
+   },
+   "deepinfra": {
+    "id": "openai/gpt-oss-120b",
+    "input": 0.037,
+    "output": 0.16999999999999998,
+    "cache_read": null,
+    "context": 131072
+   },
+   "openrouter": {
+    "id": "openai/gpt-oss-120b",
+    "input": 0.027,
+    "output": 0.09999999999999999,
+    "cache_read": 0.024,
+    "context": 131072,
+    "name": "OpenAI: gpt-oss-120b",
+    "floor_input": 0.024,
+    "floor_output": 0.088
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "PrimeIntellect | openai/gpt-oss-120b",
+    "endpoints_listed": 26,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "openrouter",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "hy4-preview",
+   "display": "Hy4 preview",
+   "novita": {
+    "id": "tencent/hy4-preview",
+    "input": 0.834,
+    "output": 2.501,
+    "cache_read": 0.042,
+    "context": 1000000
+   },
+   "deepinfra": {
+    "id": "tencent/Hy4-preview",
+    "input": 0.834,
+    "output": 2.5010000000000003,
+    "cache_read": 0.04199999814,
+    "context": 1048576
+   },
+   "openrouter": {
+    "id": "tencent/hy4-preview",
+    "input": 0.834,
+    "output": 2.501,
+    "cache_read": 0.041999999999999996,
+    "context": 1048576,
+    "name": "Tencent: Hy4 preview",
+    "floor_input": 0.834,
+    "floor_output": 2.501
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "GMICloud | tencent/hy4-preview-20260827",
+    "endpoints_listed": 7,
+    "endpoints_with_price": null,
+    "headline_matches_floor": true
+   },
+   "cheapest_output_headline": "novita",
+   "cheapest_output_floor": "novita"
+  },
+  {
+   "key": "kimi-k2.6",
+   "display": "Kimi K2.6",
+   "novita": {
+    "id": "moonshotai/kimi-k2.6",
+    "input": 0.8,
+    "output": 3.4,
+    "cache_read": 0.16,
+    "context": 262144
+   },
+   "deepinfra": {
+    "id": "moonshotai/Kimi-K2.6",
+    "input": 0.7499999999999999,
+    "output": 3.5,
+    "cache_read": 0.15,
+    "context": 262144
+   },
+   "openrouter": {
+    "id": "moonshotai/kimi-k2.6",
+    "input": 0.65,
+    "output": 3.41,
+    "cache_read": 0.15,
+    "context": 262144,
+    "name": "MoonshotAI: Kimi K2.6",
+    "floor_input": 0.39,
+    "floor_output": 1.7999999999999998
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Chutes | moonshotai/kimi-k2.6-20260420",
+    "endpoints_listed": 16,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "novita",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "kimi-k3",
+   "display": "Kimi K3",
+   "novita": {
+    "id": "moonshotai/kimi-k3",
+    "input": 3.0,
+    "output": 15.0,
+    "cache_read": 0.3,
+    "context": 1048576
+   },
+   "deepinfra": {
+    "id": "moonshotai/Kimi-K3",
+    "input": 2.8499999999999996,
+    "output": 14.25,
+    "cache_read": 0.285,
+    "context": 1048576
+   },
+   "openrouter": {
+    "id": "moonshotai/kimi-k3",
+    "input": 0.192,
+    "output": 16.0,
+    "cache_read": 0.182,
+    "context": 1048576,
+    "name": "MoonshotAI: Kimi K3",
+    "floor_input": 0.159,
+    "floor_output": 16.0
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Wafer | moonshotai/kimi-k3-20260715",
+    "endpoints_listed": 30,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "deepinfra",
+   "cheapest_output_floor": "deepinfra"
+  },
+  {
+   "key": "kimi-k3.1-pro",
+   "display": "Kimi K3.1 Pro",
+   "novita": {
+    "id": "moonshotai/kimi-k3.1-pro",
+    "input": 2.0,
+    "output": 10.0,
+    "cache_read": 0.2,
+    "context": 1048576
+   },
+   "deepinfra": {
+    "id": "moonshotai/Kimi-K3.1-Pro",
+    "input": 2.0,
+    "output": 10.0,
+    "cache_read": 0.2,
+    "context": 1048576
+   },
+   "openrouter": {
+    "id": "moonshotai/kimi-k3.1-pro",
+    "input": 2.0,
+    "output": 10.0,
+    "cache_read": 0.19999999999999998,
+    "context": 1048576,
+    "name": "MoonshotAI: Kimi K3.1 Pro",
+    "floor_input": 0.3572,
+    "floor_output": 7.9593
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Relace | moonshotai/kimi-k3.1-pro-20261023",
+    "endpoints_listed": 24,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "novita",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "ling-3.0-flash",
+   "display": "Ling 3.0 Flash",
+   "novita": {
+    "id": "inclusionai/ling-3.0-flash",
+    "input": 0.06,
+    "output": 0.18,
+    "cache_read": 0.012,
+    "context": 262144
+   },
+   "deepinfra": {
+    "id": "inclusionAI/Ling-3.0-flash",
+    "input": 0.060000000000000005,
+    "output": 0.18,
+    "cache_read": 0.012000000000000002,
+    "context": 131072
+   },
+   "openrouter": {
+    "id": "inclusionai/ling-3.0-flash",
+    "input": 0.020999999999999998,
+    "output": 0.063,
+    "cache_read": 0.004200000000000001,
+    "context": 262144,
+    "name": "inclusionAI: Ling 3.0 Flash",
+    "floor_input": 0.020999999999999998,
+    "floor_output": 0.063
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Novita | inclusionai/ling-3.0-flash-20260723",
+    "endpoints_listed": 2,
+    "endpoints_with_price": null,
+    "headline_matches_floor": true
+   },
+   "cheapest_output_headline": "openrouter",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "ling-3.0-flash-vl",
+   "display": "Ling 3.0 Flash VL",
+   "novita": {
+    "id": "inclusionai/ling-3.0-flash-vl",
+    "input": 0.075,
+    "output": 0.22,
+    "cache_read": 0.015,
+    "context": 262144
+   },
+   "deepinfra": {
+    "id": "inclusionAI/Ling-3.0-flash-VL",
+    "input": 0.060000000000000005,
+    "output": 0.18,
+    "cache_read": 0.012000000000000002,
+    "context": 131072
+   },
+   "openrouter": {
+    "id": "inclusionai/ling-3.0-flash-vl",
+    "input": 0.06,
+    "output": 0.18,
+    "cache_read": 0.012,
+    "context": 131072,
+    "name": "inclusionAI: Ling 3.0 Flash VL",
+    "floor_input": 0.06,
+    "floor_output": 0.18
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "DeepInfra | inclusionai/ling-3.0-flash-vl-20260910",
+    "endpoints_listed": 1,
+    "endpoints_with_price": null,
+    "headline_matches_floor": true
+   },
+   "cheapest_output_headline": "deepinfra",
+   "cheapest_output_floor": "deepinfra"
+  },
+  {
+   "key": "mimo-v2.6-flash",
+   "display": "MiMo-V2.6-Flash",
+   "novita": {
+    "id": "xiaomimimo/mimo-v2.6-flash",
+    "input": 0.14,
+    "output": 0.28,
+    "cache_read": 0.0028,
+    "context": 1048576
+   },
+   "deepinfra": {
+    "id": "XiaomiMiMo/MiMo-V2.6-Flash",
+    "input": 0.14,
+    "output": 0.28,
+    "cache_read": 0.0028000000000000004,
+    "context": 1048576
+   },
+   "openrouter": {
+    "id": "xiaomi/mimo-v2.6-flash",
+    "input": 0.14,
+    "output": 0.28,
+    "cache_read": 0.0028,
+    "context": 1050000,
+    "name": "Xiaomi: MiMo-V2.6-Flash",
+    "floor_input": 0.09999999999999999,
+    "floor_output": 0.28
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Darkbloom | xiaomi/mimo-v2.6-flash-20260921",
+    "endpoints_listed": 8,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "novita",
+   "cheapest_output_floor": "novita"
+  },
+  {
+   "key": "mimo-v2.6-pro",
+   "display": "MiMo-V2.6-Pro",
+   "novita": {
+    "id": "xiaomimimo/mimo-v2.6-pro",
+    "input": 0.435,
+    "output": 0.87,
+    "cache_read": 0.0036,
+    "context": 1048576
+   },
+   "deepinfra": {
+    "id": "XiaomiMiMo/MiMo-V2.6-Pro",
+    "input": 0.43,
+    "output": 0.87,
+    "cache_read": 0.0035999987000000003,
+    "context": 1048576
+   },
+   "openrouter": {
+    "id": "xiaomi/mimo-v2.6-pro",
+    "input": 0.435,
+    "output": 0.87,
+    "cache_read": 0.0036,
+    "context": 1050000,
+    "name": "Xiaomi: MiMo-V2.6-Pro",
+    "floor_input": 0.32625,
+    "floor_output": 0.6525
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "GMICloud | xiaomi/mimo-v2.6-pro-20260921",
+    "endpoints_listed": 5,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "novita",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "minimax-m3",
+   "display": "MiniMax M3",
+   "novita": {
+    "id": "minimax/minimax-m3",
+    "input": 0.3,
+    "output": 1.2,
+    "cache_read": 0.06,
+    "context": 1000000
+   },
+   "deepinfra": {
+    "id": "MiniMaxAI/MiniMax-M3",
+    "input": 0.28,
+    "output": 1.1,
+    "cache_read": 0.05600000000000001,
+    "context": 524288
+   },
+   "openrouter": {
+    "id": "minimax/minimax-m3",
+    "input": 0.3,
+    "output": 1.2,
+    "cache_read": 0.06,
+    "context": 1048576,
+    "name": "MiniMax: MiniMax M3",
+    "floor_input": 0.224,
+    "floor_output": 0.88
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "DeepInfra | minimax/minimax-m3-20260531",
+    "endpoints_listed": 12,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "deepinfra",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "qwen3-vl-30b-a3b",
+   "display": "Qwen3 VL 30B A3B Instruct",
+   "novita": {
+    "id": "qwen/qwen3-vl-30b-a3b-instruct",
+    "input": 0.2,
+    "output": 0.7,
+    "cache_read": null,
+    "context": 131072
+   },
+   "deepinfra": {
+    "id": "Qwen/Qwen3-VL-30B-A3B-Instruct",
+    "input": 0.15,
+    "output": 0.6,
+    "cache_read": null,
+    "context": 262144
+   },
+   "openrouter": {
+    "id": "qwen/qwen3-vl-30b-a3b-instruct",
+    "input": 0.15,
+    "output": 0.6,
+    "cache_read": null,
+    "context": 262144,
+    "name": "Qwen: Qwen3 VL 30B A3B Instruct",
+    "floor_input": 0.15,
+    "floor_output": 0.6
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "DeepInfra | qwen/qwen3-vl-30b-a3b-instruct",
+    "endpoints_listed": 3,
+    "endpoints_with_price": null,
+    "headline_matches_floor": true
+   },
+   "cheapest_output_headline": "deepinfra",
+   "cheapest_output_floor": "deepinfra"
+  },
+  {
+   "key": "qwen3.5-27b",
+   "display": "Qwen3.5-27B",
+   "novita": {
+    "id": "qwen/qwen3.5-27b",
+    "input": 0.3,
+    "output": 2.4,
+    "cache_read": null,
+    "context": 262144
+   },
+   "deepinfra": {
+    "id": "Qwen/Qwen3.5-27B",
+    "input": 0.26,
+    "output": 2.5999999999999996,
+    "cache_read": null,
+    "context": 262144
+   },
+   "openrouter": {
+    "id": "qwen/qwen3.5-27b",
+    "input": 0.26,
+    "output": 2.6,
+    "cache_read": null,
+    "context": 262144,
+    "name": "Qwen: Qwen3.5-27B",
+    "floor_input": 0.195,
+    "floor_output": 1.56
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Alibaba | qwen/qwen3.5-27b-20260224",
+    "endpoints_listed": 6,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "novita",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "qwen3.5-35b-a3b",
+   "display": "Qwen3.5-35B-A3B",
+   "novita": {
+    "id": "qwen/qwen3.5-35b-a3b",
+    "input": 0.25,
+    "output": 2.0,
+    "cache_read": null,
+    "context": 262144
+   },
+   "deepinfra": {
+    "id": "Qwen/Qwen3.5-35B-A3B",
+    "input": 0.14,
+    "output": 1.0,
+    "cache_read": 0.05000000040000001,
+    "context": 262144
+   },
+   "openrouter": {
+    "id": "qwen/qwen3.5-35b-a3b",
+    "input": 0.14,
+    "output": 1.0,
+    "cache_read": 0.049999999999999996,
+    "context": 262144,
+    "name": "Qwen: Qwen3.5-35B-A3B",
+    "floor_input": 0.065,
+    "floor_output": 0.75
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Darkbloom | qwen/qwen3.5-35b-a3b-20260224",
+    "endpoints_listed": 7,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "deepinfra",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "qwen3.5-397b-a17b",
+   "display": "Qwen3.5 397B A17B",
+   "novita": {
+    "id": "qwen/qwen3.5-397b-a17b",
+    "input": 0.6,
+    "output": 3.6,
+    "cache_read": null,
+    "context": 262144
+   },
+   "deepinfra": {
+    "id": "Qwen/Qwen3.5-397B-A17B",
+    "input": 0.45,
+    "output": 2.9999999999999996,
+    "cache_read": 0.22000000050000001,
+    "context": 262144
+   },
+   "openrouter": {
+    "id": "qwen/qwen3.5-397b-a17b",
+    "input": 0.5,
+    "output": 3.5999999999999996,
+    "cache_read": 0.3,
+    "context": 262144,
+    "name": "Qwen: Qwen3.5 397B A17B",
+    "floor_input": 0.39,
+    "floor_output": 2.34
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Alibaba | qwen/qwen3.5-397b-a17b-20260216",
+    "endpoints_listed": 10,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "deepinfra",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "qwen3.6-27b",
+   "display": "Qwen3.6 27B",
+   "novita": {
+    "id": "qwen/qwen3.6-27b",
+    "input": 0.6,
+    "output": 3.6,
+    "cache_read": null,
+    "context": 262144
+   },
+   "deepinfra": {
+    "id": "Qwen/Qwen3.6-27B",
+    "input": 0.32,
+    "output": 3.2,
+    "cache_read": null,
+    "context": 262144
+   },
+   "openrouter": {
+    "id": "qwen/qwen3.6-27b",
+    "input": 0.32,
+    "output": 3.1999999999999997,
+    "cache_read": null,
+    "context": 262144,
+    "name": "Qwen: Qwen3.6 27B",
+    "floor_input": 0.19999999999999998,
+    "floor_output": 3.0
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Reka | qwen/qwen3.6-27b-20260422",
+    "endpoints_listed": 7,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "openrouter",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "qwen3.6-35b-a3b",
+   "display": "Qwen3.6 35B A3B",
+   "novita": {
+    "id": "qwen/qwen3.6-35b-a3b",
+    "input": 0.248,
+    "output": 1.485,
+    "cache_read": null,
+    "context": 262144
+   },
+   "deepinfra": {
+    "id": "Qwen/Qwen3.6-35B-A3B",
+    "input": 0.1,
+    "output": 0.95,
+    "cache_read": 0.1,
+    "context": 262144
+   },
+   "openrouter": {
+    "id": "qwen/qwen3.6-35b-a3b",
+    "input": 0.09999999999999999,
+    "output": 0.8999999999999999,
+    "cache_read": 0.024999999999999998,
+    "context": 262144,
+    "name": "Qwen: Qwen3.6 35B A3B",
+    "floor_input": 0.01,
+    "floor_output": 0.092
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "PrimeIntellect | qwen/qwen3.6-35b-a3b-20260415",
+    "endpoints_listed": 11,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "openrouter",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "qwen3.7-max",
+   "display": "Qwen3.7 Max",
+   "novita": {
+    "id": "qwen/qwen3.7-max",
+    "input": 1.25,
+    "output": 3.75,
+    "cache_read": 0.25,
+    "context": 1000000
+   },
+   "deepinfra": {
+    "id": "Qwen/Qwen3.7-Max",
+    "input": 2.5,
+    "output": 7.5,
+    "cache_read": 0.5,
+    "context": 256000
+   },
+   "openrouter": {
+    "id": "qwen/qwen3.7-max",
+    "input": 1.475,
+    "output": 4.425,
+    "cache_read": 0.295,
+    "context": 1000000,
+    "name": "Qwen: Qwen3.7 Max",
+    "floor_input": 1.475,
+    "floor_output": 4.425
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Alibaba | qwen/qwen3.7-max-20260520",
+    "endpoints_listed": 2,
+    "endpoints_with_price": null,
+    "headline_matches_floor": true
+   },
+   "cheapest_output_headline": "novita",
+   "cheapest_output_floor": "novita"
+  },
+  {
+   "key": "qwen3.8-27b",
+   "display": "Qwen3.8 27B",
+   "novita": {
+    "id": "qwen/qwen3.8-27b",
+    "input": 0.42,
+    "output": 3.0,
+    "cache_read": 0.085,
+    "context": 1000000
+   },
+   "deepinfra": {
+    "id": "Qwen/Qwen3.8-27B",
+    "input": 0.2,
+    "output": 2.5,
+    "cache_read": 0.05,
+    "context": 262144
+   },
+   "openrouter": {
+    "id": "qwen/qwen3.8-27b",
+    "input": 0.15,
+    "output": 1.875,
+    "cache_read": 0.0375,
+    "context": 1024000,
+    "name": "Qwen: Qwen3.8 27B",
+    "floor_input": 0.014,
+    "floor_output": 0.778
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "PrimeIntellect | qwen/qwen3.8-27b-20260814",
+    "endpoints_listed": 24,
+    "endpoints_with_price": null,
+    "headline_matches_floor": false
+   },
+   "cheapest_output_headline": "openrouter",
+   "cheapest_output_floor": "openrouter"
+  },
+  {
+   "key": "qwen3.8-flash",
+   "display": "Qwen3.8 Flash",
+   "novita": {
+    "id": "qwen/qwen3.8-flash",
+    "input": 0.15,
+    "output": 0.47,
+    "cache_read": 0.016,
+    "context": 1000000
+   },
+   "deepinfra": {
+    "id": "Qwen/Qwen3.8-Flash",
+    "input": 0.113,
+    "output": 0.382,
+    "cache_read": 0.01409999988,
+    "context": 1000000
+   },
+   "openrouter": {
+    "id": "qwen/qwen3.8-flash",
+    "input": 0.15,
+    "output": 0.47,
+    "cache_read": 0.016,
+    "context": 1000000,
+    "name": "Qwen: Qwen3.8 Flash",
+    "floor_input": 0.15,
+    "floor_output": 0.47
+   },
+   "openrouter_routing": {
+    "cheapest_endpoint": "Alibaba | qwen/qwen3.8-flash-20260826",
+    "endpoints_listed": 2,
+    "endpoints_with_price": null,
+    "headline_matches_floor": true
+   },
+   "cheapest_output_headline": "deepinfra",
+   "cheapest_output_floor": "deepinfra"
+  }
+ ]
+}

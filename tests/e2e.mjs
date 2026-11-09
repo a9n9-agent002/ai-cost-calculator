@@ -1,5 +1,5 @@
 // End-to-end: treat the installed bin as a third-party server (the npx path) and drive it.
-// Run:  cd tests && node e2e.mjs "$(npm root -g)/costcalc-mcp/server.mjs"
+// Run:  cd tests && node e2e.mjs "$(npm root -g)/elevenlabs-cost-calculator/server.mjs"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 

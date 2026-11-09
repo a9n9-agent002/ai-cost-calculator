@@ -136,7 +136,7 @@ function handle(req) {
     return send({ jsonrpc: "2.0", id, result: {
       protocolVersion: "2024-11-05",
       capabilities: { tools: {} },
-      serverInfo: { name: "costcalc", version: "0.1.2" }
+      serverInfo: { name: "elevenlabs-cost-calculator", version: "0.1.2" }
     }});
   }
   if (method === "notifications/initialized" || method === "initialized") return; // notification: no reply

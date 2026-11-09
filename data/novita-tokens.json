@@ -1,0 +1,691 @@
+{
+ "source": "https://novita.ai/pricing",
+ "fetched": "2026-11-08T14:40Z",
+ "note": "Read from the HTML table on the public pricing page. \"$x /Mt\" means USD per million tokens. One row per model-detail link; prices are the row they appear in, never a neighbouring table.",
+ "rows": [
+  {
+   "model_id": "deepseek-deepseek-v4.1-flash-1017",
+   "name": "DeepSeek V4.1 Flash 1017",
+   "context": "1M",
+   "input_usd_per_mtok": 0.3,
+   "output_usd_per_mtok": 1.2,
+   "cache_read_usd_per_mtok": 0.006,
+   "price_note": null
+  },
+  {
+   "model_id": "deepseek-deepseek-v4.1-flash",
+   "name": "DeepSeek V4.1 Flash",
+   "context": "1M",
+   "input_usd_per_mtok": 0.3,
+   "output_usd_per_mtok": 1.2,
+   "cache_read_usd_per_mtok": 0.006,
+   "price_note": null
+  },
+  {
+   "model_id": "deepseek-deepseek-v4-pro-0813",
+   "name": "DeepSeek V4 Pro 0813",
+   "context": "1M",
+   "input_usd_per_mtok": 1.32,
+   "output_usd_per_mtok": 3.96,
+   "cache_read_usd_per_mtok": 0.044,
+   "price_note": null
+  },
+  {
+   "model_id": "deepseek-deepseek-v4-flash-0731",
+   "name": "DeepSeek V4 Flash 0731",
+   "context": "1M",
+   "input_usd_per_mtok": 0.44,
+   "output_usd_per_mtok": 1.32,
+   "cache_read_usd_per_mtok": 0.028,
+   "price_note": null
+  },
+  {
+   "model_id": "deepseek-deepseek-v4-pro",
+   "name": "DeepSeek V4 Pro",
+   "context": "1M",
+   "input_usd_per_mtok": 1.6,
+   "output_usd_per_mtok": 3.2,
+   "cache_read_usd_per_mtok": 0.135,
+   "price_note": null
+  },
+  {
+   "model_id": "deepseek-deepseek-ocr-2",
+   "name": "DeepSeek OCR 2",
+   "context": "8K",
+   "input_usd_per_mtok": 0.03,
+   "output_usd_per_mtok": 0.03,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "deepseek-deepseek-r1-0528",
+   "name": "DeepSeek R1 0528",
+   "context": "160K",
+   "input_usd_per_mtok": 0.7,
+   "output_usd_per_mtok": 2.5,
+   "cache_read_usd_per_mtok": 0.35,
+   "price_note": null
+  },
+  {
+   "model_id": "deepseek-deepseek-r1-turbo",
+   "name": "DeepSeek R1 Turbo",
+   "context": "63K",
+   "input_usd_per_mtok": 0.7,
+   "output_usd_per_mtok": 2.5,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "zai-org-glm-5.3-flashX",
+   "name": "GLM 5.3 FlashX",
+   "context": "1M",
+   "input_usd_per_mtok": 0.37,
+   "output_usd_per_mtok": 1.25,
+   "cache_read_usd_per_mtok": 0.075,
+   "price_note": null
+  },
+  {
+   "model_id": "zai-org-glm-5.3-flash",
+   "name": "GLM 5.3 Flash",
+   "context": "1M",
+   "input_usd_per_mtok": 0.15,
+   "output_usd_per_mtok": 0.5,
+   "cache_read_usd_per_mtok": 0.03,
+   "price_note": null
+  },
+  {
+   "model_id": "zai-org-glm-5.3",
+   "name": "GLM 5.3",
+   "context": "1M",
+   "input_usd_per_mtok": 1.4,
+   "output_usd_per_mtok": 4.4,
+   "cache_read_usd_per_mtok": 0.26,
+   "price_note": null
+  },
+  {
+   "model_id": "zai-org-glm-5.2",
+   "name": "GLM 5.2",
+   "context": "1M",
+   "input_usd_per_mtok": 1.4,
+   "output_usd_per_mtok": 4.4,
+   "cache_read_usd_per_mtok": 0.26,
+   "price_note": null
+  },
+  {
+   "model_id": "zai-org-glm-5.1",
+   "name": "GLM 5.1",
+   "context": "200K",
+   "input_usd_per_mtok": 1.38,
+   "output_usd_per_mtok": 4.4,
+   "cache_read_usd_per_mtok": 0.26,
+   "price_note": null
+  },
+  {
+   "model_id": "zai-org-glm-5",
+   "name": "GLM 5",
+   "context": "198K",
+   "input_usd_per_mtok": 1.0,
+   "output_usd_per_mtok": 3.2,
+   "cache_read_usd_per_mtok": 0.2,
+   "price_note": null
+  },
+  {
+   "model_id": "zai-org-glm-4.7-flash",
+   "name": "GLM 4.7 Flash",
+   "context": "195K",
+   "input_usd_per_mtok": 0.07,
+   "output_usd_per_mtok": 0.4,
+   "cache_read_usd_per_mtok": 0.01,
+   "price_note": null
+  },
+  {
+   "model_id": "zai-org-glm-4.7",
+   "name": "GLM 4.7",
+   "context": "200K",
+   "input_usd_per_mtok": 0.6,
+   "output_usd_per_mtok": 2.2,
+   "cache_read_usd_per_mtok": 0.11,
+   "price_note": null
+  },
+  {
+   "model_id": "zai-org-autoglm-phone-9b-multilingual",
+   "name": "AutoGLM Phone 9B Multilingual",
+   "context": "64K",
+   "input_usd_per_mtok": 0.035,
+   "output_usd_per_mtok": 0.138,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "zai-org-glm-4.6v",
+   "name": "GLM 4.6V",
+   "context": "128K",
+   "input_usd_per_mtok": 0.3,
+   "output_usd_per_mtok": 0.9,
+   "cache_read_usd_per_mtok": 0.055,
+   "price_note": null
+  },
+  {
+   "model_id": "zai-org-glm-4.6",
+   "name": "GLM 4.6",
+   "context": "200K",
+   "input_usd_per_mtok": 0.55,
+   "output_usd_per_mtok": 2.2,
+   "cache_read_usd_per_mtok": 0.11,
+   "price_note": null
+  },
+  {
+   "model_id": "zai-org-glm-4.5v",
+   "name": "GLM 4.5V",
+   "context": "64K",
+   "input_usd_per_mtok": 0.6,
+   "output_usd_per_mtok": 1.8,
+   "cache_read_usd_per_mtok": 0.11,
+   "price_note": null
+  },
+  {
+   "model_id": "zai-org-glm-4.5-air",
+   "name": "GLM 4.5 Air",
+   "context": "128K",
+   "input_usd_per_mtok": 0.13,
+   "output_usd_per_mtok": 0.85,
+   "cache_read_usd_per_mtok": 0.025,
+   "price_note": null
+  },
+  {
+   "model_id": "moonshotai-kimi-k3.1-pro-highspeed",
+   "name": "Kimi K3.1 Pro Highspeed",
+   "context": "1M",
+   "input_usd_per_mtok": 4.0,
+   "output_usd_per_mtok": 20.0,
+   "cache_read_usd_per_mtok": 0.2,
+   "price_note": null
+  },
+  {
+   "model_id": "moonshotai-kimi-k3.1-pro",
+   "name": "Kimi K3.1 Pro",
+   "context": "1M",
+   "input_usd_per_mtok": 2.0,
+   "output_usd_per_mtok": 10.0,
+   "cache_read_usd_per_mtok": 0.2,
+   "price_note": null
+  },
+  {
+   "model_id": "moonshotai-kimi-k3",
+   "name": "Kimi K3",
+   "context": "1M",
+   "input_usd_per_mtok": 3.0,
+   "output_usd_per_mtok": 15.0,
+   "cache_read_usd_per_mtok": 0.3,
+   "price_note": null
+  },
+  {
+   "model_id": "moonshotai-kimi-k2.7-code",
+   "name": "Kimi K2.7 Code",
+   "context": "256K",
+   "input_usd_per_mtok": 0.95,
+   "output_usd_per_mtok": 4.0,
+   "cache_read_usd_per_mtok": 0.19,
+   "price_note": null
+  },
+  {
+   "model_id": "moonshotai-kimi-k2.6",
+   "name": "Kimi K2.6",
+   "context": "256K",
+   "input_usd_per_mtok": 0.8,
+   "output_usd_per_mtok": 3.4,
+   "cache_read_usd_per_mtok": 0.16,
+   "price_note": null
+  },
+  {
+   "model_id": "moonshotai-kimi-k2.5",
+   "name": "Kimi K2.5",
+   "context": "256K",
+   "input_usd_per_mtok": 0.6,
+   "output_usd_per_mtok": 3.0,
+   "cache_read_usd_per_mtok": 0.1,
+   "price_note": null
+  },
+  {
+   "model_id": "moonshotai-kimi-k2-thinking",
+   "name": "Kimi K2 Thinking",
+   "context": "256K",
+   "input_usd_per_mtok": 0.6,
+   "output_usd_per_mtok": 2.5,
+   "cache_read_usd_per_mtok": 0.15,
+   "price_note": null
+  },
+  {
+   "model_id": "moonshotai-kimi-k2-0905",
+   "name": "Kimi K2 Instruct 0905",
+   "context": "256K",
+   "input_usd_per_mtok": 0.6,
+   "output_usd_per_mtok": 2.5,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "moonshotai-kimi-k2-instruct",
+   "name": "Kimi K2 Instruct",
+   "context": "128K",
+   "input_usd_per_mtok": 0.57,
+   "output_usd_per_mtok": 2.3,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "meta-llama-llama-3.1-8b-instruct",
+   "name": "Llama 3.1 8B Instruct",
+   "context": "16K",
+   "input_usd_per_mtok": 0.02,
+   "output_usd_per_mtok": 0.05,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "meta-llama-llama-3.3-70b-instruct",
+   "name": "Llama 3.3 70B Instruct",
+   "context": "12K",
+   "input_usd_per_mtok": 0.135,
+   "output_usd_per_mtok": 0.4,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "meta-llama-llama-4-maverick-17b-128e-instruct-fp8",
+   "name": "Llama 4 Maverick Instruct",
+   "context": "1M",
+   "input_usd_per_mtok": 0.27,
+   "output_usd_per_mtok": 0.85,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "meta-llama-llama-4-scout-17b-16e-instruct",
+   "name": "Llama 4 Scout Instruct",
+   "context": "128K",
+   "input_usd_per_mtok": 0.18,
+   "output_usd_per_mtok": 0.59,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "qwen-qwen3.8-flash",
+   "name": "Qwen3.8 Flash",
+   "context": "977K",
+   "input_usd_per_mtok": 0.15,
+   "output_usd_per_mtok": 0.47,
+   "cache_read_usd_per_mtok": 0.016,
+   "price_note": null
+  },
+  {
+   "model_id": "qwen-qwen3.8-27b",
+   "name": "Qwen3.8 27B",
+   "context": "977K",
+   "input_usd_per_mtok": 0.42,
+   "output_usd_per_mtok": 3.0,
+   "cache_read_usd_per_mtok": 0.085,
+   "price_note": null
+  },
+  {
+   "model_id": "qwen-qwen3.8-2.4t-a95b",
+   "name": "Qwen3.8 2.4T A95B",
+   "context": "977K",
+   "input_usd_per_mtok": 2.0,
+   "output_usd_per_mtok": 6.0,
+   "cache_read_usd_per_mtok": 0.25,
+   "price_note": null
+  },
+  {
+   "model_id": "qwen-qwen3.8-max",
+   "name": "Qwen3.8 Max",
+   "context": "977K",
+   "input_usd_per_mtok": 2.0,
+   "output_usd_per_mtok": 6.0,
+   "cache_read_usd_per_mtok": 0.25,
+   "price_note": null
+  },
+  {
+   "model_id": "qwen-qwen3.7-max",
+   "name": "Qwen3.7 Max",
+   "context": "977K",
+   "input_usd_per_mtok": 1.25,
+   "output_usd_per_mtok": 3.75,
+   "cache_read_usd_per_mtok": 0.25,
+   "price_note": null
+  },
+  {
+   "model_id": "qwen-qwen3.6-27b",
+   "name": "Qwen3.6 27B",
+   "context": "256K",
+   "input_usd_per_mtok": 0.6,
+   "output_usd_per_mtok": 3.6,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "qwen-qwen3.5-27b",
+   "name": "Qwen3.5 27B",
+   "context": "256K",
+   "input_usd_per_mtok": 0.3,
+   "output_usd_per_mtok": 2.4,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "qwen-qwen3.5-122b-a10b",
+   "name": "Qwen3.5 122B A10B",
+   "context": "256K",
+   "input_usd_per_mtok": 0.4,
+   "output_usd_per_mtok": 3.2,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "qwen-qwen3.5-35b-a3b",
+   "name": "Qwen3.5 35B A3B",
+   "context": "256K",
+   "input_usd_per_mtok": 0.25,
+   "output_usd_per_mtok": 2.0,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "qwen-qwen3.5-397b-a17b",
+   "name": "Qwen3.5 397B A17B",
+   "context": "256K",
+   "input_usd_per_mtok": 0.6,
+   "output_usd_per_mtok": 3.6,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "qwen-qwen3.6-35b-a3b",
+   "name": "Qwen3.6 35B A3B",
+   "context": "256K",
+   "input_usd_per_mtok": 0.248,
+   "output_usd_per_mtok": 1.485,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "qwen-qwen3-vl-30b-a3b-instruct",
+   "name": "Qwen3 VL 30B A3B Instruct",
+   "context": "128K",
+   "input_usd_per_mtok": 0.2,
+   "output_usd_per_mtok": 0.7,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "qwen-qwen3-omni-30b-a3b-thinking",
+   "name": "Qwen3 Omni 30B A3B Thinking",
+   "context": "64K",
+   "input_usd_per_mtok": null,
+   "output_usd_per_mtok": null,
+   "cache_read_usd_per_mtok": null,
+   "price_note": "- / Omnimodal"
+  },
+  {
+   "model_id": "qwen-qwen-mt-plus",
+   "name": "Qwen MT Plus",
+   "context": "16K",
+   "input_usd_per_mtok": 0.25,
+   "output_usd_per_mtok": 0.75,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "google-gemma-4-26b-a4b-it",
+   "name": "Gemma 4 26B A4B",
+   "context": "256K",
+   "input_usd_per_mtok": 0.13,
+   "output_usd_per_mtok": 0.4,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "google-gemma-4-31b-it",
+   "name": "Gemma 4 31B",
+   "context": "256K",
+   "input_usd_per_mtok": 0.14,
+   "output_usd_per_mtok": 0.4,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "google-gemma-3-27b-it",
+   "name": "Gemma 3 27B",
+   "context": "96K",
+   "input_usd_per_mtok": 0.119,
+   "output_usd_per_mtok": 0.2,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "microsoft-wizardlm-2-8x22b",
+   "name": "WizardLM 2 8x22B",
+   "context": "64K",
+   "input_usd_per_mtok": 0.62,
+   "output_usd_per_mtok": 0.62,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "apodex-apodex-1.1-mini",
+   "name": "Apodex 1.1 Mini",
+   "context": "256K",
+   "input_usd_per_mtok": 0.0,
+   "output_usd_per_mtok": 0.0,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "inclusionai-ling-3.1-flash",
+   "name": "Ling 3.1 Flash 1019",
+   "context": "977K",
+   "input_usd_per_mtok": 0.3,
+   "output_usd_per_mtok": 0.9,
+   "cache_read_usd_per_mtok": 0.06,
+   "price_note": null
+  },
+  {
+   "model_id": "inclusionai-ling-3.0-flash-fin",
+   "name": "Ling 3.0 Flash Fin",
+   "context": "256K",
+   "input_usd_per_mtok": 0.075,
+   "output_usd_per_mtok": 0.22,
+   "cache_read_usd_per_mtok": 0.015,
+   "price_note": null
+  },
+  {
+   "model_id": "inclusionai-ling-3.0-flash",
+   "name": "Ling 3.0 Flash",
+   "context": "256K",
+   "input_usd_per_mtok": 0.06,
+   "output_usd_per_mtok": 0.18,
+   "cache_read_usd_per_mtok": 0.012,
+   "price_note": null
+  },
+  {
+   "model_id": "inclusionai-ling-3.0-flash-vl",
+   "name": "Ling 3.0 Flash VL",
+   "context": "256K",
+   "input_usd_per_mtok": 0.075,
+   "output_usd_per_mtok": 0.22,
+   "cache_read_usd_per_mtok": 0.015,
+   "price_note": null
+  },
+  {
+   "model_id": "inclusionai-ling-3.0-flash-sante",
+   "name": "Ling 3.0 Flash Sante",
+   "context": "256K",
+   "input_usd_per_mtok": 0.075,
+   "output_usd_per_mtok": 0.22,
+   "cache_read_usd_per_mtok": 0.015,
+   "price_note": null
+  },
+  {
+   "model_id": "mindai-macaron-v1-venti",
+   "name": "Macaron V1 Venti",
+   "context": "1M",
+   "input_usd_per_mtok": 0.825,
+   "output_usd_per_mtok": 2.475,
+   "cache_read_usd_per_mtok": 0.165,
+   "price_note": null
+  },
+  {
+   "model_id": "mindai-macaron-v1-tall",
+   "name": "Macaron V1 Tall",
+   "context": "256K",
+   "input_usd_per_mtok": 0.2475,
+   "output_usd_per_mtok": 1.43,
+   "cache_read_usd_per_mtok": 0.044,
+   "price_note": null
+  },
+  {
+   "model_id": "minimax-minimax-m3.1-flash",
+   "name": "MiniMax M3.1 Flash",
+   "context": "977K",
+   "input_usd_per_mtok": 0.15,
+   "output_usd_per_mtok": 0.6,
+   "cache_read_usd_per_mtok": 0.015,
+   "price_note": null
+  },
+  {
+   "model_id": "minimax-minimax-m3",
+   "name": "MiniMax M3",
+   "context": "977K",
+   "input_usd_per_mtok": null,
+   "output_usd_per_mtok": null,
+   "cache_read_usd_per_mtok": null,
+   "price_note": "- / Tiered pricing"
+  },
+  {
+   "model_id": "minimax-minimax-m2.7",
+   "name": "MiniMax M2.7",
+   "context": "200K",
+   "input_usd_per_mtok": 0.3,
+   "output_usd_per_mtok": 1.2,
+   "cache_read_usd_per_mtok": 0.06,
+   "price_note": null
+  },
+  {
+   "model_id": "minimax-minimax-m2.5",
+   "name": "MiniMax M2.5",
+   "context": "200K",
+   "input_usd_per_mtok": 0.3,
+   "output_usd_per_mtok": 1.2,
+   "cache_read_usd_per_mtok": 0.03,
+   "price_note": null
+  },
+  {
+   "model_id": "minimaxai-minimax-m1-80k",
+   "name": "MiniMax M1",
+   "context": "977K",
+   "input_usd_per_mtok": 0.55,
+   "output_usd_per_mtok": 2.2,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "nvidia-nemotron-3-nano-30b-a3b",
+   "name": "NVIDIA Nemotron 3 Nano 30B A3B",
+   "context": "256K",
+   "input_usd_per_mtok": 0.05,
+   "output_usd_per_mtok": 0.2,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "openai-gpt-oss-120b",
+   "name": "OpenAI GPT OSS 120B",
+   "context": "128K",
+   "input_usd_per_mtok": 0.05,
+   "output_usd_per_mtok": 0.25,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  },
+  {
+   "model_id": "stepfun-step-5-preview",
+   "name": "Step 5 Preview",
+   "context": "977K",
+   "input_usd_per_mtok": 1.0,
+   "output_usd_per_mtok": 2.7,
+   "cache_read_usd_per_mtok": 0.1,
+   "price_note": null
+  },
+  {
+   "model_id": "stepfun-step-3.7-flash",
+   "name": "Step 3.7 Flash",
+   "context": "256K",
+   "input_usd_per_mtok": 0.2,
+   "output_usd_per_mtok": 1.15,
+   "cache_read_usd_per_mtok": 0.04,
+   "price_note": null
+  },
+  {
+   "model_id": "tencent-hy4",
+   "name": "Hy4",
+   "context": "977K",
+   "input_usd_per_mtok": 0.417,
+   "output_usd_per_mtok": 1.2505,
+   "cache_read_usd_per_mtok": 0.021,
+   "price_note": null
+  },
+  {
+   "model_id": "tencent-hy4-preview",
+   "name": "Hy4 Preview",
+   "context": "977K",
+   "input_usd_per_mtok": 0.834,
+   "output_usd_per_mtok": 2.501,
+   "cache_read_usd_per_mtok": 0.042,
+   "price_note": null
+  },
+  {
+   "model_id": "tencent-hy3",
+   "name": "Hy3",
+   "context": "256K",
+   "input_usd_per_mtok": 0.14,
+   "output_usd_per_mtok": 0.58,
+   "cache_read_usd_per_mtok": 0.035,
+   "price_note": null
+  },
+  {
+   "model_id": "xiaomimimo-mimo-v2.6-flash",
+   "name": "MiMo V2.6 Flash",
+   "context": "1M",
+   "input_usd_per_mtok": 0.14,
+   "output_usd_per_mtok": 0.28,
+   "cache_read_usd_per_mtok": 0.0028,
+   "price_note": null
+  },
+  {
+   "model_id": "xiaomimimo-mimo-v2.6-pro",
+   "name": "MiMo V2.6 Pro",
+   "context": "1M",
+   "input_usd_per_mtok": 0.435,
+   "output_usd_per_mtok": 0.87,
+   "cache_read_usd_per_mtok": 0.0036,
+   "price_note": null
+  },
+  {
+   "model_id": "baidu-cobuddy",
+   "name": "CoBuddy",
+   "context": "128K",
+   "input_usd_per_mtok": 0.28,
+   "output_usd_per_mtok": 1.13,
+   "cache_read_usd_per_mtok": 0.07,
+   "price_note": null
+  },
+  {
+   "model_id": "Sao10K-L3-8B-Stheno-v3.2",
+   "name": "Llama 3 8B Stheno V3.2",
+   "context": "8K",
+   "input_usd_per_mtok": 0.05,
+   "output_usd_per_mtok": 0.05,
+   "cache_read_usd_per_mtok": null,
+   "price_note": null
+  }
+ ]
+}
