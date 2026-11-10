@@ -1,0 +1,138 @@
+{
+ "read_at": "2026-11-09T20:05Z",
+ "note": "A per-minute price is a per-1,000-character price divided by the characters per spoken minute. Only the rate is on the rate card; the characters-per-minute figure is either a vendor convention or a measurement. These are the two vendors whose own pages state a duration for a stated text length.",
+ "rows": [
+  {
+   "vendor": "Amazon Polly",
+   "unit": "1,000 requests x 1,000 characters",
+   "characters": 1000000,
+   "minutes": 1388.0,
+   "chars_per_minute": 720.46,
+   "source": "https://aws.amazon.com/polly/pricing/",
+   "kind": "measured"
+  },
+  {
+   "vendor": "Amazon Polly",
+   "unit": "2016 Amazon Shareholders Letter",
+   "characters": 1300,
+   "minutes": 1.6667,
+   "chars_per_minute": 780.0,
+   "source": "https://aws.amazon.com/polly/pricing/",
+   "kind": "measured"
+  },
+  {
+   "vendor": "Amazon Polly",
+   "unit": "average email message",
+   "characters": 3100,
+   "minutes": 4.0,
+   "chars_per_minute": 775.0,
+   "source": "https://aws.amazon.com/polly/pricing/",
+   "kind": "measured"
+  },
+  {
+   "vendor": "Amazon Polly",
+   "unit": "typical news article",
+   "characters": 6500,
+   "minutes": 9.0,
+   "chars_per_minute": 722.22,
+   "source": "https://aws.amazon.com/polly/pricing/",
+   "kind": "measured"
+  },
+  {
+   "vendor": "Amazon Polly",
+   "unit": "A Christmas Carol",
+   "characters": 165000,
+   "minutes": 230.0,
+   "chars_per_minute": 717.39,
+   "source": "https://aws.amazon.com/polly/pricing/",
+   "kind": "measured"
+  },
+  {
+   "vendor": "Amazon Polly",
+   "unit": "Adventures of Huckleberry Finn",
+   "characters": 600000,
+   "minutes": 830.0,
+   "chars_per_minute": 722.89,
+   "source": "https://aws.amazon.com/polly/pricing/",
+   "kind": "measured"
+  },
+  {
+   "vendor": "Amazon Polly",
+   "unit": "animated video, 25 phrases",
+   "characters": 2500,
+   "minutes": 3.5,
+   "chars_per_minute": 714.29,
+   "source": "https://aws.amazon.com/polly/pricing/",
+   "kind": "measured"
+  },
+  {
+   "vendor": "Amazon Polly",
+   "unit": "conversational app, 30k chars/user",
+   "characters": 30000,
+   "minutes": 42.0,
+   "chars_per_minute": 714.29,
+   "source": "https://aws.amazon.com/polly/pricing/",
+   "kind": "measured"
+  },
+  {
+   "vendor": "Amazon Polly",
+   "unit": "storytelling with highlighted text",
+   "characters": 10000,
+   "minutes": 13.0,
+   "chars_per_minute": 769.23,
+   "source": "https://aws.amazon.com/polly/pricing/",
+   "kind": "measured"
+  },
+  {
+   "vendor": "Cartesia",
+   "unit": "Free: 20,000 credits",
+   "characters": 20000,
+   "minutes": 27.0,
+   "chars_per_minute": 740.74,
+   "source": "https://cartesia.ai/pricing",
+   "kind": "measured"
+  },
+  {
+   "vendor": "Cartesia",
+   "unit": "Pro: 100,000 credits",
+   "characters": 100000,
+   "minutes": 133.0,
+   "chars_per_minute": 751.88,
+   "source": "https://cartesia.ai/pricing",
+   "kind": "measured"
+  },
+  {
+   "vendor": "Cartesia",
+   "unit": "Startup: 1,250,000 credits",
+   "characters": 1250000,
+   "minutes": 1667.0,
+   "chars_per_minute": 749.85,
+   "source": "https://cartesia.ai/pricing",
+   "kind": "measured"
+  },
+  {
+   "vendor": "Cartesia",
+   "unit": "Scale: 8,000,000 credits",
+   "characters": 8000000,
+   "minutes": 10667.0,
+   "chars_per_minute": 749.98,
+   "source": "https://cartesia.ai/pricing",
+   "kind": "measured"
+  },
+  {
+   "vendor": "ElevenLabs",
+   "unit": "plan cards / API page",
+   "characters": 10000,
+   "minutes": 10.0,
+   "chars_per_minute": 1000.0,
+   "source": "https://elevenlabs.io/pricing/api",
+   "kind": "documented convention"
+  }
+ ],
+ "measured_min": 714.29,
+ "measured_max": 780.0,
+ "measured_median": 740.74,
+ "measured_n": 13,
+ "elevenlabs_basis": 1000,
+ "site_basis": 900
+}

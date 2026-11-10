@@ -212,8 +212,145 @@ if "autonomous AI agent" not in docs["CLAIM-CHECK.md"]:
 else:
     print("ok   CLAIM-CHECK.md states autonomous AI authorship")
 
+# --- Run 126: the per-credit page's conversion table, recomputed from dataset.json ---
+# The page answers "cost per credit" by converting one credit into each action the plan table sells.
+# Every figure on it is derived here, so a change to a plan price fails this check rather than
+# silently leaving a stale conversion on the page.
+_pc = open("site/q/firecrawl-cost-per-credit.html", encoding="utf-8").read()
+_by_name = {p["name"]: p for p in fc["plans"]}
+for _n in ("Hobby", "Standard", "Growth", "Scale"):
+    _pl = _by_name[_n]
+    _per = _pl["usd_per_month"] / _pl["pages_included"] * 1000
+    for _mult in (1, 5, 2):
+        _val = _per * _mult
+        # same rule as build_host._cr: three decimals below $1, two above
+        _s = f"${_val:,.3f}" if _val < 1 else f"${_val + 1e-9:,.2f}"
+        if _s not in _pc:
+            failures.append(f"per-credit page missing {_s} ({_n}, x{_mult})")
+            print(f"FAIL per-credit page missing {_s} ({_n}, x{_mult})")
+        else:
+            print(f"ok   per-credit page states {_s} ({_n}, x{_mult})")
+for _needle, _label in (("1 plain page scraped or crawled", "1 credit = 1 plain page"),
+                        ("1 search of 10 results", "a search = 2 credits per 10 results"),
+                        ("5,000 credits", "JSON scrape of 1,000 pages = 5,000 credits")):
+    if _needle in _pc:
+        print(f"ok   per-credit page states {_label}")
+    else:
+        failures.append(f"per-credit page missing: {_label}")
+        print(f"FAIL per-credit page missing: {_label}")
+
+_sv = open("site/q/firecrawl-search-cost.html", encoding="utf-8").read()
+for _n in ("Hobby", "Standard", "Growth", "Scale"):
+    _pl = _by_name[_n]
+    _per = _pl["usd_per_month"] / _pl["pages_included"] * 1000
+    for _mult, _what in ((2, "per 1,000 searches"), (12, "per question (search + 10 scrapes)")):
+        _val = _per * _mult
+        _s = f"${_val:,.3f}" if _val < 1 else f"${_val + 1e-9:,.2f}"
+        if _s not in _sv:
+            failures.append(f"search-cost page missing {_s} {_what} ({_n})")
+            print(f"FAIL search-cost page missing {_s} {_what} ({_n})")
+        else:
+            print(f"ok   search-cost page states {_s} {_what} ({_n})")
+if "416 questions" not in _sv:
+    failures.append("search-cost page missing the 416-questions figure")
+    print("FAIL search-cost page missing the 416-questions figure")
+else:
+    print("ok   search-cost page states 416 questions on Hobby")
+
+
+# Run 131: the DigitalOcean credit page now prices three offers at once, so the figures the
+# rebuild can silently break are recomputed here from data/do-droplets.json and
+# data/gpu-hours.json rather than trusted to the builder's own variables.
+_dc = json.load(open("data/do-droplets.json", encoding="utf-8"))
+_gc = json.load(open("data/gpu-hours.json", encoding="utf-8"))
+_plans = _dc["plans"]
+_six = next(p for p in _plans if p["family"] == "Basic" and p["memory_gib"] == 1.0 and p["vcpus"] == 1)
+_dpage = open("site/q/digitalocean-free-credit.html", encoding="utf-8").read()
+_offers = [(5.0, 90), (100.0, 60), (200.0, 60)]
+for _amt, _days in _offers:
+    _full = sum(1 for p in _plans if p["usd_per_month"] * (_days / 30.0) <= _amt)
+    _need = _amt / (_days * 24.0) * 730
+    for _s, _why in ((f"{_full} of {len(_plans)}", f"plans covered by ${_amt:.0f}/{_days}d"),
+                     (f"${_need:,.2f}/mo", f"monthly spend that consumes ${_amt:.0f}/{_days}d")):
+        if _s not in _dpage:
+            failures.append(f"credit page missing {_s} ({_why})")
+            print(f"FAIL credit page missing {_s} ({_why})")
+        else:
+            print(f"ok   credit page states {_s} ({_why})")
+for _amt, _days in ((5.0, 90), (100.0, 60), (200.0, 60)):
+    _bill = _six["usd_per_month"] * (_days / 30.0)
+    _left = max(0.0, _amt - _bill)
+    _share = 100.0 * min(1.0, _amt / _bill)
+    for _s, _why in ((f"${_left:,.2f}", f"leftover on the $6 plan for ${_amt:.0f}/{_days}d"),
+                     (f"{_share:.1f}%", f"share of the $6 plan window covered by ${_amt:.0f}")):
+        if _s not in _dpage:
+            failures.append(f"credit page missing {_s} ({_why})")
+            print(f"FAIL credit page missing {_s} ({_why})")
+        else:
+            print(f"ok   credit page states {_s} ({_why})")
+_goffs = [dict(o, family=_fam["family"]) for _fam in _gc["gpus"] for o in _fam["offers"]]
+_h100 = next(o for o in _goffs
+             if o["provider"] == "digitalocean" and o["family"] == "H100" and o["tier"] == "on_demand")
+_l40s = next(o for o in _goffs
+             if o["provider"] == "digitalocean" and o["family"] == "L40S" and o["tier"] == "on_demand")
+for _amt in (5.0, 100.0, 200.0):
+    for _s, _why in ((f"{_amt / _h100['usd_per_gpu_hour']:.1f} h", f"H100 hours for ${_amt:.0f}"),
+                     (f"{_amt / _l40s['usd_per_gpu_hour']:.1f} h", f"L40S hours for ${_amt:.0f}")):
+        if _s not in _dpage:
+            failures.append(f"credit page missing {_s} ({_why})")
+            print(f"FAIL credit page missing {_s} ({_why})")
+        else:
+            print(f"ok   credit page states {_s} ({_why})")
+for _s, _why in ((f"{60.0 * 5.0 / _h100['usd_per_gpu_hour']:.0f} minutes", "H100 minutes for $5"),
+                 (f"{60.0 * 5.0 / _l40s['usd_per_gpu_hour']:.0f} minutes", "L40S minutes for $5")):
+    if _s not in _dpage:
+        failures.append(f"credit page missing {_s} ({_why})")
+        print(f"FAIL credit page missing {_s} ({_why})")
+    else:
+        print(f"ok   credit page states {_s} ({_why})")
+_alive = 5.0 / _six["usd_per_hour"] / 24.0
+if f"{_alive:.1f} days" not in _dpage:
+    failures.append(f"credit page missing {_alive:.1f} days (time alive on $5)")
+    print(f"FAIL credit page missing {_alive:.1f} days (time alive on $5)")
+else:
+    print(f"ok   credit page states {_alive:.1f} days of the $6 plan on $5")
+if "40×" in _dpage:
+    failures.append("credit page still carries the retracted 40x framing")
+    print("FAIL credit page still carries the retracted 40x framing")
+else:
+    print("ok   credit page no longer asserts a single documented amount")
+
+
+# Run 131, second half: presence checks are not enough. A page can state the right figure in one
+# place and a wrong one in another, and a substring test passes (the run-125 mirror lesson). These
+# two families are therefore compared as SETS: every "N of 31" token and every "$X.XX/mo" token on
+# the page must be exactly the set the dataset implies.
+import re as _re
+_expected_of = set()
+_expected_mo = set()
+for _amt, _days in _offers:
+    _full = sorted([p for p in _plans if p["usd_per_month"] * (_days / 30.0) <= _amt],
+                   key=lambda p: p["usd_per_month"])
+    _expected_of.add(f"{len(_full)} of {len(_plans)}")
+    _expected_mo.add(f"${_amt / (_days * 24.0) * 730:,.2f}/mo")
+    _near = min(_plans, key=lambda p: abs(p["usd_per_month"] - _amt / (_days * 24.0) * 730))
+    _expected_mo.add(f"${_near['usd_per_month']:,.2f}/mo")
+_got_of = set(_re.findall(r"\b\d+ of 31\b", _dpage))
+_got_mo = set(_re.findall(r"\$[\d,]+\.\d\d/mo", _dpage))
+if _got_of != _expected_of:
+    failures.append(f"credit page 'N of 31' set is {sorted(_got_of)}, expected {sorted(_expected_of)}")
+    print(f"FAIL credit page 'N of 31' set is {sorted(_got_of)}, expected {sorted(_expected_of)}")
+else:
+    print(f"ok   credit page 'N of 31' tokens are exactly {sorted(_expected_of)}")
+if _got_mo != _expected_mo:
+    failures.append(f"credit page '/mo' set is {sorted(_got_mo)}, expected {sorted(_expected_mo)}")
+    print(f"FAIL credit page '/mo' set is {sorted(_got_mo)}, expected {sorted(_expected_mo)}")
+else:
+    print(f"ok   credit page '/mo' tokens are exactly {sorted(_expected_mo)}")
+
 print()
 if failures:
     print(f"FAILED: {len(failures)} -> {failures}")
     sys.exit(1)
 print("ALL CLAIM CHECKS PASS")
+

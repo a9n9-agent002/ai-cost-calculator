@@ -230,9 +230,27 @@ def page(title, body, root="", desc=None):
             f"{body}</main></body></html>\n")
 
 
+FIRECRAWL_DEST_NOTE = (" (opens Firecrawl's Alexandria data-provider catalogue; the plan "
+                       "ladder quoted here is read from firecrawl.dev/pricing)")
+
+
+def el_minutes(chars, cpm):
+    """Finished minutes a character allowance buys at `cpm` characters per spoken minute."""
+    return chars / float(cpm)
+
+
 def link_html(name, url):
-    """An affiliate link is never printed without the label inside the anchor."""
-    return f'<a href="{href(url)}" rel="sponsored noopener">{esc(name)} — affiliate link</a>'
+    """An affiliate link is never printed without the label inside the anchor.
+
+    Run 108 followed every approved link to its destination: the Firecrawl one lands on
+    alexandria.firecrawl.dev, a different product from the credit ladder this site quotes,
+    so the note beside it says where the click goes. Attribution was verified intact
+    (via=agent001 / dub_id on the redirected URL).
+    """
+    anchor = f'<a href="{href(url)}" rel="sponsored noopener">{esc(name)} — affiliate link</a>'
+    if "firecrawl.link" in url:
+        anchor += FIRECRAWL_DEST_NOTE
+    return anchor
 
 
 def norm_table(rows):
@@ -441,6 +459,12 @@ def render_voices(d):
     """
     el, dg = d["vendors"]["elevenlabs"], d["vendors"]["deepgram"]
     cpm = el["vendor_minutes_basis"]
+    # run 139: the workload table and the per-minute table were computed on the vendor's 1,000-character
+    # column while the page's own prose warned that real delivery is about 900 characters a minute. That
+    # overstates the characters a given duration needs by 11.1% and can push a reader a block up the ladder
+    # (300 finished minutes: 270,000 characters = Creator $22 at 900, 300,000 = Pro $99 at 1,000). Every
+    # workload figure below is now computed at `wb`, the rate the page states it uses.
+    wb = el["chars_per_minute_default"]
     rate = el["rates_usd_per_1000_chars"]["multilingual_v4_api"]
     body = [f"<h1>TTS pricing comparison: how many finished minutes a plan buys</h1>",
             f"<p class=\"meta\">Plans and prices read from "
@@ -454,21 +478,22 @@ def render_voices(d):
                 "question is <em>how many minutes do I get</em>. Every vendor answers in <strong>characters</strong>, "
                 "and the conversion is printed once in small grey text. ElevenLabs' own table says "
                 f"<code>75,000 ~75 min</code> and <code>12,375,000 ~12,375 min</code>, i.e. it divides characters "
-                f"by {cpm:,}. That number is the whole answer: at a slower delivery (about 900 characters a minute) "
-                f"the same plan gives you 11% fewer minutes than the column claims.</p>")
+                f"by {cpm:,}. That number is the whole answer: at {wb:,} characters a minute — the basis every "
+                f"figure below uses — the same allowance buys {1000/wb*100-100:.1f}% more finished minutes "
+                f"than that column claims.</p>")
 
-    body.append("<h2>What each workload needs, and what it costs</h2>")
-    body.append("<table><tr><th>Finished minutes / month</th><th>Characters needed</th>"
+    body.append(f"<h2>What each workload needs, and what it costs</h2>")
+    body.append(f"<table><tr><th>Finished minutes / month</th><th>Characters needed at {wb:,}/min</th>"
                 "<th>Cheapest ElevenLabs plan that covers it</th><th>$/month</th>"
                 "<th>Effective $ per finished minute</th><th>The per-character rate alone would be</th></tr>")
     for minutes in (60, 180, 300, 600, 1200, 2400, 6000):
-        chars = minutes * cpm
+        chars = minutes * wb
         cov = next((p for p in el["ladder"] if p["chars"] >= chars), None)
         linear = chars / 1000 * rate
         if cov:
             eff = cov["usd"] / minutes
             body.append(f"<tr><td class=\"num\">{minutes:,}</td><td class=\"num\">{chars:,}</td>"
-                        f"<td>{esc(cov['name'])} ({cov['chars']:,} chars ≈ {cov['chars']//cpm:,} min)</td>"
+                        f"<td>{esc(cov['name'])} ({cov['chars']:,} chars ≈ {el_minutes(cov['chars'], wb):,.0f} min)</td>"
                         f"<td class=\"num\">${cov['usd']:,}</td>"
                         f"<td class=\"num\">${eff:.4f}</td><td class=\"num\">${linear:.2f}</td></tr>")
         else:
@@ -479,19 +504,24 @@ def render_voices(d):
     body.append("</table>")
     body.append("<p><strong>Read the last two columns together.</strong> Every paid block on this ladder costs "
                 "about <strong>$1 per 12,500 characters</strong> ($0.08 per 1,000), so there is no volume "
-                "discount to wait for — but the blocks are fixed, and you cannot buy a top-up. A workload that "
-                "lands just over a block boundary buys the next whole block: 600 minutes needs 600,000 "
-                "characters, which is $48 of arithmetic and a <strong>$99</strong> plan. That is the only real "
-                "pricing decision on the page, and the plan table does not show it.</p>")
-    body.append("<p><strong>The cliff is wide enough to change what you write.</strong> Look at 300 minutes "
-                "and 1,200 minutes in that table: both need the same $99 plan, because Creator's allowance stops "
-                "at 275 minutes and the next block does not stop until 1,238. So a 300-minute workload pays "
-                "<strong>$77 a month more than a 275-minute one</strong>; the vendor's ladder makes 25 minutes "
-                "of script cost the same as 925. If your month lands in that band, either use the headroom or "
-                "trim the script — 9% less text is 78% less bill.</p>")
+                "discount to wait for — but the blocks are fixed, and you cannot buy a top-up. A workload "
+                "that lands just over a block boundary buys the next whole block: 600 minutes needs "
+                f"{(600*wb):,} characters, which is ${600*wb/1000*rate:,.2f} of arithmetic and a "
+                "<strong>$99</strong> plan. That is the only real pricing decision on the page, and the plan "
+                "table does not show it.</p>")
+    cov306 = next(p for p in el["ladder"] if p["usd"] == 99)
+    brim = el["ladder"][[p["usd"] for p in el["ladder"]].index(99) - 1]["chars"]
+    body.append("<p><strong>The cliff is wide enough to change what you write.</strong> Creator's allowance "
+                f"stops at {brim:,} characters, which is {el_minutes(brim, wb):,.1f} finished minutes at "
+                f"{wb:,} characters a minute; the next block does not stop until "
+                f"{el_minutes(cov306['chars'], wb):,.1f}. So minute {el_minutes(brim, wb)+1:,.0f} costs "
+                f"<strong>${cov306['usd'] - 22:,}</strong> on its own — the same audio, one minute longer, "
+                f"{cov306['usd']/22:.1f}x the bill. If your month lands in that band, either use the headroom "
+                "or trim the script: a few characters off the boundary is the only discount on this "
+                "ladder.</p>")
 
     body.append("<h2>What one finished minute costs, by engine</h2>")
-    body.append(f"<p class=\"meta\">Per-character rate × {cpm:,} characters per minute. Rates: ElevenLabs "
+    body.append(f"<p class=\"meta\">Per-character rate × {wb:,} characters per minute. Rates: ElevenLabs "
                 f"{esc(el['source'])}, Deepgram {esc(dg['source'])}.</p>")
     rows = [
         ("ElevenLabs", "v4 (default)", el["rates_usd_per_1000_chars"]["multilingual_v4_api"]),
@@ -505,12 +535,12 @@ def render_voices(d):
                 "<th>Cost of 10 hours (600 min)</th></tr>")
     for vendor, engine, r in rows:
         body.append(f"<tr><td>{esc(vendor)} {esc(engine)}</td><td class=\"num\">${r:.3f}</td>"
-                    f"<td class=\"num\">${r/1000*cpm:.4f}</td><td class=\"num\">${r/1000*cpm*600:.2f}</td></tr>")
+                    f"<td class=\"num\">${r/1000*wb:.4f}</td><td class=\"num\">${r/1000*wb*600:.2f}</td></tr>")
     body.append("</table>")
     body.append("<p>The cheapest engine for plain narration is not the one with a commission on this page — "
                 "Deepgram Aura-1 is "
-                f"${dg['tts_usd_per_1000_chars']['aura_1_payg']/1000*cpm:.4f} a minute against ElevenLabs v4's "
-                f"${el['rates_usd_per_1000_chars']['multilingual_v4_api']/1000*cpm:.4f}, a "
+                f"${dg['tts_usd_per_1000_chars']['aura_1_payg']/1000*wb:.4f} a minute against ElevenLabs v4's "
+                f"${el['rates_usd_per_1000_chars']['multilingual_v4_api']/1000*wb:.4f}, a "
                 f"{el['rates_usd_per_1000_chars']['multilingual_v4_api']/dg['tts_usd_per_1000_chars']['aura_1_payg']:.1f}x gap. "
                 "Whether that is worth it depends on what you need beyond narration (voice cloning, dubbing, "
                 "multiple languages, agent hosting wins); on price alone it does not.</p>")
@@ -519,7 +549,7 @@ def render_voices(d):
     body.append("<p>Characters in your script <em>are</em> the input — no estimate needed. If your finished "
                 "audio is 43 minutes, paste the script into a character counter, take that number, and read it "
                 "against the allowance column above. If you only know the duration, multiply minutes by "
-                f"{cpm:,} for the vendor's basis, or by 900 for a slower read.</p>")
+                f"{wb:,} for the table above, or by {cpm:,} if you want the vendor's own column.</p>")
     body.append(f"<p>ElevenLabs plan costs above are list prices: {link_html(el['name'], el['affiliate_link'])}. "
                 f"The same page prints first-month promotions (Starter $1, Creator $11 on {esc(d['as_of'])}) — "
                 f"those are not prices and the bill reverts after month one.</p>")
@@ -528,8 +558,8 @@ def render_voices(d):
                 f"<a href=\"index.html\">Unit price index</a></footer>")
     return page("TTS pricing comparison: what a text-to-speech plan buys in finished minutes",
                 "".join(body),
-                desc=(f"Characters ÷ 1,000 give the minutes a speech plan's own column prints; at 900 "
-                      f"characters a minute the same plan buys about 10% fewer finished minutes."))
+                desc=(f"At 900 characters a minute a speech plan buys 11.1% more finished minutes than its "
+                      f"own column claims, and one minute past Creator costs the whole $77 step-up."))
 
 
 def build(out_dir=None):
@@ -605,6 +635,11 @@ def _check_in(S, written, d):
                 failures.append(f"{p}: unlabelled affiliate href {m.group(1)}")
     # run 85: the SERP snippet layer. One description per page, 110-158 chars, a number in it, never the
     # title repeated, and every number in the description already visible on that page.
+    # run 131: a literal backslash before a quote in an attribute (the `<p class=\"lede\">` defect)
+    # parses as a different class name. Two pages shipped like that; this makes it a check failure.
+    for p, t in html.items():
+        if '\\"' in t:
+            failures.append(f"{p}: contains a literal backslash before a quote (attribute will not parse)")
     seen = {}
     for p, t in html.items():
         m = re.search(r'<meta name="description" content="([^"]*)"', t)
@@ -623,7 +658,9 @@ def _check_in(S, written, d):
             failures.append(f"{p}: description duplicates {seen[dsc]}")
         seen[dsc] = p
         body_text = re.sub(r"\s+", " ", html_lib.unescape(re.sub(r"<[^>]+>", " ", t)))
-        for num in set(re.findall(r"\$?\d[\d,]*(?:\.\d+)?", dsc)):
+        # Run 123: the pattern captures the comma after a figure ("$5, expiring" -> "$5,"),
+        # which made any description with a comma straight after a number impossible to pass.
+        for num in {n.rstrip(",") for n in re.findall(r"\$?\d[\d,]*(?:\.\d+)?", dsc)}:
             if num not in body_text:
                 failures.append(f"{p}: description number {num} is not visible in the page body")
     # feed parses

@@ -1,0 +1,80 @@
+{
+ "as_of": "2026-11-09",
+ "purpose": "Scraping-API list prices read from each vendor's own pricing page for the `firecrawl alternatives` page (run 107). Price only: anti-bot success, latency, output quality and proxy pools are NOT priced here.",
+ "basis": "one page fetched by the vendor's own browser and returned as Markdown; credits are the vendor's unit, converted at that vendor's cheapest plan that covers the volume",
+ "firecrawl": {
+  "source": "https://www.firecrawl.dev/pricing",
+  "read_at": "2026-11-09T02:45Z",
+  "free_credits_per_month": 1000,
+  "credits": {"scrape_page": 1, "crawl_page": 1, "map_page": 1, "search_per_10_results": 2, "monitor_page_check": 1},
+  "json_extra_credits_per_page": 4,
+  "annual_usd_per_month": {"Hobby": 16, "Standard": 83, "Growth": 333, "Scale": 599},
+  "quotes": [
+   "1 credit = 1 page on a basic scrape or crawl, and 1 credit per Map call. Search costs 2 credits per 10 results; Interact costs 2 credits per browser minute. On Scrape and Crawl, the JSON, Question, and Highlight formats add 4 credits per page",
+   "Standard: $83/month - Prices shown are per month, billed annually.",
+   "Hobby: $19/month billed monthly ($16/month billed annually), 5,000 credits/month",
+   "Standard: $99/month billed monthly ($83/month billed annually), 100,000 credits/month"
+  ]
+ },
+ "scrapingbee": {
+  "source": "https://www.scrapingbee.com/pricing/",
+  "read_at": "2026-11-09T02:45Z",
+  "free_credits": 1000,
+  "credits": {"request": 1, "js_rendering": 5, "premium_proxy": 10},
+  "plans": [
+   {"name": "Hobby", "usd_per_month": 19, "credits": 75000},
+   {"name": "Freelance", "usd_per_month": 49, "credits": 250000},
+   {"name": "Startup", "usd_per_month": 99, "credits": 1000000},
+   {"name": "Business", "usd_per_month": 249, "credits": 3000000},
+   {"name": "Business +", "usd_per_month": 599, "credits": 8000000}
+  ],
+  "quotes": [
+   "API credits are valid for one month and don't roll over. Requests start at 1 credit each.",
+   "Each successful request with JS rendering enabled costs 5 API credits.",
+   "Each successful request with Premium proxies costs 10 or 25 credits depending on JS rendering."
+  ]
+ },
+ "crawl4ai": {
+  "source": "https://crawl4ai.com/",
+  "read_at": "2026-11-09T02:50Z",
+  "credit_usd": 0.001,
+  "credits": {"page": 0.5, "from_archive": 0.25, "real_browser": 1, "hard_site": 2, "search": 1},
+  "free_credits_per_month": 1000,
+  "free_credits_no_signup": 20,
+  "plans_annual_billed": [
+   {"name": "Starter", "usd_per_month": 8.33, "usd_per_year": 100, "credits": 10000},
+   {"name": "Pro", "usd_per_month": 82.5, "usd_per_year": 990, "credits": 125000},
+   {"name": "Scale", "usd_per_month": 415.83, "usd_per_year": 4990, "credits": 750000}
+  ],
+  "starter_monthly_usd": 10,
+  "oss": {"license": "Apache-2.0", "repo": "https://github.com/unclecode/crawl4ai", "stars": 86928, "install": "pip install crawl4ai"},
+  "quotes": [
+   "1 credit = $0.001 - page 0.5 - search 1 - from our archive 0.25 - real browser 1 - hard site 2",
+   "$10 here buys 20,000 pages a month; Firecrawl's $19 Hobby plan buys 5,000.",
+   "It's Apache-2.0. pip install crawl4ai, point it at your own boxes and proxies. No gate, no token. It's yours."
+  ]
+ },
+ "jina": {
+  "source": "https://jina.ai/reader/",
+  "read_at": "2026-11-09T02:45Z",
+  "billing_unit": "tokens counted in the output response",
+  "free_tokens_with_key": 10000000,
+  "tiers": [
+   {"name": "paid key 1B tokens", "usd": 50, "tokens": 1000000000, "usd_per_1m_tokens": 0.05},
+   {"name": "paid key 11B tokens", "usd": 500, "tokens": 11000000000, "usd_per_1m_tokens": 0.045}
+  ],
+  "search_tokens_per_request": 10000,
+  "measured": [
+   {"url": "https://www.firecrawl.dev/pricing", "tokens": 2524, "chars": 10956},
+   {"url": "https://en.wikipedia.org/wiki/Web_scraping", "tokens": 12603, "chars": 50124},
+   {"url": "https://news.ycombinator.com", "tokens": 5341, "chars": 16271}
+  ],
+  "licence_note": "The Reader models (ReaderLM-v2, jina-vlm) are licensed CC-BY-NC 4.0: free to download and use non-commercially; commercial production use requires a commercial licence, sold separately by Elastic since 2026-08-10.",
+  "quotes": [
+   "Reader is free for basic usage: prepend 'https://r.jina.ai/' to your URL. Supplying an API key raises the rate limit and charges tokens based on content length.",
+   "Count the number of tokens in the output response.",
+   "1 Billion tokens ... $50 ... 0.050 / 1M tokens"
+  ]
+ },
+ "apify_note": "Apify is metered by compute unit rather than page: $0.20 per CU (1 CU = 1 GB RAM-hour) on Free and Starter, with pay-per-event Actors quoting their own per-result price ($2.30 per 1,000 results in Apify's Instagram example). A per-page figure is a property of the Actor and the RAM you give it, so no single number is honest and none is claimed here."
+}

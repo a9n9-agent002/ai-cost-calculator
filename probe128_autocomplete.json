@@ -1,0 +1,14 @@
+{
+ "measured": "2026-11-09T18:33Z",
+ "instrument": "Google Autocomplete suggestqueries.google.com client=firefox",
+ "run": 128,
+ "why_added": "The site page q/elevenlabs-pricing-per-minute.html carried 'elevenlabs pricing per minute' (typed, 5 completions) while a page holding a live position 4 for 'elevenlabs cost per minute' (my dev.to article 5005284, read 18:24Z and 18:29Z in the web_search tool) uses the 'cost' form. Both forms complete; the cost form is the one a ranking page carries, so the page title now uses it verbatim.",
+ "results": {
+  "elevenlabs cost": ["elevenlabs cost", "elevenlabs cost per month", "elevenlabs cost per minute", "elevenlabs cost per credit", "elevenlabs cost in india", "elevenlabs cost api", "elevenlabs cost per character", "elevenlabs cost calculator", "elevenlabs cost reddit", "elevenlabs cost per hour"],
+  "elevenlabs cost per": ["elevenlabs cost per month", "elevenlabs cost per minute", "elevenlabs cost per credit", "elevenlabs cost per character", "elevenlabs cost per hour", "elevenlabs cost per token", "elevenlabs cost per word", "elevenlabs cost per second", "elevenlabs pricing per model", "elevenlabs api cost per. minute"],
+  "elevenlabs cost per minute": ["elevenlabs cost per minute", "elevenlabs api cost per. minute", "elevenlabs tts cost per minute", "how to calculate cost per minute", "how much is per minute"],
+  "elevenlabs pricing per minute": ["elevenlabs pricing per minute", "elevenlabs api pricing per minute", "elevenlabs tts pricing per minute", "how much is per minute", "how to calculate cost per minute"],
+  "elevenlabs pricing": ["elevenlabs pricing", "elevenlabs pricing plans", "elevenlabs pricing api", "elevenlabs pricing india", "elevenlabs pricing per minute", "elevenlabs pricing uk", "elevenlabs pricing text to speech", "elevenlabs pricing per month", "elevenlabs pricing calculator", "elevenlabs pricing inr"]
+ },
+ "unit_family_gap": "The 10-completion 'elevenlabs cost' list names eight units a buyer types: per month, per minute, per credit, per character, per hour, per token, per word, per second. The site covers 2 of the 8 (minute, credit). Recorded, not built: any new page changes the README count and the judge gate that ships at 00:00Z."
+}

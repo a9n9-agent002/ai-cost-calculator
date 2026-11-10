@@ -1,0 +1,123 @@
+{
+ "as_of": "2026-11-09",
+ "purpose": "Text-to-speech list prices from five vendors, read live from their own pricing pages for the `elevenlabs alternatives` page. Price only: voice quality, latency, voice cloning and languages are NOT priced here.",
+ "minute_basis_chars": 1000,
+ "offers": [
+  {
+   "vendor": "OpenAI",
+   "product": "tts-1",
+   "usd_per_1m_chars": 15.0,
+   "free_chars_per_month": 0,
+   "source": "https://developers.openai.com/api/docs/pricing",
+   "quote": "tts-1 | Text | $15.00 / 1M characters",
+   "read_at": "2026-11-09T02:29Z"
+  },
+  {
+   "vendor": "OpenAI",
+   "product": "gpt-4o-mini-tts",
+   "usd_per_1m_chars": 12.0,
+   "free_chars_per_month": 0,
+   "source": "https://developers.openai.com/api/docs/pricing",
+   "quote": "gpt-4o-mini-tts | Text | $0.60 | -",
+   "read_at": "2026-11-09T02:29Z"
+  },
+  {
+   "vendor": "Google Cloud",
+   "product": "Chirp 3: HD",
+   "usd_per_1m_chars": 30.0,
+   "free_chars_per_month": 1000000,
+   "source": "https://cloud.google.com/text-to-speech/pricing",
+   "quote": "Chirp 3: HD voices | 0 to 1 million characters | US$0.00003 per character (US$30 per 1 million characters)",
+   "read_at": "2026-11-09T02:24Z"
+  },
+  {
+   "vendor": "Google Cloud",
+   "product": "WaveNet / Standard",
+   "usd_per_1m_chars": 4.0,
+   "free_chars_per_month": 4000000,
+   "source": "https://cloud.google.com/text-to-speech/pricing",
+   "quote": "WaveNet voices | 0 to 4 million characters | US$0.000004 per character (US$4 per 1 million characters)",
+   "read_at": "2026-11-09T02:24Z"
+  },
+  {
+   "vendor": "Amazon Polly",
+   "product": "Neural",
+   "usd_per_1m_chars": 16.0,
+   "free_chars_per_month": 1000000,
+   "free_note": "first 12 months only",
+   "source": "https://aws.amazon.com/polly/pricing/",
+   "quote": "Neural voices are priced at $16.00 per 1 million characters ... the free tier includes 1 million characters per month ... for the first 12 months",
+   "read_at": "2026-11-09T02:28Z"
+  },
+  {
+   "vendor": "Amazon Polly",
+   "product": "Standard",
+   "usd_per_1m_chars": 4.0,
+   "free_chars_per_month": 5000000,
+   "source": "https://aws.amazon.com/polly/pricing/",
+   "quote": "Standard voices are priced at $4.00 per 1 million characters ... the free tier includes 5 million characters per month",
+   "read_at": "2026-11-09T02:28Z"
+  },
+  {
+   "vendor": "Amazon Polly",
+   "product": "Generative",
+   "usd_per_1m_chars": 30.0,
+   "free_chars_per_month": 100000,
+   "free_note": "first 12 months only",
+   "source": "https://aws.amazon.com/polly/pricing/",
+   "quote": "Generative voices are priced at $30 per 1 million characters ... the free tier includes 100 thousand characters per month",
+   "read_at": "2026-11-09T02:28Z"
+  }
+ ],
+ "plan_priced": [
+  {
+   "vendor": "Cartesia",
+   "product": "Sonic-3.6",
+   "plan": "Pro",
+   "plan_usd_per_month": 5.0,
+   "tts_minutes_included": 133,
+   "credits_included": 100000,
+   "source": "https://cartesia.ai/pricing",
+   "quote": "Pro $5/mo 100K credits / month ... 133 Text to Speech minutes / month",
+   "read_at": "2026-11-09T02:25Z"
+  },
+  {
+   "vendor": "Cartesia",
+   "product": "Sonic-3.6",
+   "plan": "Startup",
+   "plan_usd_per_month": 49.0,
+   "tts_minutes_included": 1667,
+   "credits_included": 1250000,
+   "source": "https://cartesia.ai/pricing",
+   "quote": "Startup $49/mo 1.25M credits / month ... ~1,667 minutes included monthly",
+   "read_at": "2026-11-09T02:25Z"
+  },
+  {
+   "vendor": "Cartesia",
+   "product": "Sonic-3.6",
+   "plan": "Scale",
+   "plan_usd_per_month": 299.0,
+   "tts_minutes_included": 10667,
+   "credits_included": 8000000,
+   "source": "https://cartesia.ai/pricing",
+   "quote": "Scale $299/mo 8M credits / month ... ~10,667 minutes included monthly",
+   "read_at": "2026-11-09T02:25Z"
+  },
+  {
+   "vendor": "Cartesia",
+   "product": "Sonic-3.6",
+   "plan": "Free",
+   "plan_usd_per_month": 0.0,
+   "tts_minutes_included": 27,
+   "credits_included": 20000,
+   "source": "https://cartesia.ai/pricing",
+   "quote": "Free $0/mo 20K credits / month ... ~27 minutes included monthly",
+   "read_at": "2026-11-09T02:25Z"
+  }
+ ],
+ "not_priced": [
+  "voice cloning, dubbing, sound effects and agent products differ between these vendors and none of that is in the table",
+  "quality and latency are not measured here; a price table cannot rank them",
+  "Play.ht and Deepgram Aura were probed but not read (play.ht blocked from this container; Deepgram's speech-to-text and agent rates are on another page of this site)"
+ ]
+}

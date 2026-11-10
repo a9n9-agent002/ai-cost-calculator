@@ -55,8 +55,9 @@ from any prose:
   Using Firecrawl's JSON format costs **+4 credits** on top of the page's own credit, which is the
   line that turns a five-figure crawl into a six-figure one.
 - **How do ElevenLabs credits convert to minutes?** The vendor's own plan table divides characters
-  by 1,000 (`75,000 ~75 min`), i.e. **1,000 characters ≈ 1 minute**; a slower 900-chars-per-minute
-  read gets about 11% fewer finished minutes than that column claims. The ElevenLabs credits to minutes
+  by 1,000 (`75,000 ~75 min`), i.e. **1,000 characters ≈ 1 minute**; a slower 900-characters-a-minute
+  read fits more speech into the same allowance — Creator's 275,000 characters is **306 finished
+  minutes, not 275** (11.1% more). The ElevenLabs credits to minutes
   step is one the plan table expects you to do yourself, so `voice.py` does both conversions and says
   which one it used.
 - **How many ElevenLabs minutes per month does each plan give?** Starter 75 min, Creator 275 min,
@@ -70,8 +71,20 @@ from any prose:
   $0.080 per finished minute on the vendor's own 1,000-chars-per-minute basis and $0.072 at a
   900-chars-per-minute read. The $22 Creator **API** plan includes **275,000 characters**, i.e.
   **$0.0800 per 1,000** — the same as pay-as-you-go, so the ladder is flat. The Creative plans page
-  advertises **121,000 credits** for the same $22; credits are not characters, and reading that number
-  as characters gives **$0.1818/1,000 (2.27×)** — a units error, not a price. (Re-read 2026-11-09T00:25Z.)
+  advertises **121,000 credits** for the same $22. Whether that is the same quantity in another unit
+  or a different allowance is not settled by the vendor's own text: its FAQ says one text character
+  equals one credit on the V2 models (which would make the two figures 121,000 against 275,000
+  characters for the same money), while the API page bills in dollars and says so. Both numbers are
+  quoted as dated; neither is converted into the other here. (Re-read 2026-11-09T01:32Z.)
+- **How many minutes does a plan's credit balance buy?** Eight answers, from one shared pool: a
+  minute costs **330 credits** of transcription, **900** of music, **1,000** of speech or voice
+  isolation, and **2,000–10,000** of dubbing depending on mode. On Creator ($22, 121,000 credits)
+  that is **367 minutes of transcription, 121 of speech and 12.1 of studio dubbing** — a 30.3× spread
+  inside the same balance.
+- **What does Droplet bandwidth cost past the allowance?** **$0.01 a GiB** outbound after the plan's
+  allowance (the $6 Droplet includes 1,000 GiB) and inbound is free — but the allowance **accrues per
+  second** over a 28-day window, so a Droplet alive 7 days has accrued only **250 GiB**, and a 500 GiB
+  burst that week costs **$2.50** overage on a plan advertised as "1,000 GiB included".
 - **What is ElevenLabs agent pricing per minute?** A flat **$0.080 per agent minute**, the same
   figure for Agents, Realtime v1 Mini and Realtime v1 Max; the vendor tables print "$0.080 + LLM
   usage", so the LLM is billed separately and a managed minute is not an all-in minute.
@@ -188,24 +201,27 @@ code, and not a table in an article that silently rots.
 `voice.py` (and `site/voices.html`) answers the creator's version of the question. Voice vendors
 quote characters; the person with a podcast has minutes. ElevenLabs' own plan table divides
 characters by **1,000** — `75,000 ~75 min`, `12,375,000 ~12,375 min` — so that is the conversion
-used here, and a slower (900 chars/min) read gets ~11% fewer minutes than the column claims.
+the vendor prints; at a slower (900 chars/min) read the same allowance buys **11.1% more** finished
+minutes, which is why the table below is computed at 900 and says so.
 
 The finding worth the page: **the ladder is linearly priced but coarsely blocked.** Every paid
 block costs about $1 per 12,500 characters, so there is no volume discount — but you cannot buy a
 top-up, and a workload just over a block boundary buys the next whole block:
 
-| minutes/month | chars | plan | $/month | effective $/min |
+| minutes/month | chars at 900/min | plan | $/month | effective $/min |
 |---|---|---|---|---|
-| 180 | 180,000 | Creator (275 min) | $22 | $0.1222 |
-| 300 | 300,000 | **Pro** (1,238 min) | **$99** | $0.3300 |
-| 1,200 | 1,200,000 | Pro (1,238 min) | $99 | $0.0825 |
+| 180 | 162,000 | Creator (275 min) | $22 | $0.1222 |
+| 305 | 274,500 | Creator (275 min) | $22 | $0.0721 |
+| 306 | 275,400 | **Pro** (1,238 min) | **$99** | **$0.3235** |
+| 600 | 540,000 | Pro (1,238 min) | $99 | $0.1650 |
 
-300 minutes and 1,200 minutes cost the same $99, so a month that lands 25 minutes past Creator's
-allowance pays $77 more than a month that fits. The tool says so when your number falls in that
-band, and the honest advice is to trim the script or use the headroom.
+**305 minutes fit Creator and 306 do not.** The step is the whole $77, so one extra minute of audio
+turns a $22 month into a $99 one — 4.5x the bill. (On the vendor's own 1,000-character column the same
+cliff sits at 275 minutes, which is the pair most posts quote.) The tool says so when your number falls
+in that band, and the honest advice is to trim the script or use the headroom.
 
-The engine table on that page also ranks **Deepgram Aura-1 ($0.0150/min) below ElevenLabs v4
-($0.0800/min)** — a 5.3× gap in the direction of the vendor this repository earns nothing from.
+The engine table on that page also ranks **Deepgram Aura-1 ($0.0135/min) below ElevenLabs v4
+($0.0720/min)** — a 5.3× gap in the direction of the vendor this repository earns nothing from.
 
 ## The public index
 
@@ -236,7 +252,9 @@ the data files.
 
 `dataset_ext.json` is derived by `build_ext.py` from four raw vendor reads kept in `data/`
 (`do-droplets.json`, `gpu-hours.json`, `novita-tokens.json`, `cross-provider.json`), so the repository
-rebuilds without network access:
+rebuilds without network access. A fifth raw read, `data/do-bandwidth.json`, holds DigitalOcean's
+bandwidth rates, the team-pool rule and the per-second accrual that the bandwidth page computes from
+(the vendor page is dated 2026-11-05; read 2026-11-09).
 
 | page | what it computes from the raw read | the number a pricing page makes hard to see |
 |---|---|---|

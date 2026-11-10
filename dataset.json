@@ -152,6 +152,55 @@
     "rollover": "Your credit allowance resets at the start of each billing cycle. Unused credits roll over for up to two months — up to 2x your monthly quota — so a balance can reach at most 3x the monthly quota, as long as the paid subscription stays active and is not downgraded or cancelled. Rollover does not apply to the Free plan, and downgrading or cancelling forfeits unused credits.",
     "free_tier_disabled_note": "ElevenLabs' own Help Center lists the message \"Unusual activity detected. Free Tier usage disabled. If you are using proxy/VPN you might need to purchase a paid plan to not trigger our abuse detectors\" — so the free tier can be switched off by the vendor's abuse detector, and its stated cause is proxy or VPN use."
    },
+   "concurrency": {
+    "sources": {
+     "tts_pricing": "https://elevenlabs.io/pricing",
+     "agent_pricing": "https://elevenlabs.io/pricing/agents",
+     "error_429": "https://elevenlabs.io/docs/help-center/technical/api-error-code-429",
+     "burst": "https://elevenlabs.io/docs/eleven-agents/guides/burst-pricing",
+     "queueing": "https://elevenlabs.io/docs/eleven-agents/guides/call-queueing"
+    },
+    "verified": "2026-11-09T02:02Z",
+    "tts_concurrent_requests": [
+     {"plan": "Free", "usd": 0, "requests": 2},
+     {"plan": "Starter", "usd": 6, "requests": 3},
+     {"plan": "Creator", "usd": 22, "requests": 5},
+     {"plan": "Pro", "usd": 99, "requests": 10},
+     {"plan": "Scale", "usd": 299, "requests": 15},
+     {"plan": "Business", "usd": 990, "requests": 25}
+    ],
+    "tts_help_center_business": 15,
+    "agent_concurrent_calls": [
+     {"plan": "Free", "usd": 0, "calls": 4},
+     {"plan": "Starter", "usd": 6, "calls": 6},
+     {"plan": "Creator", "usd": 22, "calls": 10},
+     {"plan": "Pro", "usd": 99, "calls": 20},
+     {"plan": "Scale", "usd": 299, "calls": 30},
+     {"plan": "Business", "usd": 990, "calls": 40}
+    ],
+    "burst": {
+     "max_multiplier": 3,
+     "absolute_cap_non_enterprise": 300,
+     "rate_multiplier": 2,
+     "standard_agent_usd_per_minute": 0.08,
+     "burst_agent_usd_per_minute": 0.16,
+     "deprioritised": true,
+     "note": "Calls above the subscription limit are accepted up to 3x the limit (or 300 concurrent, whichever is lower) and billed at double the standard per-minute rate. Burst calls are deprioritised for speech processing. The docs' own example table starts at a 50-call limit, which no published plan has: the top published plan is 40 agent calls, so the cap that applies is 3x your own plan number."
+    },
+    "queueing": {
+     "default_enabled": true,
+     "max_wait_default_seconds": 180,
+     "max_wait_range_seconds": [1, 1800],
+     "queue_time_billed": false,
+     "websocket_close_code_on_timeout": 4300,
+     "unsupported_channels": "outbound and batch calls, text-only agents (they are never queued)"
+    },
+    "error_429_messages": {
+     "too_many_concurrent_requests": "the plan's concurrency limit was exceeded",
+     "system_busy": "ElevenLabs' own services were under high traffic; retrying generally succeeds"
+    },
+    "note": "Read 2026-11-09T02:02Z. The per-plan TTS numbers come from the 'Concurrent requests' row of the Creative comparison table; the agent numbers from the ElevenAgents plan cards and table. The two official pages disagree on Business for TTS: the pricing table says 25, the 429 help-centre article says 15."
+   },
    "traps": [
     "Two of the vendor's own pages print two different allowances for the same $22 Creator plan: /pricing/api lists 275,000 characters, while /pricing lists 121,000 credits. Its FAQ says 1 text character equals 1 credit for V2 Multilingual models, which would make those the same quantity at $0.1818 per 1,000 characters — 2.27x the API page's $0.080 — yet the API page's own FAQ says API usage is billed in US dollars, not credits. Re-read 2026-11-09T01:3xZ: the two pages are not reconcilable from their own text, so both numbers are quoted as dated and neither is converted into the other. Settle it before repeating either rate as 'the' ElevenLabs price.",
     "The API ladder is flat: $990/12.375M = $0.080/1k, i.e. no volume discount. Buying a bigger plan does not lower the unit price.",

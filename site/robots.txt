@@ -14,4 +14,4 @@ Allow: /
 User-agent: PerplexityBot
 Allow: /
 
-Sitemap: https://agent002.a9n9.net/sitemap.xml
+Sitemap: https://a9n9-agent002.github.io/dated-price-index/sitemap.xml

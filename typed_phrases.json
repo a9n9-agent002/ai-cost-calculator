@@ -15,7 +15,12 @@
   "probe95b.json",
   "probe99.json",
   "probe100.json",
-  "suggest78.json"
+  "suggest78.json",
+  "probe103.json",
+  "probe104.json",
+  "probe105.json",
+  "probe106.json",
+  "probe128_autocomplete.json"
  ],
  "phrases": [
   "ai api pricing comparison",
@@ -33,13 +38,20 @@
   "digitalocean free credit",
   "digitalocean vs hetzner",
   "elevenlabs agent pricing",
+  "elevenlabs alternatives",
+  "elevenlabs concurrency limit",
+  "elevenlabs concurrent requests",
+  "elevenlabs cost per minute",
   "elevenlabs credits per minute",
   "elevenlabs credits to minutes",
-  "elevenlabs plans and pricing",
-  "elevenlabs startup grant",
+  "elevenlabs free plan",
   "elevenlabs free tier",
+  "elevenlabs plans and pricing",
   "elevenlabs pricing",
   "elevenlabs pricing per minute",
+  "elevenlabs rate limit",
+  "elevenlabs startup grant",
+  "firecrawl alternatives",
   "firecrawl cost per credit",
   "firecrawl cost per page",
   "firecrawl pricing",
@@ -50,6 +62,7 @@
   "glm 5.3 pricing",
   "gpt oss 120b pricing",
   "h100 price per hour",
+  "h100 rental price",
   "ling 3.0 flash pricing",
   "llm api pricing comparison",
   "novita ai api pricing",
@@ -66,6 +79,7 @@
   "voice minutes": "completes to mobile-phone airtime plans (mtn/vodacom/telkom), not speech"
  },
  "probes": {
+  "elevenlabs alternatives": "probe104.py (2026-11-09 02:2xZ, Google Autocomplete: `elevenlabs alternative` 10 completions and `elevenlabs alternatives` 10, incl ... free / open source / reddit / 2026; `cheaper than elevenlabs` 6, incl `is cartesia cheaper than elevenlabs`)",
   "deepseek v4 pro pricing": "probe87a.py (2026-11-08 22:20Z, Google Autocomplete, control 'elevenlabs pricing' = 10)",
   "deepseek v4 flash pricing": "probe87a.py (2026-11-08 22:20Z, Google Autocomplete, control 'elevenlabs pricing' = 10)",
   "glm 5.3 pricing": "probe87a.py (2026-11-08 22:20Z, Google Autocomplete, control 'elevenlabs pricing' = 10)",
@@ -80,6 +94,7 @@
   "digitalocean vs hetzner": "probe89.py (2026-11-08 22:56Z, Google Autocomplete, control 'vultr vs' = 10; the same list contains digitalocean vs vultr, digitalocean vs linode, digitalocean alternatives cheap)",
   "deepgram vs elevenlabs": "probe91.py (2026-11-08 22:56Z, Google Autocomplete, control 'vultr vs' = 10; the list contains deepgram vs elevenlabs, ... stt, ... reddit, ... pricing, ... speech to text, ... tts, and elevenlabs vs deepgram returns only 4, so the title takes the typed direction)",
   "firecrawl vs tavily": "probe91b.py (2026-11-08 23:1xZ, Google Autocomplete; 5 completions incl firecrawl vs tavily vs exa, firecrawl vs tavily reddit, playwright vs firecrawl vs tavily; the parent `firecrawl vs` list answered 10)",
-  "novita ai vs openrouter": "probe92.py (2026-11-08 23:1xZ, Google Autocomplete; `novita ai vs` returns it as its FIRST completion and `openrouter vs novita` / `novita vs openrouter` also complete; controls `vultr vs` = 10 and `elevenlabs pricing` = 10. The bare `novita vs` list is 6/10 air purifiers, so the title and slug carry the brand-complete phrase.)"
+  "novita ai vs openrouter": "probe92.py (2026-11-08 23:1xZ, Google Autocomplete; `novita ai vs` returns it as its FIRST completion and `openrouter vs novita` / `novita vs openrouter` also complete; controls `vultr vs` = 10 and `elevenlabs pricing` = 10. The bare `novita vs` list is 6/10 air purifiers, so the title and slug carry the brand-complete phrase.)",
+  "h100 rental price": "probe106.py (2026-11-09 02:30Z, Google Autocomplete, control 'elevenlabs pricing' = 10; `h100 rental` returns h100 rental price / price chart / price index / price tracker, and `cheapest h100` returns 10 tails incl cheapest h100 rental, cheapest h100 per hour, cheapest h100 provider. Rejected on the same pass: `novita gpu pricing` = 0 completions"
  }
 }

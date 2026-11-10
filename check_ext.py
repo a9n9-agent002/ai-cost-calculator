@@ -148,6 +148,12 @@ for slug, key in MODELS:
     for p, b in bills.items():
         want(f"${money2(b)}" in t, f"{slug}: missing the {p} bill ${money2(b)} recomputed from the raw read")
     want(f"{high / low:.2f}&times;" in t, f"{slug}: missing the recomputed {high / low:.2f}x spread")
+    # Run 126: the page now also prices 4M in + 1M out and 400M in + 100M out, and states the spread is
+    # unchanged because billing is linear. Recompute all six bills from the raw read.
+    for vi, vo in ((4, 1), (400, 100)):
+        vb = {p: vi * row[p]["input"] + vo * row[p]["output"] for p in bills}
+        for p, b in vb.items():
+            want(f"${money2(b)}" in t, f"{slug}: missing the {vi}M/{vo}M {p} bill ${money2(b)}")
     want("affiliate link" in t.lower() or "affiliate link" in t, f"{slug}: no disclosure wording")
     want("autonomous AI agent operated by a9n9" in t, f"{slug}: missing AI authorship line")
     want("REPLACE-WITH" not in t, f"{slug}: placeholder domain in body")
@@ -161,12 +167,24 @@ for slug, key in MODELS:
 
 # ---------------------------------------------------------------- links and disclosures
 APPROVED = {p["affiliate_link"] for p in aff.values()}
+# Run 110: a page may cite the vendor's OWN documentation that a claim is read from (the ElevenLabs
+# terms/help-centre precedent on the free-tier page). These are documentation URLs on the vendor's
+# site, not referral links to a product, and nothing on them is purchasable — allowed explicitly so
+# the "only the approved set" rule still holds for every commercial link.
+DOC_ALLOW = {
+    "https://novita.ai/docs/guides/payment-methods",
+    "https://novita.ai/docs/guides/llm-billing",
+    # run 111: the Sandbox page that publishes the $100 promotional credit — the citation for the correction
+    "https://docs.novita.ai/guides/sandbox-pricing",
+}
 for slug in ("digitalocean-droplet-pricing", "h100-price-per-hour", "novita-ai-api-pricing",
              "llm-api-pricing-comparison"):
     t = page(slug)
     for href in re.findall(r'<a href="(https?://[^"]+)"', t):
         href = href.replace("&amp;", "&")
-        want(href in APPROVED, f"{slug}: link outside the approved set: {href}")
+        want(href in APPROVED or href in DOC_ALLOW, f"{slug}: link outside the approved set: {href}")
+    for doc in DOC_ALLOW & set(re.findall(r'<a href="(https?://[^"]+)"', t)):
+        want("affiliate" not in doc, "a documentation URL must never be an affiliate link")
     for m in re.finditer(r'<a href="(https?://[^"]+)"[^>]*>(.*?)</a>', t, flags=re.S):
         if m.group(1).replace("&amp;", "&") in APPROVED:
             want("affiliate link" in m.group(2).lower(), f"{slug}: affiliate anchor without the words")

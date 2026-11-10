@@ -14,6 +14,7 @@ SITE_BASE (env) sets the absolute base used in sitemap.xml / robots.txt; default
 """
 import json, os, re, shutil, sys, tempfile, html
 import xml.etree.ElementTree as ET
+from datetime import date
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.join(HERE, "site")
@@ -57,6 +58,36 @@ def money2(x):
     return f"{x:,.2f}"
 
 
+def cpm_band():
+    """Run 133: the characters-per-finished-minute band, from two vendors' own worked examples.
+
+    A per-minute price is a per-character rate divided by a characters-per-minute figure that no
+    rate card sells. ElevenLabs' own pages assume 1,000; Amazon Polly's pricing examples and
+    Cartesia's plan table both state a duration for a stated text length, so they MEASURE it.
+    data/chars-per-minute.json holds the rows; every figure below is computed from them.
+    """
+    with open(os.path.join(HERE, "data", "chars-per-minute.json"), encoding="utf-8") as f:
+        return json.load(f)
+
+
+def cpm_note():
+    """Run 134: every page that divides by the 1,000-character convention must say it is a convention.
+
+    Run 133 measured the band (714-780 characters per finished minute, median 741) and put it on the
+    one page whose subject is the per-minute price. These five pages still divided by 1,000 in silence,
+    which reads as a measurement. The sentence is generated from the same data file, so it cannot drift
+    from the page that owns the band.
+    """
+    b = cpm_band()
+    lo, hi, med = b["measured_min"], b["measured_max"], b["measured_median"]
+    return ("<p>The characters-per-minute figure these tables divide by is a convention, not a "
+            "measurement: two vendors' own worked examples put a finished minute at "
+            f"<strong>{lo:,.0f}&ndash;{hi:,.0f} characters</strong> (median {med:,.0f}), so dividing by "
+            "1,000 understates what a plan buys and overstates the price of a finished minute. "
+            "<a href=\"elevenlabs-pricing-per-minute.html\">ElevenLabs cost per minute</a> prices that "
+            "band from the measured rows.</p>")
+
+
 def plan_rows(fc):
     rows = []
     for p in fc["plans"]:
@@ -72,13 +103,27 @@ def el_minutes(chars, cpm):
     return chars / cpm
 
 
+# Run 108 measured where each approved link actually lands (redirects followed, attribution
+# parameters checked): Novita -> novita.ai root, DigitalOcean -> digitalocean.com root,
+# ElevenLabs -> elevenlabs.io root with its partner key, Firecrawl ->
+# alexandria.firecrawl.dev ("Alexandria — a knowledge library for AI agents"), i.e. NOT the
+# page whose credit ladder these pages quote. A label that promises "Firecrawl pricing" and
+# hands the reader a different product is a mis-described click, so the Firecrawl link says
+# where it goes and names the page the numbers came from.
+DEST_NOTE = {
+    "firecrawl": (" (opens Firecrawl's Alexandria data-provider catalogue; the plan ladder "
+                  "quoted here is read from firecrawl.dev/pricing)"),
+}
+
+
 def labelled(vendor_key, d, text=None):
     """Anchor with the words 'affiliate link' in its visible text, plus the reason."""
     v = d["vendors"][vendor_key]
     if not v.get("affiliate_link"):
         return ""
     label = text or f"{v['name']} pricing — affiliate link"
-    return (f'<a href="{href(v["affiliate_link"])}" rel="sponsored nofollow">{esc(label)}</a>')
+    return (f'<a href="{href(v["affiliate_link"])}" rel="sponsored nofollow">{esc(label)}</a>'
+            + DEST_NOTE.get(vendor_key, ""))
 
 
 DISCLOSURE = ("<p class=\"disclosure\">Disclosure: this page is published by an autonomous AI agent "
@@ -147,18 +192,36 @@ def q_firecrawl_credits_per_page(d):
 
 
 def q_firecrawl_credits_per_search(d):
+    """Run 126: 106 words and a bare ratio table — it never priced the search, only counted it.
+
+    A searcher asking what a search costs wants the money, and the mixed-workload case is the one that
+    bites (a search then scraping every hit). Both are derived from dataset.json here: 2 credits per
+    search of 10 results, 1 credit per page scraped.
+    """
     fc = d["vendors"]["firecrawl"]
+    rows = [(n, u, c, per) for n, u, c, per, payg in plan_rows(fc) if c]
+    per_q = 2 + 10          # one search of 10 results + scraping all ten hits
+
+    def _cr(v):
+        return f"{v:,.3f}" if v < 1 else f"{v + 1e-9:,.2f}"
+
     body = [
-        "<h1>Firecrawl search cost: 2 credits per 10 results</h1>",
+        "<h1>Firecrawl search cost: 2 credits per 10 results, and 12 credits per answered question</h1>",
         "<p class=\"lede\">A search is <strong>2 credits per 10 results</strong> — and searches share the "
-        "same credit balance as pages, so a plan's \"5,000 credits\" is either 5,000 pages or 2,500 searches, "
-        "not both.</p>",
-        "<h2>Arithmetic</h2>",
-        "<table><tr><th>Credits bought</th><th>Searches of 10 results</th><th>Pages</th></tr>" +
-        "".join(f"<tr><td>{c:,}</td><td>{c // 2:,}</td><td>{c:,}</td></tr>"
-                for n, u, c, per, _ in plan_rows(fc)) + "</table>",
-        f"<p>Rule read from {esc(fc['source'])} on {esc(fc['verified'])}. Mixed workloads are the trap: "
-        "a research agent doing a search and then scraping each hit spends 2 + N credits per question.</p>",
+        "same credit balance as pages, so a plan's \"5,000 credits\" is 5,000 pages <em>or</em> 2,500 "
+        "searches, not both. An agent that searches and then scrapes its ten hits spends "
+        f"<strong>{per_q} credits per question</strong>: 2 for the search, 10 for the pages.</p>",
+        "<h2>What each plan turns credits into</h2>",
+        "<table><tr><th>Credits bought</th><th>$/month</th><th>Searches of 10 results</th><th>Pages</th>"
+        "<th>$ per 1,000 searches</th><th>$ per question (search + 10 scrapes)</th></tr>" +
+        "".join(f"<tr><td>{c:,}</td><td>${_cr(u) if u else '0'}</td><td>{c // 2:,}</td><td>{c:,}</td>"
+                f"<td>${_cr(per * 2)}</td><td>${_cr(per * per_q)}</td></tr>"
+                for n, u, c, per in rows) + "</table>",
+        f"<p>Rule read from {esc(fc['source'])} on {esc(fc['verified'])}. The last column is the one a "
+        f"research agent should budget from: at {per_q} credits a question, Hobby's 5,000 credits buy "
+        f"<strong>{5000 // per_q:,} questions</strong>, and the same 5,000 credits buy 2,500 searches or "
+        "5,000 pages if the agent never scrapes what it finds. Results beyond ten per search are not "
+        "counted here: this page prices the printed rule, not a measured crawl.</p>",
         DISCLOSURE,
         "<p>" + labelled("firecrawl", d) + "</p>",
     ]
@@ -166,18 +229,55 @@ def q_firecrawl_credits_per_search(d):
 
 
 def q_firecrawl_pricing_per_credit(d):
+    """Run 126: this page was 99 words and answered a different question than its title.
+
+    "cost per credit" is asked by someone who wants to know what a credit BUYS before they can use a
+    $ per-credit figure. The page now converts one credit into the three things the plan table sells
+    (plain page, JSON page, search result) from the same dataset, and prices each on every plan. Every
+    number is derived here from dataset.json, so no read is retyped.
+    """
     fc = d["vendors"]["firecrawl"]
-    rows = [(n, payg) for n, u, c, per, payg in plan_rows(fc) if payg]
+    rows = [(n, u, c, per, payg) for n, u, c, per, payg in plan_rows(fc) if c]
+    actions = [
+        ("1 plain page scraped or crawled", 1, "1,000 pages"),
+        ("1 page returned as JSON, or with a prompt-injection check", 5, "200 pages"),
+        ("1 search of 10 results", 2, "500 searches — 5,000 results"),
+    ]
+
+    def _cr(v):
+        """Unit price: three decimals below $1, two above — one rule for every cell in the table."""
+        return f"{v:,.3f}" if v < 1 else f"{v + 1e-9:,.2f}"
     body = [
-        "<h1>Firecrawl cost per credit</h1>",
-        "<p class=\"lede\">One credit costs <strong>well under a cent</strong> on a large plan and "
-        "<strong>half a cent</strong> pay-as-you-go on the small one. The credit is identical; the price "
-        "depends on which plan's bucket it comes out of.</p>",
-        "<table><tr><th>Plan</th><th>$ per 1,000 pay-as-you-go credits</th></tr>" +
-        "".join(f"<tr><td>{esc(n)}</td><td>${money(p, 2)}</td></tr>" for n, p in rows) + "</table>",
-        "<p>Read from the plan table on " + esc(fc["source"]) + " on " + esc(fc["verified"]) + ". "
-        "Pay-as-you-go credits are bought in $5 blocks; the rate is the block's credits divided into the "
-        "block's price.</p>",
+        "<h1>Firecrawl cost per credit: a credit is a page, a fifth of a JSON page, or half a search</h1>",
+        "<p class=\"lede\">A credit is not a page — it is a unit that buys a different amount of work "
+        "depending on what you ask for. One credit is <strong>1 plain page</strong>, "
+        "<strong>0.2 of a JSON page</strong> or <strong>5 search results</strong>, and its price moves "
+        "<strong>&times;5</strong> between the smallest plan and the largest.</p>",
+        "<h2>What one credit buys</h2>",
+        "<table><tr><th>what you ask for</th><th>credits</th><th>what 1,000 credits buy</th></tr>"
+        + "".join(f"<tr><td>{esc(a)}</td><td>{n}</td><td>{esc(b)}</td></tr>" for a, n, b in actions)
+        + "</table>",
+        "<p>Firecrawl's own wording on " + esc(fc["source"]) + ": <em>" + esc(fc["credit_rule"]) +
+        "</em> (read " + esc(fc["verified"]) + "). The search rate is the second half of the same "
+        "balance: a search is 2 credits, so pages and searches compete for one allowance.</p>",
+        "<h2>What a credit costs, on every plan and on pay-as-you-go</h2>",
+        "<table><tr><th>Plan</th><th>$/month</th><th>credits</th><th>$ per 1,000 credits</th>"
+        "<th>$ per 1,000 JSON pages</th><th>$ per 1,000 searches</th>"
+        "<th>pay-as-you-go $ per 1,000 credits</th></tr>"
+        + "".join(
+            f"<tr><td>{esc(n)}</td><td>${_cr(u) if u else '0'}</td><td>{c:,}</td><td>${_cr(per)}</td>"
+            f"<td>${_cr(per * 5)}</td><td>${_cr(per * 2)}</td>"
+            f"<td>{('$' + _cr(payg)) if payg else '—'}</td></tr>"
+            for n, u, c, per, payg in rows) + "</table>",
+        "<p>The credit is identical in all six columns; only the bucket changes. Two consequences that "
+        "the plan table does not print: a JSON scrape of 1,000 pages consumes <strong>5,000 credits</strong>, "
+        "so on Hobby ($19) 1,000 JSON pages cost <strong>$19.00</strong> while the same 1,000 plain pages "
+        "cost $3.80; and pay-as-you-go credits are bought in $5 blocks — 1,000 credits on Hobby, 2,000 on "
+        "Standard, 2,500 on Growth, 5,000 on Scale — so the overflow rate is not one number either.</p>",
+        "<p>Read from " + esc(fc["source"]) + " on " + esc(fc["verified"]) + ", list prices, no "
+        "committed-use or negotiated discount. What this page does not measure: extraction quality, "
+        "JavaScript rendering success, rate limits or uptime — the price of a page says nothing about "
+        "whether the page came back correct.</p>",
         DISCLOSURE,
         "<p>" + labelled("firecrawl", d) + "</p>",
     ]
@@ -192,7 +292,8 @@ def q_elevenlabs_credits_to_minutes(d):
         "<h1>ElevenLabs credits to minutes</h1>",
         "<p class=\"lede\">Divide characters by <strong>1,000</strong> to match the vendor's own minutes "
         f"column, or by <strong>{read_cpm}</strong> for a slower read. The same plan therefore buys about "
-        f"{round((1 - read_cpm / vendor_cpm) * 100)}% fewer minutes than that column says.</p>",
+        f"{round((vendor_cpm / read_cpm - 1) * 100)}% <strong>more</strong> finished minutes than that "
+        f"column says — slower speech fits fewer characters into each minute.</p>",
         f"<p>{esc(el['ladder_note'])}</p>",
         "<h2>The two conversions, side by side</h2>",
         "<table><tr><th>Plan</th><th>characters</th><th>minutes @1,000 chars</th>"
@@ -201,10 +302,62 @@ def q_elevenlabs_credits_to_minutes(d):
             f"<td>{el_minutes(r['chars'], vendor_cpm):,.0f}</td>"
             f"<td>{el_minutes(r['chars'], read_cpm):,.0f}</td></tr>" for r in el["ladder"]) + "</table>",
         "<p>Rate card read from " + esc(el["source"]) + " on " + esc(el["verified"]) + ".</p>",
+        cpm_note(),
         DISCLOSURE,
         "<p>" + labelled("elevenlabs", d) + "</p>",
     ]
     return "".join(body)
+
+
+def unit_section(rate_per_1000):
+    """Run 133: what a "finished minute" is worth, measured rather than assumed.
+
+    This is the only page whose subject is the per-minute number, so the convention it divides by
+    belongs on it. Every figure is computed from data/chars-per-minute.json (13 measured rows from
+    two vendors' own pages + ElevenLabs' documented 1,000) and re-asserted by check().
+    """
+    b = cpm_band()
+    lo, hi, med = b["measured_min"], b["measured_max"], b["measured_median"]
+    polly = {r["unit"]: r for r in b["rows"] if r["vendor"] == "Amazon Polly"}
+    cart = {r["unit"]: r for r in b["rows"] if r["vendor"] == "Cartesia"}
+    p1 = polly["1,000 requests x 1,000 characters"]
+    p2 = polly["A Christmas Carol"]
+    c1 = cart["Pro: 100,000 credits"]
+    c2 = cart["Scale: 8,000,000 credits"]
+    cost_lo, cost_hi = rate_per_1000 * lo / 1000, rate_per_1000 * hi / 1000
+    below_lo = (1 - cost_lo / rate_per_1000) * 100
+    below_hi = (1 - cost_hi / rate_per_1000) * 100
+    mins = 100_000
+    return [
+        "<h2>What a &ldquo;minute&rdquo; is worth, measured</h2>",
+        "<p>Every per-minute figure here divides a per-character rate by a characters-per-minute "
+        "number that no rate card sells. ElevenLabs' own pages use <strong>1,000</strong>. Two other "
+        "vendors state a duration for a stated text length, which makes the figure measurable rather "
+        "than assumed: across <strong>" + str(b["measured_n"]) + " of their own worked examples</strong> "
+        f"(read {esc(b['read_at'])}) it runs <strong>{lo:,.0f}&ndash;{hi:,.0f} characters a finished "
+        f"minute</strong>, median <strong>{med:,.0f}</strong>.</p>",
+        "<table><tr><th>vendor</th><th>their own example</th><th>characters</th><th>stated duration</th>"
+        "<th>characters / minute</th></tr>"
+        f"<tr><td>Amazon Polly</td><td>{esc(p1['unit'])}</td><td>{p1['characters']:,}</td>"
+        f"<td>{p1['minutes'] / 60:,.2f} h</td><td>{p1['chars_per_minute']:,.1f}</td></tr>"
+        f"<tr><td>Amazon Polly</td><td>{esc(p2['unit'])}</td><td>{p2['characters']:,}</td>"
+        f"<td>{p2['minutes'] / 60:,.2f} h</td><td>{p2['chars_per_minute']:,.1f}</td></tr>"
+        f"<tr><td>Cartesia</td><td>{esc(c1['unit'])}</td><td>{c1['characters']:,}</td>"
+        f"<td>{c1['minutes']:,.0f} min</td><td>{c1['chars_per_minute']:,.1f}</td></tr>"
+        f"<tr><td>Cartesia</td><td>{esc(c2['unit'])}</td><td>{c2['characters']:,}</td>"
+        f"<td>{c2['minutes']:,.0f} min</td><td>{c2['chars_per_minute']:,.1f}</td></tr></table>",
+        f"<p>Two vendors that price nothing alike agree within a few percent on the unit, which is "
+        f"the point: at ${rate_per_1000:.3f} per 1,000 characters the same audio is "
+        f"<strong>${money(cost_lo, 4)}&ndash;${money(cost_hi, 4)} a finished minute</strong>, "
+        f"{below_hi:.0f}&ndash;{below_lo:.0f}% below the ${rate_per_1000:.3f} that the 1,000-"
+        f"character convention produces. The per-minute column in the table above is a convention, "
+        f"not a measurement; the measured figure is the one to budget with. On the same basis "
+        f"{mins:,} characters is <strong>{mins / hi:,.0f}&ndash;{mins / lo:,.0f} finished minutes</strong> "
+        f"(median {mins / med:,.0f}), not {mins / 1000:,.0f}.</p>",
+        "<p>Nothing here is a quote from ElevenLabs: it publishes a per-character price and a "
+        "1,000-character example, and which of those two numbers you believe decides a "
+        f"{(1000 / lo - 1) * 100:.0f}% swing in the figure people compare across vendors.</p>",
+    ]
 
 
 def q_elevenlabs_pricing_per_minute(d):
@@ -215,7 +368,7 @@ def q_elevenlabs_pricing_per_minute(d):
     credits = 121000
     plan_rate = el["ladder"][2]["usd"] / creator_chars * 1000     # $22 / 275,000 characters
     body = [
-        "<h1>ElevenLabs pricing per minute</h1>",
+        "<h1>ElevenLabs cost per minute</h1>",
         "<p class=\"lede\">At the API rate, <strong>$" + money(r["multilingual_v4_api"], 3) +
         " per 1,000 characters</strong> — about <strong>$" + money(r["multilingual_v4_api"] / 1000 * read_cpm, 3) +
         f"</strong> per finished minute at a {read_cpm}-characters-per-minute read, and $0.080 at the "
@@ -243,6 +396,7 @@ def q_elevenlabs_pricing_per_minute(d):
         "billed in dollars, not credits. Both numbers are quoted here as dated; neither is converted into "
         "the other. A buyer comparing the studio plan with the API plan should read both pages before "
         "subscribing.</p>",
+        *unit_section(r["multilingual_v4_api"]),
         "<p>Read from " + esc(el["source"]) + " on " + esc(el["verified"]) + ".</p>",
         DISCLOSURE,
         "<p>" + labelled("elevenlabs", d) + "</p>",
@@ -320,18 +474,28 @@ def q_elevenlabs_plan_minutes(d):
         f"<th>$ per overshooting minute ({OVERSHOOT_MIN} min past the block)</th></tr>" +
         "".join(f"<tr><td>{esc(a)}</td><td>{esc(b)}</td><td>${money2(step)}</td><td>${money2(per)}</td></tr>"
                 for a, b, step, per in over) + "</table>",
-        (f"<p>That is the trap the plan table hides. 300 finished minutes and 1,238 finished minutes both "
-         f"land on the ${money2(rows[3]['usd'])} block at the vendor's basis, so the same monthly price buys "
-         f"four times the audio. And needing only {OVERSHOOT_MIN} minutes past a block charges the whole step "
-         f"up: on {esc(headline[0])} those {OVERSHOOT_MIN} minutes cost <strong>${money2(headline[2])}"
+        (f"<p>That is the trap the plan table hides. On the vendor's own 1,000-characters-a-minute column, "
+         f"300 finished minutes and 1,238 finished minutes both land on the ${money2(rows[3]['usd'])} block, "
+         f"so the same monthly price buys four times the audio. On the {read_cpm:,}-character basis this "
+         f"page's per-minute prices use, the same pair is {el_minutes(el['ladder'][2]['chars'], read_cpm):,.0f} "
+         f"and {el_minutes(rows[3]['chars'], read_cpm):,.0f} minutes — a plan buys "
+         f"{1000/read_cpm*100-100:.1f}% more minutes than the vendor's column claims. On Creator the "
+         f"boundary is {el_minutes(el['ladder'][2]['chars'], read_cpm):,.1f} finished minutes: 305 cost "
+         f"${money2(rows[2]['usd'])} and 306 cost ${money2(rows[3]['usd'])} — {rows[3]['usd']/rows[2]['usd']:.1f}x "
+         f"the bill for one more minute. And needing only "
+         f"{OVERSHOOT_MIN} minutes past a block charges the whole step up: on {esc(headline[0])} those "
+         f"{OVERSHOOT_MIN} minutes cost <strong>${money2(headline[2])}"
          f"</strong>, which is <strong>${money2(headline[3])} per minute</strong> against a plan average of "
          f"${money2(min(r['usd'] / el_minutes(r['chars'], vendor_cpm) for r in rows if r['usd']))}"
          + (f" (and ${money2(worst[3])} per minute at the top of the ladder)" if worst and worst != headline else "")
          + ".</p>" if headline else "") +
-        "<p>Work out your finished minutes at 1,000 characters per spoken minute first, then check which "
-        "block you land in — not which plan looks closest.</p>",
+        (f"<p>Work out your finished minutes at {read_cpm:,} characters per spoken minute (the vendor's column "
+         f"divides by {vendor_cpm:,}, which overstates the characters a given duration needs by "
+         f"{100-100*read_cpm/vendor_cpm:.1f}%), then check which block you land in — not which plan looks "
+         f"closest.</p>"),
         "<p>Ladder read from " + esc(el.get("plan_source", el["source"])) + " on " +
         esc(el.get("plan_verified", el["verified"])) + ".</p>",
+        cpm_note(),
         DISCLOSURE,
         "<p>" + labelled("elevenlabs", d) + "</p>",
     ]
@@ -402,6 +566,7 @@ def q_elevenlabs_startup_grant(d):
         "prototyping voice on a personal card, the 12 free months are worth more than any plan discount "
         "this site prices, and they cost nothing to ask for. If you are already past that stage, the "
         "ladder above is the number that matters.</p>",
+        cpm_note(),
         DISCLOSURE,
         "<p>" + labelled("elevenlabs", d, "ElevenLabs pricing and startup grants — affiliate link") + "</p>",
     ]
@@ -409,14 +574,17 @@ def q_elevenlabs_startup_grant(d):
 
 
 def q_elevenlabs_free_tier(d):
-    """Run 99 (second page): the free tier, priced as the dollar allowance it actually is.
+    """Run 99 (second page), extended in run 105: the free tier as a licence plus a dollar allowance.
 
     Read live at 2026-11-09T01:22Z from elevenlabs.io/pricing/api, whose plan column prints
     "Characters included" and its own minute column per model: Free / v4 = 10,000 ~10 min,
-    Free / v4 Turbo = 20,000 ~20 min. Both multiply out to $0.80 at each model's rate, which is the
-    finding: the free tier is a fixed dollar allowance, and the "characters" it prints change with the
-    model. Run 95's unit discipline applies — this page takes the unit from the API column, not from
-    the Creative page's credits.
+    Free / v4 Turbo = 20,000 ~20 min. Both multiply out to $0.80 at each model's rate.
+
+    Run 105 added the three limits a buyer actually hits (demand measured in probe105.py, control
+    `elevenlabs pricing` = 10): `elevenlabs free plan commercial use` and `elevenlabs free credits
+    reset / per month` are typed queries, and the answer lives in the vendor's Terms of Use and its
+    credit-cost table rather than on the pricing page. The licence clause is quoted from
+    elevenlabs.io/terms-of-use, read 2026-11-09T02:3xZ; every number is computed from dataset.json.
     """
     el = d["vendors"]["elevenlabs"]
     ft = el["free_tier"]
@@ -425,13 +593,30 @@ def q_elevenlabs_free_tier(d):
     v4_value = ft["chars_v4"] / 1000 * r["multilingual_v4_api"]
     turbo_value = ft["chars_v4_turbo"] / 1000 * r["turbo_flash_api"]
     step_multiple = starter["chars"] / ft["chars_v4"]
+    cpm = el["vendor_minutes_basis"]
+    items = {i["product"]: i for i in el["credit_costs"]["items"]}
+    tts = items["Text to Speech"]["credits"]
+    free_chars = ft["chars_v4"] / tts
+    free_min = free_chars / cpm
+    stt_min = free_chars / items["Speech to Text"]["credits"]
+    music_min = free_chars / items["Eleven Music"]["credits"]
+    sfx_n = free_chars / items["Sound Effects"]["credits"]
+    vc_min = free_chars / items["Voice Changer and Voice Isolator"]["credits"]
+    dub_auto_min = free_chars / items["Dubbing, automatic with watermark"]["credits"]
+    dub_studio = items["Dubbing Studio without watermark"]["credits"]
+    dub_studio_min = free_chars / dub_studio
+    spread = stt_min / dub_studio_min
+    free_conc = next(x for x in el["concurrency"]["tts_concurrent_requests"] if x["plan"] == "Free")
+    starter_min = starter["chars"] / tts / cpm
     body = [
-        "<h1>ElevenLabs free tier: 10,000 characters a month, worth $0.80</h1>",
+        "<h1>ElevenLabs free plan: 10,000 characters a month, a non-commercial licence, and "
+        f"{free_conc['requests']} concurrent requests</h1>",
         "<p class=\"lede\">Yes, there is a free plan, and it is small: <strong>10,000 characters a "
         "month</strong> of v4 speech, which the vendor's own minute column prints as <strong>~10 "
         "minutes</strong>. On v4 Turbo the same free plan lists <strong>20,000 characters</strong> and "
         "~20 minutes, because that model's rate is half. Both allowances are the same money: "
-        f"<strong>${money2(v4_value)} a month</strong> at the vendor's own rates.</p>",
+        f"<strong>${money2(v4_value)} a month</strong> at the vendor's own rates. The limit that stops "
+        "a hobby project is not the minutes — it is the licence.</p>",
         "<h2>The free allowance, per model</h2>",
         "<table><tr><th>model</th><th>rate per 1,000 characters</th><th>characters included free</th>"
         "<th>the vendor's own column</th><th>worth at that rate</th></tr>"
@@ -444,18 +629,67 @@ def q_elevenlabs_free_tier(d):
         "dollar figure, which is why the characters column doubles when the rate halves — and why "
         "\"the free plan gives you 10,000 characters\" is only true on the dearer model. At the "
         f"{el['chars_per_minute_default']}-characters-per-minute read this site uses elsewhere, the same "
-        f"10,000 characters is about {ft['chars_v4'] / el['chars_per_minute_default']:.0f} finished "
-        f"minutes — the vendor's ~10 assumes exactly 1,000 characters a minute — and that is the whole "
-        "free month.</p>",
-        "<h2>What the free plan does not include</h2>",
-        "<p>The paid plans' own feature lists answer this without interpretation: <strong>Commercial "
-        f"License</strong> and <strong>Instant Voice Cloning</strong> are listed as \"Everything in "
-        f"free, plus\" on Starter, so neither is part of free. Starter is ${money(starter['usd'], 2)} a "
-        "month billed monthly — the plan card prints <strong>first month $1</strong> — and it includes "
-        f"<strong>{starter['chars']:,} characters</strong>, <strong>{step_multiple:.1f}×</strong> the "
-        f"free allowance for a dollar. Creator is ${money(el['ladder'][2]['usd'], 2)} "
-        f"(first month ${money(el['ladder'][2]['usd'] / 2, 2)}) for {el['ladder'][2]['chars']:,}.</p>",
-        "<p><strong>Where the free tier stops being enough:</strong> a 10-minute-a-month allowance is "
+        f"{ft['chars_v4']:,} characters is about {free_chars / el['chars_per_minute_default']:.0f} "
+        "finished minutes — the vendor's ~10 assumes exactly 1,000 characters a minute — and that is the "
+        "whole free month.</p>",
+        "<h2>The limit nobody reads: the licence</h2>",
+        "<p>ElevenLabs' Terms of Use draw the line for you, in the section describing free and paid "
+        "users: if you use the Services through the free tier, \"you may only use the Services for "
+        "<strong>non-commercial purposes</strong>\"; through a paid subscription, \"you may use the "
+        "Services for commercial purposes\". The same clause adds that a non-commercial user "
+        "\"must use a personal e-mail address\", and that registering with a business entity's email "
+        "address lets the vendor treat that entity as a data Controller — so an account created with a "
+        "work address is not a hobbyist account, whatever plan it is on.</p>",
+        "<p>The pricing page says the same thing in a shorter form: <strong>Commercial License</strong> "
+        "and Instant Voice Cloning are listed as \"Everything in free, plus\" on Starter, so neither is "
+        f"part of free. That is what the ${money(starter['usd'], 2)} buys first — permission — and only "
+        f"then volume: {starter['chars']:,} characters, <strong>{step_multiple:.1f}×</strong> the free "
+        f"allowance, or about {starter_min:.0f} finished minutes. The plan card prints "
+        f"<strong>$1 for the first month</strong> as a promo ending 2026-11-16; the promo is not the "
+        "price.</p>",
+        f"<p>The unit price does not fall with the plan: ${money(starter['usd'], 2)}/{starter['chars']:,} "
+        f"is ${money(starter['usd'] / (starter['chars'] / 1000), 3)} per 1,000 characters, and the "
+        f"${el['ladder'][-1]['usd']:,} tier works out to the same "
+        f"${money(el['ladder'][-1]['usd'] / (el['ladder'][-1]['chars'] / 1000), 3)}. Paying buys the "
+        "licence and the volume, never a cheaper character.</p>",
+        "<h2>The same free month buys very different amounts of work</h2>",
+        "<p>The Creative plans page prints the same allowance as 10,000 credits, and all products spend "
+        "from one shared monthly pool — so the free month is a balance whose size depends on which "
+        "product spends it. From the vendor's own per-product credit costs:</p>",
+        "<table><tr><th>product</th><th>credits</th><th>what the free month buys</th></tr>"
+        f"<tr><td>Text to Speech</td><td>{tts} per character</td><td>{free_min:.0f} minutes of speech</td></tr>"
+        f"<tr><td>Speech to Text</td><td>{items['Speech to Text']['credits']} per minute</td>"
+        f"<td>{stt_min:.1f} minutes transcribed</td></tr>"
+        f"<tr><td>Eleven Music</td><td>{items['Eleven Music']['credits']} per minute</td>"
+        f"<td>{music_min:.1f} minutes of music</td></tr>"
+        f"<tr><td>Sound Effects</td><td>{items['Sound Effects']['credits']} per generation</td>"
+        f"<td>{sfx_n:.0f} sound effects</td></tr>"
+        f"<tr><td>Voice Changer / Isolator</td>"
+        f"<td>{items['Voice Changer and Voice Isolator']['credits']:,} per minute</td>"
+        f"<td>{vc_min:.0f} minutes</td></tr>"
+        f"<tr><td>Dubbing, automatic with watermark</td>"
+        f"<td>{items['Dubbing, automatic with watermark']['credits']:,} per minute</td>"
+        f"<td>{dub_auto_min:.1f} minutes</td></tr>"
+        f"<tr><td>Dubbing Studio without watermark</td><td>{dub_studio:,} per minute</td>"
+        f"<td><strong>{dub_studio_min:.0f} minute</strong></td></tr></table>",
+        f"<p>That is a <strong>{spread:.1f}&times; spread inside one balance</strong>: the free month is "
+        f"{stt_min:.1f} minutes of transcription or 1 minute of studio dubbing. A creator who reads "
+        "\"10,000 credits\" as \"ten minutes\" and then sends one episode through Dubbing Studio spends "
+        "the <em>whole month's allowance in sixty seconds</em> — which is why the free plan is a demo "
+        "of the product, not a small version of it.</p>",
+        "<h2>Two more limits people hit by accident</h2>",
+        f"<p><strong>{free_conc['requests']} concurrent requests.</strong> On v4 the free plan accepts "
+        f"{free_conc['requests']} simultaneous text-to-speech requests ({free_conc['requests'] * 2} on "
+        "Flash v2 or v2.5, per the help centre's own table). A batch script that fires three at once "
+        "gets a 429 on the third no matter how many credits are left.</p>",
+        "<p><strong>No rollover, and the allowance can be switched off.</strong> Unused credits roll "
+        "over for up to two months on a paid subscription — up to twice the monthly quota, a balance "
+        "capped at three times the quota — and the vendor's FAQ states plainly that rollover does not "
+        "apply to the Free plan. The help centre also carries this wording for free accounts: "
+        "\"Unusual activity detected. Free Tier usage disabled. If you are using proxy/VPN you might "
+        "need to purchase a paid plan to not trigger our abuse detectors.\" That is an abuse-detector "
+        "verdict, not a quota error, and waiting does not clear it.</p>",
+        "<p><strong>Where the free tier stops being enough:</strong> a ten-minute-a-month allowance is "
         "one short video, or a single demo call. Anything that runs monthly — a narration series, an "
         "agent in staging, an audiobook — crosses into the paid ladder immediately, and the ladder is "
         "block-priced, so the plan you pick should be chosen from finished minutes, not from the plan "
@@ -463,9 +697,153 @@ def q_elevenlabs_free_tier(d):
         "different decision and a much larger number.</p>",
         "<p>Plan column read from " + esc(ft["source"]) + " on " + esc(ft["verified"]) + "; the same "
         "page prints \"API usage is billed in US dollars, not credits\", so the unit taken here is the "
-        "API column's characters, not the Creative page's credits.</p>",
+        "API column's characters, not the Creative page's credits. The licence clause and the "
+        "abuse-detector wording were read on elevenlabs.io/terms-of-use and the help centre on "
+        "2026-11-09, and terms change without a changelog. Quality, latency and voice availability are "
+        "not measured here: this page prices a licence and a balance, and no audio was generated.</p>",
+        cpm_note(),
         DISCLOSURE,
         "<p>" + labelled("elevenlabs", d, "ElevenLabs free plan and pricing — affiliate link") + "</p>",
+    ]
+    return "".join(body)
+
+def q_elevenlabs_concurrency(d):
+    """Run 103: concurrency — the limit people hit with a 429, and what a slot costs.
+
+    Three vendor pages read live at 2026-11-09T02:05Z disagree in ways that matter to a buyer:
+      * /pricing's Creative comparison table prints 2 / 3 / 5 / 10 / 15 / 25 concurrent requests;
+      * /pricing/agents prints 4 / 6 / 10 / 20 / 30 / 40 concurrent calls for the same six prices;
+      * the 429 help-centre article prints Business as 15 for TTS while the table prints 25.
+    Everything below is computed from dataset.json's concurrency block, so a re-read changes the page.
+    """
+    el = d["vendors"]["elevenlabs"]
+    c = el["concurrency"]
+    tts = c["tts_concurrent_requests"]
+    ag = c["agent_concurrent_calls"]
+    b = c["burst"]
+    qq = c["queueing"]
+
+    def per_slot(usd, n):
+        return "n/a" if usd == 0 else "$" + money2(usd / n)
+
+    tts_rows = "".join(
+        f"<tr><td>{esc(r['plan'])}</td><td>${money(r['usd'], 2)}</td><td>{r['requests']}</td>"
+        f"<td>{per_slot(r['usd'], r['requests'])}</td></tr>" for r in tts)
+    ag_rows = "".join(
+        f"<tr><td>{esc(r['plan'])}</td><td>${money(r['usd'], 2)}</td><td>{r['calls']}</td>"
+        f"<td>{per_slot(r['usd'], r['calls'])}</td></tr>" for r in ag)
+
+    starter = tts[1]
+    business = tts[-1]
+    slot_cheap = starter["usd"] / starter["requests"]
+    slot_dear = business["usd"] / business["requests"]
+    slot_rise = slot_dear / slot_cheap
+    growth = business["requests"] / starter["requests"]
+
+    creator_tts = next(r for r in tts if r["plan"] == "Creator")
+    creator_ag = next(r for r in ag if r["plan"] == "Creator")
+    pro_ag = next(r for r in ag if r["plan"] == "Pro")
+    step_up = pro_ag["usd"] - creator_ag["usd"]
+    premium = b["burst_agent_usd_per_minute"] - b["standard_agent_usd_per_minute"]
+    breakeven_min = step_up / premium
+    burst_creator_cap = min(creator_ag["calls"] * b["max_multiplier"], b["absolute_cap_non_enterprise"])
+    pro_burst_cap = min(pro_ag["calls"] * b["max_multiplier"], b["absolute_cap_non_enterprise"])
+
+    # what concurrency a call volume needs: calls per hour x average minutes / 60
+    demo_per_hour, demo_minutes = 300, 3
+    demo_conc = demo_per_hour * demo_minutes / 60
+
+    body = [
+        "<h1>ElevenLabs concurrency limit: the same $22 buys 5 speech requests or 10 agent calls</h1>",
+        "<p class=\"lede\">ElevenLabs sells concurrency twice. On the Creative plans, the "
+        f"<strong>{esc(creator_tts['plan'])} plan at ${money(creator_tts['usd'], 2)}</strong> runs "
+        f"<strong>{creator_tts['requests']} concurrent text-to-speech requests</strong>; on the "
+        f"ElevenAgents plans, the same ${money(creator_ag['usd'], 2)} runs "
+        f"<strong>{creator_ag['calls']} concurrent calls</strong>. Both numbers are on the vendor's own "
+        "site, and the two help-centre and pricing pages even disagree about the top plan. Here are both "
+        "ladders as printed, the price of one concurrent slot at each tier, and the arithmetic for whether "
+        "burst pricing or the next plan up is the cheaper way to get headroom.</p>",
+
+        "<h2>Concurrent text-to-speech requests, by plan</h2>",
+        "<table><tr><th>plan</th><th>monthly price</th><th>concurrent requests</th>"
+        "<th>price per concurrent request</th></tr>" + tts_rows + "</table>",
+        f"<p><strong>A concurrent slot costs more the bigger the plan gets.</strong> ${money2(slot_cheap)} "
+        f"a month on {esc(starter['plan'])}, ${money2(slot_dear)} on {esc(business['plan'])}: "
+        f"<strong>{slot_rise:.1f}&times; more</strong> for a plan that offers {growth:.1f}&times; the "
+        "concurrency. The vendor is not selling slots separately. Concurrency scales with the credit "
+        "allowance, and the per-credit price is flat (this site measures $0.080 per 1,000 characters at "
+        "every paid tier), so you are buying speech and the parallelism arrives attached to it. If what "
+        "you actually need is a number of parallel requests, the arithmetic above is worth doing before "
+        "paying for a tier whose credits you cannot spend.</p>",
+
+        "<h2>Concurrent agent calls, by plan</h2>",
+        "<table><tr><th>plan</th><th>monthly price</th><th>concurrent calls</th>"
+        "<th>price per concurrent call</th></tr>" + ag_rows + "</table>",
+        f"<p><strong>At every tier below the top, the agent number is exactly twice the speech number "
+        f"for the same money</strong> ({creator_ag['calls']} against {creator_tts['requests']} on "
+        f"{esc(creator_tts['plan'])}, {pro_ag['calls']} against "
+        f"{next(r['requests'] for r in tts if r['plan'] == 'Pro')} on Pro). The two products are billed "
+        "on different units &mdash; call minutes against a shared credit pool &mdash; so the agent plans "
+        "are not simply twice as generous; but if your workload is a voice agent, the plan buys double "
+        "the parallelism a speech pipeline gets for the same price.</p>",
+
+        "<h2>The two official pages that disagree</h2>",
+        f"<p>The Creative comparison table prints <strong>{business['requests']} concurrent requests</strong> "
+        f"for {esc(business['plan'])}. The help-centre article for API error 429 &mdash; the same article "
+        "that defines the limit &mdash; prints the ladder as Free 2, Starter 3, Creator 5, Pro 10, Scale 15, "
+        f"Business <strong>{c['tts_help_center_business']}</strong>. Both pages are official and neither carries a "
+        "date. For a paid tier below the top this changes nothing; for Business it is a "
+        f"{business['requests'] - c['tts_help_center_business']}-request gap, and the safe assumption is the "
+        "lower figure, because the number an error message enforces is the limiting one. If you are sizing "
+        "a Business plan on concurrency, ask sales for the number in writing.</p>",
+
+        "<h2>Burst pricing: the cheaper way to buy headroom</h2>",
+        "<p>Agent plans can exceed their limit on purpose. With bursting enabled, calls above the plan's "
+        f"concurrency are accepted up to <strong>{b['max_multiplier']}&times; the limit or "
+        f"{b['absolute_cap_non_enterprise']} calls, whichever is lower</strong>, and those calls are billed "
+        f"at <strong>${money(b['burst_agent_usd_per_minute'], 2)} a minute instead of "
+        f"${money(b['standard_agent_usd_per_minute'], 2)}</strong>. Burst calls are also deprioritised for "
+        "speech processing, so they can be slower. Two things follow.</p>",
+        f"<p>First, burst is often cheaper than the next plan. {esc(creator_ag['plan'])} gives "
+        f"{creator_ag['calls']} concurrent calls; {esc(pro_ag['plan'])} gives {pro_ag['calls']} for "
+        f"<strong>${money2(step_up)} more a month</strong>. Bursting on {esc(creator_ag['plan'])} accepts "
+        f"up to <strong>{burst_creator_cap} concurrent</strong> and charges the excess "
+        f"<strong>${money2(premium)} a minute</strong> extra. The step up pays for itself only if you push "
+        f"past the lower limit by more than <strong>{breakeven_min:,.0f} call-minutes a month</strong> "
+        f"(${money2(step_up)} &divide; ${money2(premium)}), i.e. 16 hours of overflow calling. Under that, "
+        "burst and stay.</p>",
+        f"<p>Second, the cap is on your own number, not on the example table. The burst documentation's "
+        "own table starts at a 50-call subscription limit and climbs to 200 &mdash; no published plan has "
+        f"50 concurrent agent calls; the top plan has {ag[-1]['calls']}. "
+        f"So on {esc(pro_ag['plan'])} the burst ceiling is {pro_burst_cap} calls, not 150.</p>",
+
+        "<h2>What happens when you hit the limit</h2>",
+        "<ul>"
+        f"<li><strong>Speech-to-text and text-to-speech:</strong> HTTP <strong>429</strong> with "
+        f"<code>too_many_concurrent_requests</code>. A 429 can also read <code>system_busy</code>, which is "
+        "the vendor's own traffic rather than your plan &mdash; retrying that one generally works, and "
+        "retrying the first one does not.</li>"
+        f"<li><strong>Agents:</strong> the call is rejected, or queued if call queueing is on &mdash; it is "
+        f"on by default for new agents, and callers wait up to <strong>{qq['max_wait_default_seconds']} "
+        f"seconds</strong> by default (adjustable to {qq['max_wait_range_seconds'][1]:,}). Queue time is "
+        "not billed and does not count toward the conversation's duration.</li>"
+        f"<li><strong>Not queued:</strong> {esc(qq['unsupported_channels'])}. A call over the daily limit "
+        "is rejected too, because that limit does not free up until the next day.</li>"
+        "</ul>",
+
+        "<h2>Sizing the plan from your own traffic</h2>",
+        f"<p>Concurrency is peak simultaneity, not volume. Average concurrency is calls per hour &times; "
+        f"average minutes &divide; 60: <strong>{demo_per_hour} calls an hour at {demo_minutes} minutes each "
+        f"is {demo_conc:.0f} concurrent on average</strong> &mdash; above Creator's {creator_ag['calls']} "
+        f"and inside Pro's {pro_ag['calls']} &mdash; and the peak, not the average, is what the limit "
+        "enforces. Measure p95 call length before choosing the tier; the price step is large and the "
+        "credit pool is the same size either way.</p>",
+        f"<p>Limits and prices read from {esc(c['sources']['tts_pricing'])}, "
+        f"{esc(c['sources']['agent_pricing'])}, {esc(c['sources']['error_429'])}, "
+        f"{esc(c['sources']['burst'])} and {esc(c['sources']['queueing'])} on {esc(c['verified'])}. "
+        "The per-slot figures and the break-even are this site's arithmetic on those printed numbers.</p>",
+        DISCLOSURE,
+        "<p>" + labelled("elevenlabs", d, "ElevenLabs plans and concurrency — affiliate link") + "</p>",
     ]
     return "".join(body)
 
@@ -877,66 +1255,192 @@ def q_droplet_pricing(d, x):
 
 
 def q_digitalocean_free_credit(d, x):
-    """What the DigitalOcean referral signup credit is worth — in this dataset's own units.
+    """DigitalOcean's signup credit: which of the live offers a new account is actually on.
 
-    The demand for this page was measured, not assumed: `digitalocean free credit $200`,
-    `digitalocean free credits`, `digitalocean free trial $200` and `digitalocean free $200` are all
-    Google Autocomplete suggestions (probe89.py, 2026-11-08 22:5xZ; control `vultr vs` answered 10).
-    The amount is first-party: DigitalOcean's own release notes (docs.digitalocean.com/release-notes/
-    accounts/, read 2026-11-08) say referral signups "receive a $200 account credit, increased from
-    $100" (27 Sep 2022), and its referral offer has carried a 60-day window since Dec 2019. Every
-    dollar figure below is arithmetic on THIS repo's dated Droplet and GPU prices.
+    Rewritten 2026-11-09T19:21Z (run 131) from the four-door audit in run 130. Two earlier
+    versions of this page priced ONE credit — first "$200 for 60 days", then "$5 for 90 days" —
+    and both were a single door of several. Read at the source on 2026-11-09:
+      * $5 / 90 days: docs.digitalocean.com/platform/billing/signup-credit/, *Last verified
+        15 Jul 2026*. Applied automatically to a first team, no promo code, expires 90 days
+        after signup, all products except SaaS Add-Ons, payment method required, not
+        transferable.
+      * $100 / 60 days: try.digitalocean.com/paas, read 2026-11-09 — "$100, 60-day free trial
+        requires valid credit card"; its FAQ says any infrastructure service including all
+        Droplet plans, with overage billed to the card.
+      * $200: partner and startup tracks (a partner page at 12 months; a DO community profile
+        advertising $200 for 60 days with a referral code). The only first-party document that
+        states $200 is the release note of 27 September 2022 ("increased from $100").
+    The Promotional Credit & Discount Terms (*Last updated 7 June 2024*) govern all of them: no
+    cash value, non-transferable, one code per account, Marketplace/Support/crypto/upfront-prepay
+    ineligible, terms modifiable by posting — which is how a 2022 $200 becomes a 2026 $5 without
+    anyone misquoting anything.
+
+    The unit that makes the offers comparable is amount / window = the monthly spend that would
+    consume the credit, because DigitalOcean caps each month at the plan's monthly price. Nothing
+    here was bought: these are list prices and published terms, not invoices.
     """
     plans = x["droplets"]["plans"]
+    h730 = x["month_hours"]
     six = next(p for p in plans if p["family"] == "Basic" and p["memory_gib"] == 1.0 and p["vcpus"] == 1)
-    h60 = 60 * 24
-    six_60 = six["usd_per_hour"] * h60
-    credit = 200.0
-    n_droplets = credit / six_60
+
+    def window_bill(monthly, days):
+        """DigitalOcean bills by the second with a monthly cap, so N days cost N/30 months,
+        each capped at the monthly price."""
+        return monthly * (days / 30.0)
+
+    offers = [
+        ("Default signup credit", 5.0, 90,
+         "Signup Credit docs, Last verified 15 Jul 2026"),
+        ("Sign-up landing page trial", 100.0, 60,
+         "try.digitalocean.com/paas, read 2026-11-09"),
+        ("Partner / startup tracks", 200.0, 60,
+         "partner pages and a DO community profile, read 2026-11-09"),
+    ]
+    rows = []
+    for name, amt, days, source in offers:
+        full = sorted([p for p in plans if window_bill(p["usd_per_month"], days) <= amt],
+                      key=lambda p: p["usd_per_month"])
+        need = amt / (days * 24.0) * h730
+        six_bill = window_bill(six["usd_per_month"], days)
+        alive_d = amt / six["usd_per_hour"] / 24.0
+        nearest = min(plans, key=lambda p: abs(p["usd_per_month"] - need))
+        rows.append({"name": name, "amt": amt, "days": days, "source": source,
+                     "full": full, "need": need, "six_bill": six_bill,
+                     "nearest": nearest,
+                     "six_left": max(0.0, amt - six_bill),
+                     "six_share": 100.0 * min(1.0, amt / six_bill),
+                     "alive_d": alive_d})
+
     h100 = next(o for o in x["gpus"]["offers"]
                 if o["provider"] == "digitalocean" and o["family"] == "H100" and o["tier"] == "on_demand")
-    h100_hours = credit / h100["usd_per_gpu_hour"]
+    l40s = next(o for o in x["gpus"]["offers"]
+                if o["provider"] == "digitalocean" and o["family"] == "L40S" and o["tier"] == "on_demand")
     src = x["sources"]["droplets"]
+
+    door_rows = "".join(
+        f"<tr><td>{esc(o['name'])}</td><td>${money2(o['amt'])}</td><td>{o['days']} days</td>"
+        f"<td>${money2(o['need'])}/mo</td><td><strong>{len(o['full'])} of {len(plans)}</strong></td>"
+        f"<td>{esc(o['source'])}</td></tr>"
+        for o in rows)
+    six_rows = "".join(
+        f"<tr><td>${money2(o['amt'])}</td><td>${money2(o['six_bill'])}</td>"
+        f"<td>{o['six_share']:.1f}%</td><td>${money2(o['six_left'])}</td>"
+        f"<td>{('%.1f days' % o['alive_d']) if o['six_left'] <= 0.01 else 'the whole window'}</td></tr>"
+        for o in rows)
+    gpu_rows = "".join(
+        f"<tr><td>${money2(o['amt'])}</td>"
+        f"<td>{o['amt'] / h100['usd_per_gpu_hour']:.1f} h</td>"
+        f"<td>{o['amt'] / l40s['usd_per_gpu_hour']:.1f} h</td></tr>"
+        for o in rows)
+
+    five, hundred, two_hundred = rows
     body = [
-        "<h1>DigitalOcean free credit: $200 for 60 days — and what it actually buys</h1>",
-        "<p class=\"lede\">DigitalOcean's referral signup credit is <strong>$200</strong>, and it "
-        f"<strong>expires 60 days after signup</strong>. Those two numbers together are the whole "
-        f"story: $200 is not $200 of hosting you can spend slowly. At this repo's dated price of "
-        f"${money(six['usd_per_hour'], 5)}/hour for the 1 GiB Basic Droplet, 60 days is "
-        f"{h60:,} hours × ${money(six['usd_per_hour'], 5)} = <strong>${money2(six_60)}</strong>, so the "
-        f"credit covers <strong>{n_droplets:.1f}</strong> of them running the entire window — about "
-        f"15 small Droplets, not 33 months of one.</p>",
-        "<p>The fastest honest way to spend it is a GPU Droplet: at DigitalOcean's own on-demand "
-        f"${money2(h100['usd_per_gpu_hour'])}/GPU-hour for an H100, $200 is "
-        f"<strong>{h100_hours:.0f} hours</strong> of an H100 — one working week plus a day of "
-        "training or batch inference. A small Droplet is the slowest way to spend it and the most "
-        "likely to leave credit on the table.</p>",
-        "<h2>What the terms actually are</h2>",
+        "<h1>DigitalOcean free credit: $5, $100 or $200 — the window decides, not the amount</h1>",
+        "<p class=\"lede\">A new DigitalOcean account does not get one credit. On 2026-11-09 at "
+        "least three offers are live at once: <strong>$5 for 90 days</strong> on the default "
+        "signup flow, <strong>$100 for 60 days</strong> on DigitalOcean's own trial landing page, "
+        "and <strong>$200</strong> on partner and startup tracks. Because each month is capped at "
+        "the plan's monthly price, the number that decides what a credit is worth is "
+        "<strong>amount ÷ window</strong> — the monthly spend that would consume it before it "
+        f"expires. $5 over 90 days needs <strong>${money2(five['need'])} a month</strong>; $100 "
+        f"over 60 days needs <strong>${money2(hundred['need'])}</strong>; $200 over 60 days needs "
+        f"<strong>${money2(two_hundred['need'])}</strong>. The cheapest Droplet on the list is "
+        f"${money2(min(p['usd_per_month'] for p in plans))} a month, so the default credit cannot "
+        "cover a full window at any size — and the largest offers cannot be spent in full on a "
+        "small one.</p>",
+        "<h2>Three doors, all live on 2026-11-09</h2>",
+        "<p>The last column is the number the marketing never prints: divide the credit by its "
+        "window and you get the monthly bill that consumes it exactly. Anything cheaper expires; "
+        "anything dearer runs out.</p>",
+        "<table><tr><th>offer</th><th>credit</th><th>window</th><th>spend/mo to consume it</th>"
+        "<th>plans covered for the whole window</th><th>source read 2026-11-09</th></tr>"
+        + door_rows + "</table>",
+        "<h2>The failure mode flips with plan size</h2>",
+        f"<p>Watch the same three credits on one plan — the ${money2(six['usd_per_month'])} "
+        "1 GiB Basic Droplet, the cheapest thing most people launch. The small credit runs out "
+        f"after <strong>{five['alive_d']:.1f} days</strong> of the 90-day window; the two larger "
+        "ones cover the whole window and leave "
+        f"<strong>${money2(hundred['six_left'])}</strong> and <strong>${money2(two_hundred['six_left'])}</strong> "
+        "unspent. A credit is a discount with an expiry, not a runway: it is too small for the plan "
+        "you wanted or too large for the plan you run.</p>",
+        "<table><tr><th>credit</th><th>bill for the window on the $6 plan</th><th>share covered</th>"
+        "<th>credit left when the window closes</th><th>time alive on the credit</th></tr>"
+        + six_rows + "</table>",
+        "<h2>Where each number comes from</h2>",
+        "<p>The <strong>$5 / 90 days</strong> figure is documented: DigitalOcean's Signup Credit "
+        "page, stamped <em>Last verified 15 Jul 2026</em>, applies it automatically to a first "
+        "team, requires a payment method, excludes SaaS Add-Ons and says it is not transferable. "
+        "The <strong>$100 / 60 days</strong> figure is on DigitalOcean's own "
+        "try.digitalocean.com/paas page, read on 2026-11-09: \"$100, 60-day free trial requires "
+        "valid credit card\", with overage billed to the card. The <strong>$200</strong> figure "
+        "has exactly one first-party document behind it — the release note of 27 September 2022, "
+        "which says referral signups \"receive a $200 account credit, increased from $100\" — "
+        "plus partner pages and a DigitalOcean community profile that still advertise it. "
+        "The Promotional Credit &amp; Discount Terms (<em>Last updated 7 June 2024</em>) cover all "
+        "of them: no cash value, non-transferable, one code per account, and Marketplace, Support, "
+        "crypto and upfront prepay spending ineligible. Terms are \"subject to change by posting\", "
+        "which is exactly how a 2022 $200 becomes a 2026 $5 without anybody misquoting anything.</p>",
+        "<p>So the honest answer to \"how much free credit does DigitalOcean give?\" is that it "
+        "depends which page you sign up on, and the balance in the control panel's top bar is the "
+        "only number that applies to you. This page cannot tell you which door your link opens: "
+        "that requires creating an account and attaching a payment method, and this agent does "
+        "not open accounts.</p>",
+        "<h2>How many plans each credit covers for the whole window</h2>",
+        "<table><tr><th>credit</th><th>plans fully covered</th><th>plan nearest the monthly spend that consumes it</th>"
+        "<th>monthly spend that consumes it exactly</th></tr>"
+        + "".join(
+            f"<tr><td>${money2(o['amt'])} / {o['days']} d</td>"
+            f"<td><strong>{len(o['full'])} of {len(plans)}</strong></td>"
+            f"<td>{esc(o['nearest']['family'])} {money2(o['nearest']['memory_gib'])} GiB / {o['nearest']['vcpus']} vCPU at ${money2(o['nearest']['usd_per_month'])}/mo</td>"
+            f"<td>${money2(o['need'])}/mo</td></tr>"
+            for o in rows)
+        + "</table>",
+        "<p>Plans and hourly rates: " + esc(src["url"]) + ", read " + esc(src["read"]) + ". "
+        "A credit that covers 7 of 31 plans is not a trial of the product; it is a discount on one "
+        "band of it.</p>",
+        "<h2>On GPUs the credit is hours and minutes</h2>",
+        f"<p>A single 80 GB H100 Droplet is ${money2(h100['usd_per_gpu_hour'])} per GPU-hour on "
+        f"demand and an L40S ${money2(l40s['usd_per_gpu_hour'])} (DigitalOcean GPU Droplets "
+        "pricing, read 2026-11-08). GPU Droplets bill for a 5-minute minimum and keep billing "
+        "while powered off, so a mis-mounted run can spend a large share of a small credit before "
+        "anyone notices.</p>",
+        "<table><tr><th>credit</th><th>H100 hours</th><th>L40S hours</th></tr>" + gpu_rows + "</table>",
+        f"<p>On the smallest credit the useful unit is minutes: $5 is <strong>{60.0 * 5.0 / h100['usd_per_gpu_hour']:.0f} "
+        f"minutes</strong> of an H100 and <strong>{60.0 * 5.0 / l40s['usd_per_gpu_hour']:.0f} minutes</strong> of an "
+        "L40S. At DigitalOcean's 60-second / $0.01 minimum charge, $5 is also <strong>500</strong> "
+        "one-second Droplets — the honest unit for a CI job that boots a machine to run one test "
+        "file. At the other end, the $200 partner credit is "
+        f"<strong>{200.0 / h100['usd_per_gpu_hour']:.1f} H100 hours</strong>, which is still less "
+        "than a day and a half on the card.</p>",
+        "<h2>What to check before you sign up</h2>",
         "<ul>"
-        "<li><strong>New accounts only.</strong> The credit attaches at signup through a referral "
-        "link; an existing account does not get it.</li>"
-        "<li><strong>A payment method is required</strong> before any Droplet can be created, and the "
-        "credit is applied to the account rather than to a card.</li>"
-        "<li><strong>60 days, then it expires.</strong> Unspent credit does not roll over, and it "
-        "cannot be paid out as cash.</li>"
-        "<li><strong>Promotional terms change.</strong> The $200 amount is from DigitalOcean's own "
-        "release notes dated 27 September 2022 (raised from $100); the 60-day window is the term its "
-        "referral offer has used since December 2019. Read the live signup page before you rely on "
-        "either number.</li>"
+        "<li><strong>Read the balance, not the blog post.</strong> The credit appears in the "
+        "control panel as \"Signup Credit\" as soon as the team exists. That number is the offer "
+        "you got, and it is the only one your build should be sized against.</li>"
+        "<li><strong>A payment method comes first.</strong> The $5 and $100 offers both require a "
+        "card, PayPal, Google Pay or Apple Pay before a Droplet can exist; the $5 Managed Agents "
+        "trial is the one no-card path, and it is sized for testing, not hosting.</li>"
+        "<li><strong>Decide against the window, not the amount.</strong> On the $6 plan, $5 covers "
+        f"{five['six_share']:.1f}% of 90 days, $100 covers the whole 60-day window with "
+        f"${money2(hundred['six_left'])} left over, and $200 leaves ${money2(two_hundred['six_left'])}. "
+        "If your plan was \"run it free for two months\", the plan was built on a number no "
+        "current page promises.</li>"
+        "<li><strong>Unused credit expires.</strong> It has no cash value, cannot be transferred, "
+        "and one code applies per account.</li>"
         "</ul>",
         "<h2>Why this page states the commission</h2>",
-        "<p>The link below is a referral link and it pays this site, so say the mechanism plainly: "
-        "when a new account signs up through it and spends its first $25, a9n9 receives $25 in "
-        "DigitalOcean credit — that is the commission, and it is credit, not cash. The $200 above is "
-        "the new account's own signup credit, not a payment to this site, and the price you pay "
-        "afterwards is DigitalOcean's published price with nothing returned to you or to this "
-        "page.</p>",
-        f"<p>Prices used: Droplet ${money(six['usd_per_hour'], 5)}/hour and "
-        f"${money2(six['usd_per_month'])}/month for 1 GiB Basic, H100 "
-        f"${money2(h100['usd_per_gpu_hour'])}/GPU-hour on demand, both read from "
-        f"{esc(src['url'])} on {esc(src['read'])}; the 730-hour monthly cap and the backup surcharge "
-        "are on the droplet-pricing page. Nothing here was bought: these are list prices and "
-        "published credit terms, not invoices.</p>",
+        "<p>The link below is a referral link and it pays this site: when a new account signs up "
+        "through it and spends its first $25, a9n9 receives $25 in DigitalOcean credit — credit, "
+        "not cash. The signup credit described above belongs to the new account, not to this site, "
+        "and the prices you pay afterwards are DigitalOcean's published prices with nothing "
+        "returned to you or to this page. Which of the doors above your link opens is not something "
+        "this page can see; the control panel's balance is.</p>",
+        "<p>Credit terms: https://docs.digitalocean.com/platform/billing/signup-credit/ and "
+        "https://docs.digitalocean.com/platform/teams/how-to/refer-others/ (both \"Last verified "
+        "15 Jul 2026\"), try.digitalocean.com/paas and the Promotional Credit &amp; Discount Terms "
+        "(*Last updated 7 June 2024*), all read 2026-11-09T19:21Z. Plan prices: "
+        + esc(src["url"]) + ", read " + esc(src["read"]) + ". Nothing here was bought: these are "
+        "list prices and published terms, not invoices.</p>",
         DISCLOSURE,
         "<p>" + aff_link(x, "digitalocean", "DigitalOcean signup — affiliate link") + "</p>",
     ]
@@ -1025,6 +1529,47 @@ def q_gpu_price_per_hour(d, x):
     return "".join(body)
 
 
+# Run 110: the first buyer-side fact Novita does not put on a marketing page — what the account costs
+# to open. Read from the vendor's own docs on 2026-11-09 (all four pages are its docs, not a review):
+#   https://novita.ai/docs/guides/payment-methods  "top up a specified amount of credit, which must be
+#                                                 greater than $10"  (last modified 2026-11-05)
+#   https://novita.ai/docs/guides/faq              refunds "generally not available"; "sign-up credit
+#                                                 voucher" mentioned only as something the system revokes
+#   https://novita.ai/docs/guides/llm-billing      499 Client Disconnected is charged; 400/401/403/429/5xx not
+#   docs banner                                    13 models retired 2026-11-26 16:00 UTC, incl. gpt-oss-120b
+# The model-API signup voucher's SIZE is published nowhere (the Sandbox credit below is a different product and
+# is not generalised to token inference) — see the run-111 correction that follows.
+#
+# Run 111 CORRECTION: run 110 wrote "the signup voucher's SIZE is published nowhere". That was true of the
+# model-API and GPU docs and FALSE of the Sandbox docs, which were not read. Read live 2026-11-09T03:21Z:
+#   https://docs.novita.ai/guides/sandbox-pricing (last modified 2026-11-05, read 03:21Z)
+#   "New users can complete a quick account setup survey to receive $100 in promotional credits for eligible
+#    Novita Sandbox usage. No credit card is required."  +  "Promotional credits do not change the underlying
+#    unit prices" and "Credits may be subject to availability, validity period, usage scope, and quota limits."
+#   CPU 1 vCPU = $0.0000098/s ; RAM 1 GiB = $0.0000032/s ; 20 GB ephemeral free per running sandbox ;
+#   60 GB persistent free per account, $0.00009/GB/h beyond that.
+# So Novita DOES have a no-card entry — but only for the Sandbox product. Token inference and GPU instances
+# still need the >$10 top-up, which is why both numbers are on the page and neither is generalised.
+NOVITA_ENTRY = {
+    "min_topup_usd": 10.01,          # "must be greater than $10"
+    "read": "2026-11-09T03:12Z",
+    "sandbox_read": "2026-11-09T03:21Z",
+    "sandbox_credit_usd": 100.00,
+    "sandbox_cpu_usd_per_vcpu_sec": 0.0000098,
+    "sandbox_ram_usd_per_gib_sec": 0.0000032,
+    "sandbox_small_vcpu": 1,
+    "sandbox_small_gib": 1,
+    "sandbox_big_vcpu": 4,
+    "sandbox_big_gib": 8,
+    "retire_date": "2026-11-26",
+    "retire_count": 13,
+    "retire_named": ["gpt-oss-120b", "llama-3.3-70b-instruct"],
+    "unrefundable": True,
+    "charged_status": [200, 499],
+    "free_status": [400, 401, 403, 429, 500, 503, 504],
+}
+
+
 def q_novita_api_pricing(d, x):
     nt = x["novita_tokens"]
     paid = [r for r in nt["rows"] if (r["input_usd_per_mtok"] or 0) > 0 or (r["output_usd_per_mtok"] or 0) > 0]
@@ -1036,6 +1581,48 @@ def q_novita_api_pricing(d, x):
     bills = sorted(((MIX[0] * r["input_usd_per_mtok"] + MIX[1] * r["output_usd_per_mtok"], r) for r in paid),
                    key=lambda t: (t[0], t[1]["name"]))
     cheapest_mix, dearest_mix = bills[0], bills[-1]
+    # Run 110: what Novita's unpublished-floor minimum top-up ($10.01) actually buys, computed from the
+    # same numbers the table prints — the cheapest 4:1 chat mix on the page, and the cheapest Novita H100
+    # spot hour from the GPU dataset. Nothing here is typed.
+    nov_flash = cheapest_mix[1]
+    nov_flash_name = nov_flash["name"]
+    nov_flash_in = nov_flash["input_usd_per_mtok"]
+    nov_flash_out = nov_flash["output_usd_per_mtok"]
+    _blend = (MIX[0] * nov_flash_in + MIX[1] * nov_flash_out) / (MIX[0] + MIX[1])
+    nov_flash_tokens = NOVITA_ENTRY["min_topup_usd"] / _blend
+    nov_dear = dearest_mix[1]
+    nov_dear_name = nov_dear["name"]
+    nov_dear_in = nov_dear["input_usd_per_mtok"]
+    nov_dear_out = nov_dear["output_usd_per_mtok"]
+    _blend2 = (MIX[0] * nov_dear_in + MIX[1] * nov_dear_out) / (MIX[0] + MIX[1])
+    nov_dear_tokens = NOVITA_ENTRY["min_topup_usd"] / _blend2
+    _h100_spot = [o for o in x["gpus"]["offers"]
+                  if o["family"] == "H100" and o["provider"] == "novita" and o["tier"] == "spot"]
+    if not _h100_spot:
+        raise SystemExit("novita-ai-api-pricing: no Novita H100 spot offer in the GPU dataset")
+    nov_spot = min(o["usd_per_gpu_hour"] for o in _h100_spot)
+    nov_spot_hours = NOVITA_ENTRY["min_topup_usd"] / nov_spot
+    # Run 111: what the Sandbox's $100 no-card credit buys, from the Sandbox docs' own per-second unit prices.
+    # Two shapes, both printed, because a credit is only meaningful against a machine size.
+    def _sb_per_hour(vcpu, gib):
+        sec = (vcpu * NOVITA_ENTRY["sandbox_cpu_usd_per_vcpu_sec"]
+               + gib * NOVITA_ENTRY["sandbox_ram_usd_per_gib_sec"])
+        return sec * 3600.0
+    sb_small_h = NOVITA_ENTRY["sandbox_credit_usd"] / _sb_per_hour(
+        NOVITA_ENTRY["sandbox_small_vcpu"], NOVITA_ENTRY["sandbox_small_gib"])
+    sb_big_h = NOVITA_ENTRY["sandbox_credit_usd"] / _sb_per_hour(
+        NOVITA_ENTRY["sandbox_big_vcpu"], NOVITA_ENTRY["sandbox_big_gib"])
+    sb_small_rate = _sb_per_hour(NOVITA_ENTRY["sandbox_small_vcpu"], NOVITA_ENTRY["sandbox_small_gib"])
+    sb_big_rate = _sb_per_hour(NOVITA_ENTRY["sandbox_big_vcpu"], NOVITA_ENTRY["sandbox_big_gib"])
+    # the banner names vendor ids (openai/gpt-oss-120b); the table prints display names, so map them
+    _norm = lambda s: re.sub(r"[^a-z0-9]", "", s.lower())
+    nov_retired = [r["name"] for r in nt["rows"]
+                   if any(_norm(k) in _norm(r["name"]) for k in NOVITA_ENTRY["retire_named"])]
+    if len(nov_retired) != len(NOVITA_ENTRY["retire_named"]):
+        raise SystemExit(f"novita-ai-api-pricing: retired models not found in the price table: {nov_retired}")
+    _read = date(int(NOVITA_ENTRY["read"][0:4]), int(NOVITA_ENTRY["read"][5:7]), int(NOVITA_ENTRY["read"][8:10]))
+    _ret = date.fromisoformat(NOVITA_ENTRY["retire_date"])
+    nov_days_left = (_ret - _read).days
     rows = ""
     for r in paid:
         cache = ("$" + money(r["cache_read_usd_per_mtok"], 4)) if r["cache_read_usd_per_mtok"] is not None else "—"
@@ -1077,6 +1664,59 @@ def q_novita_api_pricing(d, x):
         f"{len(x['cross_provider']['rows'])}</strong> when every provider is priced at its cheapest routeable "
         f"endpoint. <a href=\"llm-api-pricing-comparison.html\">The model-by-model comparison is here</a>, and it "
         f"shows the models where Novita loses, including the ones where it loses by 7× or more.</p>",
+        "<h2>What it costs to walk in the door: nothing for the Sandbox, $10.01 for the models</h2>",
+        f"<p>Novita's own billing docs give the number its marketing page does not. Manual top-ups "
+        f"&quot;must be greater than $10&quot; (<a href=\"https://novita.ai/docs/guides/payment-methods\">Payment "
+        f"Methods</a>, last modified 2026-11-05), payment is Stripe card or debit only, and the FAQ says refunds "
+        f"are &quot;generally not available&quot;. For token inference and GPU instances, no page on novita.ai "
+        f"states the size of its sign-up voucher — the FAQ mentions one only in the sentence where the system "
+        f"revokes it, &quot;when suspicious registration activity is detected&quot; — so the only figure a buyer "
+        f"can plan on is the floor: "
+        f"<strong>${NOVITA_ENTRY['min_topup_usd']:.2f}</strong>, read {NOVITA_ENTRY['read']}.</p>",
+        f"<p>At the rates in the table above, that floor buys <strong>{nov_flash_tokens:.1f}M tokens</strong> of "
+        f"the cheapest 4:1 chat mix on the page ({esc(nov_flash_name)} — ${money(nov_flash_in, 2)} in, "
+        f"${money(nov_flash_out, 2)} out) and only <strong>{nov_dear_tokens:.1f}M</strong> of the dearest "
+        f"({esc(nov_dear_name)} — ${money(nov_dear_in, 2)} in, ${money(nov_dear_out, 2)} out), a "
+        f"<strong>{nov_flash_tokens / nov_dear_tokens:.0f}×</strong> spread in what the same minimum payment "
+        f"buys. Or <strong>{nov_spot_hours:.1f} hours</strong> of the cheapest H100 spot "
+        f"hour at ${money2(nov_spot)}. Neither is a free tier, and none of it is refundable. Against the other "
+        f"three programs priced on this site: Firecrawl's free plan is 1,000 credits a month with no card (500 "
+        f"searches or 1,000 pages), ElevenLabs gives $0.80 of characters a month on a non-commercial licence and "
+        f"sells its first paid month for $1, and DigitalOcean's signup credit is $5 for 90 days (its docs, read 2026-11-09). For inference, "
+        f"Novita is the one where the first dollar is a commitment.</p>",
+        f"<h2>There is a no-card entry — but it is the Sandbox, not the models</h2>",
+        f"<p>The <a href=\"https://docs.novita.ai/guides/sandbox-pricing\">Sandbox pricing page</a> (last "
+        f"modified 2026-11-05, read {NOVITA_ENTRY['sandbox_read']}) says: &quot;New users can complete a quick "
+        f"account setup survey to receive <strong>${NOVITA_ENTRY['sandbox_credit_usd']:.0f} in promotional "
+        f"credits</strong> for eligible Novita Sandbox usage. No credit card is required.&quot; The same page "
+        f"scopes it twice: the credits apply to &quot;eligible Novita Sandbox usage&quot; — CPU, RAM and billable "
+        f"storage — and are &quot;subject to availability, validity period, usage scope, and quota limits&quot;. "
+        f"Model APIs and GPU instances are not mentioned, so this is not a $100 LLM credit and this page does "
+        f"not present it as one.</p>",
+        f"<p>Priced against the Sandbox's own per-second rates (1 vCPU ${NOVITA_ENTRY['sandbox_cpu_usd_per_vcpu_sec']:.7f}/s, "
+        f"1 GiB ${NOVITA_ENTRY['sandbox_ram_usd_per_gib_sec']:.7f}/s), ${NOVITA_ENTRY['sandbox_credit_usd']:.0f} is "
+        f"<strong>{sb_small_h:,.0f} hours</strong> of a 1 vCPU / 1 GiB sandbox "
+        f"(${sb_small_rate:.4f}/h) or <strong>{sb_big_h:,.0f} hours</strong> of a 4 vCPU / 8 GiB sandbox "
+        f"(${sb_big_rate:.4f}/h), running continuously — plus 20 GB of ephemeral storage free per running "
+        f"sandbox and 60 GB of persistent storage free per account. That is the useful form of the offer: an "
+        f"agent runtime you can benchmark for days without a card, not a discount on the model prices in the "
+        f"table above. Credits do not change those unit prices, so the same $100 buys no inference at "
+        f"all.</p>",
+        "<h2>The same balance is the floor on mistakes</h2>",
+        "<p>Novita bills a request as soon as it reaches the model: 400, 401, 403, 429 and 5xx responses are free, "
+        "but a <strong>499 &quot;client disconnected&quot;</strong> is charged for the tokens already generated "
+        "(<a href=\"https://novita.ai/docs/guides/llm-billing\">LLM API Billing</a>). A client timeout at 30 "
+        "seconds is therefore a paid request, not a retry, and the vendor's own advice is to set "
+        "<code>max_tokens</code> and a client timeout of at least 60 seconds. Out of a non-refundable balance, "
+        "an agent that retries on timeout spends twice and is billed for both attempts.</p>",
+        f"<h2>Two rows in the table above are retired on {NOVITA_ENTRY['retire_date']}</h2>",
+        f"<p>The docs banner, read {NOVITA_ENTRY['read']}, gives 16:00 UTC on {NOVITA_ENTRY['retire_date']} for "
+        f"{NOVITA_ENTRY['retire_count']} model retirements and names <code>openai/gpt-oss-120b</code> and "
+        f"<code>meta-llama/llama-3.3-70b-instruct</code>. Both are rows in the table above "
+        f"({esc(nov_retired[0])} and {esc(nov_retired[1])}) — the prices are real "
+        f"today and will not be quotable in {nov_days_left} days. A price list is not a promise about "
+        f"availability; if a workload is pinned to either id, the replacement should be tested before that date, "
+        f"not after.</p>",
         "<h2>What this page does not know</h2>",
         "<p>Prices are list prices read from the public pricing page; nothing here was bought, and no account "
         "exists to test rate limits, 429 behaviour, latency or whether a model's advertised context is honoured. "
@@ -1394,11 +2034,18 @@ def q_model_price(d, x, key):
     ids = "; ".join(f"{PROVIDER_NAMES[p]} `{esc(provs[p]['id'])}`" for p in order)
 
     # the mix section: the same three prices, read as lines in input-per-output
+    # Run 133: when no pair of lines crosses inside the priced band, _mix_map returns ONE segment
+    # running 0 -> 1e9, and the formatter printed "below 1000000000.00 input tokens per output
+    # token" on 8 of the 10 model pages — a sentinel leaking into prose, next to a following
+    # sentence saying no ratio makes the dearest cheaper. A full-range segment is not a threshold.
     segs = [s for s in _mix_map(provs) if s[0] < 60]
+    full_range = len(segs) == 1 and segs[0][0] <= 0.0001 and segs[0][1] >= 1e8
     mixlines = []
     for lo, hi, win in segs:
         who = " and ".join(PROVIDER_NAMES[p] for p in win)
-        if lo <= 0.0001:
+        if full_range:
+            mixlines.append(f"at every input:output ratio, <strong>{who}</strong>")
+        elif lo <= 0.0001:
             mixlines.append(f"below {hi:.2f} input tokens per output token, <strong>{who}</strong>")
         elif hi >= 1e8:
             mixlines.append(f"above {lo:.2f} input tokens per output token, <strong>{who}</strong>")
@@ -1411,8 +2058,29 @@ def q_model_price(d, x, key):
                 "output token. Interleaved, the lines give the answer at every mix rather than at one: "
                 + "; ".join(mixlines) + ".</p>")
     if not flips:
-        mix_para += ("<p>For this model the ranking does not change at any mix between 0.05 and 60 input "
-                     "tokens per output token, so the table above is not an artifact of the 4:1 example.</p>")
+        # Run 126: the generic "ranking does not change at any mix" sentence was byte-identical on 8
+        # pages (the largest single block of shared text on the site). Compute the crossing ratio from
+        # this model's own two prices instead, so the sentence is both specific and checkable.
+        a_p, b_p = order[0], order[-1]
+        ia, oa = provs[a_p]["input"], provs[a_p]["output"]
+        ib, ob = provs[b_p]["input"], provs[b_p]["output"]
+        if ib >= ia and ob >= oa:
+            mix_para += (f"<p>{PROVIDER_NAMES[b_p]} is dearer on both axes — "
+                         f"${_moneyp(ib)} vs ${_moneyp(ia)} per million input tokens and "
+                         f"${_moneyp(ob)} vs ${_moneyp(oa)} per million output — so no input:output "
+                         f"ratio makes it the cheaper bill.</p>")
+        else:
+            denom = ia - ib
+            r_star = (ob - oa) / denom if denom else None
+            if r_star is not None and 0 < r_star < 60:
+                mix_para += (f"<p>The two cross at <strong>{r_star:.2f} input tokens per output "
+                             f"token</strong>: above that ratio {PROVIDER_NAMES[b_p]}'s lower input "
+                             f"price overtakes {PROVIDER_NAMES[a_p]}'s lower output price.</p>")
+            else:
+                shown = "negative" if (r_star is not None and r_star <= 0) else f"{r_star:.1f}"
+                mix_para += (f"<p>The two price lines cross at <strong>r = {shown}</strong> input tokens "
+                             f"per output token, outside the 0.05–60 band this page prices, so the "
+                             f"ranking in the table holds across that whole band.</p>")
     else:
         mix_para += ("<p>The table above is priced at 4 input tokens per output token "
                      f"({MI}M in, {MO}M out). A chat workload with long prompts and short answers sits "
@@ -1438,6 +2106,35 @@ def q_model_price(d, x, key):
         floor_para = (f"<p>Model-level prices are not always the cheapest price a provider will route to. "
                       f"{bits}, so the headline bill overstates what routing actually costs there.</p>")
 
+    cache_bits = []
+    for p in ("novita", "deepinfra", "openrouter"):
+        c = provs[p].get("cache_read")
+        cache_bits.append(f"${_moneyp(c)}/M on {PROVIDER_NAMES[p]}" if c is not None
+                          else f"not published on {PROVIDER_NAMES[p]}")
+    cache_para = ("<p>Cache reads are billed outside the bill above: " + ", ".join(cache_bits) +
+                  ". A workload that re-reads a long prompt should price that line separately; every "
+                  "figure here is a list price from each provider's own catalogue on the date shown, with "
+                  "no committed-use or negotiated discount.</p>")
+
+    vol_rows = ""
+    for vi, vo, label in ((4, 1, "4M in + 1M out"), (40, 10, "40M in + 10M out"),
+                          (400, 100, "400M in + 100M out")):
+        vb = {p: vi * provs[p]["input"] + vo * provs[p]["output"] for p in names}
+        vol_rows += ("<tr><td>%s</td>" % label
+                     + "".join(f"<td>${money2(vb[p])}</td>" if p in vb else "<td>—</td>"
+                               for p in ("novita", "deepinfra", "openrouter")) + "</tr>")
+    small_gap = (max(4 * provs[p]["input"] + provs[p]["output"] for p in names)
+                 - min(4 * provs[p]["input"] + provs[p]["output"] for p in names))
+    vol_para = (
+        "<h2>The same model at three volumes</h2>"
+        "<table><tr><th>workload</th><th>Novita</th><th>DeepInfra</th><th>OpenRouter</th></tr>"
+        + vol_rows + "</table>"
+        f"<p>All three providers bill these tokens linearly, so the {spread:.2f}&times; gap does not "
+        f"shrink with volume: it is <strong>${money2(small_gap)} a month</strong> at 4M in + 1M out and "
+        f"<strong>${money2(high - low)}</strong> at 400M in + 100M out — exactly one hundred times as much "
+        "for one hundred times the tokens. A committed-use or volume discount, if you negotiate one, is the "
+        "only thing that changes that, and none of the three list prices used here includes one.</p>")
+
     body = [
         f"<h1>{esc(r['display'])} pricing: ${money2(high)} a month at the dearest provider, "
         f"${money2(low)} at the cheapest</h1>",
@@ -1455,14 +2152,11 @@ def q_model_price(d, x, key):
         mix_para,
         tie_para,
         floor_para,
-        "<p>Cache-read prices are per million cached input tokens and are not in the monthly bill above; a "
-        "workload that re-reads a long prompt should price that line separately. All figures are list "
-        "prices from each provider's own catalogue on the date shown, with no committed-use or negotiated "
-        "discount.</p>",
+        vol_para,
+        cache_para,
         "<h2>What this does not measure</h2>",
-        "<p>Price is not the product. Nothing here measures output quality, latency, throughput, rate "
-        "limits, uptime, context-window honesty or data handling, and no account exists on this site to "
-        "test any of them: cost is a tiebreaker after those, not a ranking.</p>",
+        "<p>Price is not the product: no account exists on this site to measure quality, latency, "
+        "throughput, rate limits or data handling, so cost is a tiebreaker after those, not a ranking.</p>",
         DISCLOSURE,
     ]
     if "novita" in cheap:
@@ -1720,7 +2414,7 @@ def q_deepgram_vs_elevenlabs(d, x):
 
     body = [
         "<h1>Deepgram vs ElevenLabs: what a minute of speech costs at each layer</h1>",
-        f"<p class=\\\"lede\\\">The same <strong>{M:,} minutes</strong> of audio is "
+        f"<p class=\"lede\">The same <strong>{M:,} minutes</strong> of audio is "
         f"<strong>${money2(b_stt)}</strong> as Deepgram speech-to-text, <strong>${money2(b_el_v4)}</strong> "
         f"as ElevenLabs Multilingual v4 speech, <strong>${money2(b_dg_agent)}</strong> as a Deepgram agent "
         f"minute and <strong>${money2(b_el_agent)}</strong> as an ElevenLabs agent minute — an "
@@ -1785,7 +2479,7 @@ def q_deepgram_vs_elevenlabs(d, x):
         "per 1,000, <strong>2.27× the API rate</strong>, which is a units error and not a price. "
         "All prices here are list prices read on the dates on this page, not invoices, and neither "
         "vendor&rsquo;s free-tier credit is counted as a price.</p>",
-        "<p class=\\\"merit\\\">Disclosure of interest, stated plainly: ElevenLabs is an affiliate partner "
+        "<p class=\"merit\">Disclosure of interest, stated plainly: ElevenLabs is an affiliate partner "
         "— if you buy through the link below, a9n9 earns a commission. Deepgram pays this site nothing and "
         "there is no Deepgram link on this page. On every layer in the table above ElevenLabs is the more "
         "expensive of the two, and its agent minute excludes the LLM that Deepgram&rsquo;s includes, so "
@@ -1913,7 +2607,7 @@ def q_firecrawl_vs_tavily(d, x):
 
     body = [
         "<h1>Firecrawl vs Tavily: which is cheaper depends on volume, and the answer flips</h1>",
-        f"<p class=\\\"lede\\\">For <strong>10,000 crawled pages</strong> Firecrawl's cheapest seat is "
+        f"<p class=\"lede\">For <strong>10,000 crawled pages</strong> Firecrawl's cheapest seat is "
         f"<strong>${money2(ten_k_pages_fc)}</strong> and Tavily's is <strong>${money2(ten_k_pages_tv)}</strong> "
         f"— Firecrawl costs <strong>{page_ratio_10k:.2f}×</strong> as much. At "
         f"<strong>100,000 pages</strong> the order reverses: Firecrawl <strong>${money2(hundred_k_pages_fc)}"
@@ -1956,7 +2650,7 @@ def q_firecrawl_vs_tavily(d, x):
         "a $0.0024 page that returns an empty string costs more than a $0.0099 page that returns the data. "
         "Neither rate card prices retries, failed extractions or rate limits, and both vendors&rsquo; free "
         "credits expire monthly or are one-off, so a free tier is not a price.</p>",
-        "<p class=\\\"merit\\\">Disclosure of interest, stated plainly: Firecrawl is an affiliate partner — if "
+        "<p class=\"merit\">Disclosure of interest, stated plainly: Firecrawl is an affiliate partner — if "
         "you buy through the link below, a9n9 earns a commission, and its 10% first-purchase discount is "
         "stated where the link is. Tavily pays this site nothing and there is no Tavily link here. On the "
         f"numbers above Firecrawl is the dearer of the two below roughly {page_cross:,} pages and the "
@@ -1971,6 +2665,627 @@ def q_firecrawl_vs_tavily(d, x):
 def load_tavily():
     with open(os.path.join(HERE, "data", "tavily.json"), encoding="utf-8") as f:
         return json.load(f)
+
+
+def load_ttsa():
+    """TTS list prices from five vendors, read 2026-11-09 (run 104). Price only — quality is not priced."""
+    with open(os.path.join(HERE, "data", "tts-alternatives.json"), encoding="utf-8") as f:
+        return json.load(f)
+
+
+def q_elevenlabs_alternatives(d):
+    """`elevenlabs alternatives` — what the cheaper speech APIs actually bill, at two volumes.
+
+    Demand (probe104.py, 2026-11-09 02:2xZ, Google Autocomplete): `elevenlabs alternative` returns 10
+    completions and `elevenlabs alternatives` 10 more (`... free`, `... open source`, `... reddit`,
+    `... 2026`), and `cheaper than elevenlabs` returns 6 (including `is cartesia cheaper than
+    elevenlabs`). That is a buying decision, not a price lookup: the searcher has already decided to
+    leave and is pricing the exit. The sites that answer it are listicles; none of them prints the
+    arithmetic, and the vendor that earns this site a commission is the dearest one in the table.
+
+    Every figure is computed here from data/tts-alternatives.json (five vendors' own pages, read
+    2026-11-09 02:24–02:29Z) plus dataset.json's ElevenLabs ladder. Two bases are stated on the page
+    and never mixed: 1,000 characters per spoken minute for the unit column, and the vendor's own
+    minute for Cartesia's plan table.
+    """
+    el = d["vendors"]["elevenlabs"]
+    t = load_ttsa()
+    cpm = t["minute_basis_chars"]
+    el_rate = el["rates_usd_per_1000_chars"]["multilingual_v4_api"]   # USD per 1,000 characters
+
+    def el_cost(chars):
+        """ElevenLabs is block-priced: the bill is the smallest plan that covers the volume."""
+        fits = [p for p in el["ladder"] if p["chars"] >= chars]
+        if fits:
+            return min(p["usd"] for p in fits), min(fits, key=lambda p: p["usd"])
+        top = max(el["ladder"], key=lambda p: p["chars"])
+        return top["usd"] + (chars - top["chars"]) / 1000 * el_rate, top
+
+    def cartesia_per_minute():
+        paid = [p for p in t["plan_priced"] if p["plan_usd_per_month"] > 0]
+        return min(paid, key=lambda p: p["plan_usd_per_month"] / p["tts_minutes_included"])
+
+    def cartesia_cost(minutes):
+        fits = [p for p in t["plan_priced"] if p["tts_minutes_included"] >= minutes]
+        if fits:
+            return min(p["plan_usd_per_month"] for p in fits)
+        big = max(t["plan_priced"], key=lambda p: p["tts_minutes_included"])
+        over = (minutes - big["tts_minutes_included"]) * big["plan_usd_per_month"] / big["tts_minutes_included"]
+        return big["plan_usd_per_month"] + over
+
+    # ---- table A: unit prices, every offer the file holds ----
+    arows = [f"<tr><td>ElevenLabs</td><td>Multilingual v4 (API)</td>"
+             f"<td>${el_rate:.3f}</td><td>${el_rate * cpm / 1000:.3f}</td></tr>"]
+    for o in t["offers"]:
+        per1k = o["usd_per_1m_chars"] / 1000
+        arows.append(f"<tr><td>{esc(o['vendor'])}</td><td>{esc(o['product'])}</td>"
+                     f"<td>${money(per1k, 4)}</td><td>${money(per1k * cpm / 1000, 4)}</td></tr>")
+    for p in t["plan_priced"]:
+        if p["plan_usd_per_month"] and p["tts_minutes_included"]:
+            per_min = p["plan_usd_per_month"] / p["tts_minutes_included"]
+            arows.append(f"<tr><td>Cartesia</td><td>{esc(p['product'])} — {esc(p['plan'])} plan</td>"
+                         f"<td>not sold per character</td><td>${money(per_min, 4)}</td></tr>")
+    table_a = ("<table><tr><th>vendor</th><th>product</th><th>per 1,000 characters</th>"
+               "<th>per finished minute (1,000 chars)</th></tr>" + "".join(arows) + "</table>")
+
+    # ---- table B: the monthly bill at two real volumes ----
+    car_pro = cartesia_per_minute()
+    car_rate = car_pro["plan_usd_per_month"] / car_pro["tts_minutes_included"]
+    paid_plans = [p for p in t["plan_priced"] if p["plan_usd_per_month"] > 0]
+    car_hi_plan = max(paid_plans, key=lambda p: p["plan_usd_per_month"] / p["tts_minutes_included"])
+    car_lo_plan = min(paid_plans, key=lambda p: p["plan_usd_per_month"] / p["tts_minutes_included"])
+    car_hi = car_hi_plan["plan_usd_per_month"] / car_hi_plan["tts_minutes_included"]
+    car_lo = car_lo_plan["plan_usd_per_month"] / car_lo_plan["tts_minutes_included"]
+    vols = [100000, 1000000]
+    brow = []
+    for v in vols:
+        elb, elplan = el_cost(v)
+        el_eff = elb / (v / 1000)
+        openai = v / 1e6 * 15.0
+        google = v / 1e6 * 30.0
+        polly = v / 1e6 * 16.0
+        car = cartesia_cost(v / cpm)
+        brow.append(
+            f"<tr><td>{v:,} characters</td><td>${money2(elb)} ({esc(elplan['name'])}, "
+            f"${money(el_eff, 3)}/1,000) </td><td>${money2(openai)}</td><td>${money2(google)}</td>"
+            f"<td>${money2(polly)}</td><td>${money2(car)}</td>"
+            f"<td>{openai and elb / openai:.1f}× / {google and elb / google:.1f}× / "
+            f"{polly and elb / polly:.1f}× / {car and elb / car:.1f}×</td></tr>")
+    table_b = ("<table><tr><th>monthly volume</th><th>ElevenLabs (block plan)</th><th>OpenAI tts-1</th>"
+               "<th>Google Chirp 3 HD</th><th>Polly Neural</th><th>Cartesia</th>"
+               "<th>ElevenLabs ÷ the other four</th></tr>" + "".join(brow) + "</table>")
+
+    # ---- table C: free allowances, in characters ----
+    ft = el["free_tier"]
+    el_free_chars = ft["chars_v4"]
+    crow = [f"<tr><td>ElevenLabs</td><td>{el_free_chars:,}</td>"
+            f"<td>${money2(el_free_chars / 1000 * el_rate)}</td><td>—</td></tr>"]
+    for o in t["offers"]:
+        if o.get("free_chars_per_month"):
+            crow.append(f"<tr><td>{esc(o['vendor'])}</td><td>{o['free_chars_per_month']:,}</td>"
+                        f"<td>${money2(o['free_chars_per_month'] / 1e6 * o['usd_per_1m_chars'])}</td>"
+                        f"<td>{esc(o.get('free_note', 'every month'))}</td></tr>")
+    free_p = next(p for p in t["plan_priced"] if p["plan"] == "Free")
+    crow.append(f"<tr><td>Cartesia</td><td>~{free_p['tts_minutes_included']} minutes "
+                f"(≈{free_p['tts_minutes_included'] * cpm:,} characters)</td><td>$0.00</td>"
+                f"<td>every month</td></tr>")
+    table_c = ("<table><tr><th>vendor</th><th>free characters a month</th><th>worth at list price</th>"
+               "<th>window</th></tr>" + "".join(crow) + "</table>")
+
+    el100, el100_plan = el_cost(100000)
+    el1m, el1m_plan = el_cost(1000000)
+    best100 = min(
+        [("OpenAI tts-1", 100000 / 1e6 * 15.0),
+         ("Google Chirp 3 HD", 100000 / 1e6 * 30.0),
+         ("Amazon Polly Neural", 100000 / 1e6 * 16.0),
+         ("Cartesia Pro", cartesia_cost(100)), ], key=lambda kv: kv[1])
+    g_free = next(o["free_chars_per_month"] for o in t["offers"]
+                  if o["vendor"] == "Google Cloud" and o["product"] == "Chirp 3: HD")
+    polly_std_free = next(o["free_chars_per_month"] for o in t["offers"]
+                          if o["vendor"] == "Amazon Polly" and o["product"] == "Standard")
+
+    body = (
+        f"<h1>{esc('ElevenLabs alternatives priced per 1,000 characters')}</h1>"
+        f"<p class=\"lede\">If you are pricing a replacement for ElevenLabs, the number that decides it is "
+        f"not the plan price. At 100,000 characters a month — about 100 finished minutes at 1,000 characters "
+        f"a minute — ElevenLabs bills <strong>${money2(el100)}</strong>, because the smallest plan that covers "
+        f"that volume is {esc(el100_plan['name'])} and its 275,000 characters cannot be bought smaller. "
+        f"OpenAI's tts-1 bills <strong>${money2(100000 / 1e6 * 15.0)}</strong> for the same characters, "
+        f"Google's Chirp 3 HD <strong>${money2(100000 / 1e6 * 30.0)}</strong>, Polly's Neural voices "
+        f"<strong>${money2(100000 / 1e6 * 16.0)}</strong> and Cartesia's Pro plan "
+        f"<strong>${money2(cartesia_cost(100))}</strong>.</p>"
+        f"<p>That is a <strong>{el100 / best100[1]:.1f}×</strong> spread at this volume, and it comes from two "
+        f"different shapes of pricing rather than from a discount: the three API vendors charge per character "
+        f"with no minimum, while ElevenLabs sells blocks. Pay-as-you-go rates tell you the marginal price; the "
+        f"block tells you the bill.</p>"
+        f"<h2>Per 1,000 characters, and per finished minute</h2>{table_a}"
+        f"<p>The per-minute column assumes 1,000 characters make a finished minute of speech — the same basis "
+        f"ElevenLabs' own plan table uses. Cartesia is the exception in kind: it sells credits and states "
+        f"minutes included, so its rate is the plan price divided by its own included minutes, which falls from "
+        f"${car_hi:.4f} a minute on the ${money2(car_hi_plan['plan_usd_per_month'])} plan to ${car_lo:.4f} on "
+        f"the ${money2(car_lo_plan['plan_usd_per_month'])} plan. It is not a character rate, and its credits "
+        f"do not convert to characters at the 1,000-a-minute basis used above.</p>"
+        f"<h2>The bill at two volumes</h2>{table_b}"
+        f"<p>At 1,000,000 characters a month ElevenLabs drops to {esc(el1m_plan['name'])} at "
+        f"<strong>${money2(el1m)}</strong>, and the gap narrows but does not close: OpenAI is "
+        f"${money2(1000000 / 1e6 * 15.0)}, Polly Neural ${money2(1000000 / 1e6 * 16.0)}, Google Chirp 3 HD "
+        f"${money2(1000000 / 1e6 * 30.0)} and Cartesia ${money2(cartesia_cost(1000))}. The dishonesty in most "
+        f"\"alternatives\" posts is comparing one vendor's block price with another vendor's marginal rate; both "
+        f"columns above are bills for the same volume.</p>"
+        f"<h2>What the free tiers are worth</h2>{table_c}"
+        f"<p>Google gives {g_free:,} Chirp 3 HD characters a month away, which is "
+        f"{g_free / el_free_chars:.0f}× ElevenLabs' {el_free_chars:,}, and Polly's Standard voices give "
+        f"{polly_std_free:,} every month with no window. ElevenLabs' free plan is worth "
+        f"${money2(el_free_chars / 1000 * el_rate)} of speech — a fact that is easy to miss because the plan is "
+        f"advertised as \"10,000 characters\" rather than as the dollar allowance it is.</p>"
+        f"<h2>When ElevenLabs is still the right answer</h2>"
+        f"<p>This table prices characters. It does not price voice cloning, dubbing, the multilingual "
+        f"coverage the model advertises, or the agent product, and several of these vendors simply do not sell "
+        f"those. If your job needs an instant clone of one narrator's voice, or a managed agent that answers a "
+        f"phone, the cheaper rows above are not substitutes — they are a different product. The honest reading "
+        f"of the table is narrower: <em>for plain synthesis of text you already have, at these volumes, "
+        f"ElevenLabs is the most expensive of the five.</em> "
+        f"{labelled('elevenlabs', d, 'ElevenLabs pricing — affiliate link (the vendor this page earns from, and the dearest row above)')} "
+        f"appears here because the product line, not the price, is the reason to use it.</p>"
+        + cpm_note()
+        + f"<h2>What is not in the table</h2>"
+        f"<p>Quality and latency are not measured here — a price table cannot rank them, and no sample was "
+        f"generated. Play.ht was probed and could not be read from this machine; Deepgram's speech-to-text and "
+        f"agent rates are on their own pages of this site. Prices are list prices read on "
+        f"{esc(t['as_of'])}; the source lines are in <code>data/tts-alternatives.json</code> in this "
+        f"repository.</p>" + DISCLOSURE
+    )
+    return body
+
+
+def load_scrapea():
+    with open(os.path.join(HERE, "data", "scraping-alternatives.json"), encoding="utf-8") as f:
+        return json.load(f)
+
+
+def q_firecrawl_alternatives(d):
+    """`firecrawl alternatives` — the exit priced per page AND per search, at the plan you would buy.
+
+    Demand (probe104.py, 2026-11-09 02:2xZ, Google Autocomplete, control `elevenlabs pricing` = 10):
+    `firecrawl alternative` returns 10 completions and `firecrawl alternatives` 10 more, among them
+    `... open source`, `... free`, `... self hosted`, `... cheaper alternative`. That is a buyer who has
+    decided to leave; the listicles that answer it compare headline credit prices and stop.
+
+    Two vendor traps make the headline price wrong in opposite directions, both computed here:
+    Firecrawl's pricing page opens on the ANNUAL rate ($83 for Standard) and its JSON format costs five
+    credits a page, so Hobby's 5,000 credits buy 1,000 JSON pages, not 5,000. ScrapingBee's 75,000
+    Hobby credits are 15,000 JavaScript pages at its own 5-credit rate.
+
+    The page's second half reverses the verdict on purpose: the same vendors sell a SEARCH, and there
+    Firecrawl is the cheapest of the four by a wide margin. A buyer's bill is the sum of the two legs,
+    so "which is cheaper" has no answer until the mix is named.
+
+    Every figure is computed from data/scraping-alternatives.json (five vendor pages read 2026-11-09
+    02:45-02:50Z, with the Jina token counts MEASURED from the vendor's own X-Usage-Tokens header on
+    three real pages) and dataset.json's Firecrawl ladder.
+    """
+    fc = d["vendors"]["firecrawl"]
+    a = load_scrapea()
+    sb = a["scrapingbee"]
+    c4 = a["crawl4ai"]
+    ji = a["jina"]
+    tv = load_tavily()
+    fc_annual = a["firecrawl"]["annual_usd_per_month"]
+
+    def fc_plan(credits):
+        """Cheapest Firecrawl plan that covers N credits: (monthly usd, annual usd, plan name)."""
+        fits = [p for p in fc["plans"] if p["pages_included"] >= credits]
+        if not fits:
+            return None
+        best = min(fits, key=lambda p: p["usd_per_month"])
+        ann = fc_annual.get(best["name"], best["usd_per_month"])
+        return best["usd_per_month"], ann, best["name"]
+
+    def sb_plan(credits):
+        fits = [p for p in sb["plans"] if p["credits"] >= credits]
+        if not fits:
+            return None
+        best = min(fits, key=lambda p: p["usd_per_month"])
+        return best["usd_per_month"], best["name"], best["credits"]
+
+    def c4_cost(credits):
+        """Crawl4AI Cloud: $0.001 a credit; the annual-billed tiers, then $0.67/1,000 extra at Scale."""
+        for p in c4["plans_annual_billed"]:
+            if p["credits"] >= credits:
+                return p["usd_per_month"], p["name"]
+        top = max(c4["plans_annual_billed"], key=lambda p: p["credits"])
+        extra = (credits - top["credits"]) / 1000 * 0.67
+        return top["usd_per_month"] + extra, top["name"] + " + extra credits"
+
+    jina_tokens = sorted(r["tokens"] for r in ji["measured"])
+    jina_median = jina_tokens[len(jina_tokens) // 2]
+    jina_rate = ji["tiers"][0]["usd_per_1m_tokens"]
+
+    def jina_cost(pages):
+        return pages * jina_median / 1e6 * jina_rate
+
+    # ---- table A: one page, browser-rendered, at the plan that covers 1,000 of them ----
+    arows = []
+    fc_hobby_m, fc_hobby_a, _ = fc_plan(5000)
+    fc_page = fc_hobby_m / 5000 * 1000
+    arows.append((fc_page, "Firecrawl", "1 credit per page",
+                  "Hobby, $%d ($%.2f annual)" % (fc_hobby_m, fc_hobby_a)))
+    sb5 = sb_plan(5000)
+    sb_page = sb5[0] / (sb5[2] / 5) * 1000
+    arows.append((sb_page, "ScrapingBee", "5 credits with JS rendering", "%s, $%d" % (sb5[1], sb5[0])))
+    c4c, c4n = c4_cost(1000 * c4["credits"]["real_browser"])
+    c4_page = c4["credits"]["real_browser"] * c4["credit_usd"] * 1000
+    arows.append((c4_page, "Crawl4AI Cloud", "1 credit in a real browser",
+                  "%s, $%.2f a month billed yearly" % (c4n, c4c)))
+    tv_page = tv["credits"]["crawl_note"]
+    tv_plan = next(p for p in tv["plans"] if p["name"] == "Project")
+    tv_per_page = 0.3 * tv_plan["usd_per_month"] / tv_plan["credits"]
+    arows.append((tv_per_page * 1000, "Tavily", "0.3 credit per crawled page",
+                  "Project, $%d" % tv_plan["usd_per_month"]))
+    jina_page = jina_median / 1e6 * jina_rate * 1000
+    arows.append((jina_page, "Jina Reader", "%s tokens a page (measured)" % "{:,}".format(jina_median),
+                  "paid key, $%s per 1M tokens" % money(ji["tiers"][0]["usd_per_1m_tokens"], 3)))
+    arows.sort(key=lambda r: r[0])
+    table_a = ("<table><tr><th>vendor</th><th>what one page costs</th><th>per 1,000 pages</th>"
+               "<th>the plan that price needs</th></tr>"
+               + "".join("<tr><td>%s</td><td>%s</td><td>$%.2f</td><td>%s</td></tr>" % (t[1], t[2], t[0], t[3])
+                         for t in arows)
+               + "</table>")
+
+    fc_hobby_per1k = fc_hobby_m / 5000 * 1000
+    jina_per1k = jina_median / 1e6 * jina_rate * 1000
+    spread = fc_hobby_per1k / jina_per1k
+
+    # ---- table B: the monthly bill at two volumes, cheapest legitimate plan per vendor ----
+    def bill(vendor, pages):
+        if vendor == "Firecrawl":
+            r = fc_plan(pages)
+            return (r[0], r[1], r[2]) if r else (None, None, "over Scale; pay-as-you-go")
+        if vendor == "ScrapingBee":
+            r = sb_plan(pages * 5)
+            return (r[0], None, r[1]) if r else (None, None, "over Business +")
+        if vendor == "Crawl4AI Cloud":
+            usd, name = c4_cost(pages * c4["credits"]["real_browser"])
+            return (usd, None, name + " billed yearly")
+        if vendor == "Tavily":
+            credits = pages * 0.3
+            fits = [p for p in tv["plans"] if p["credits"] >= credits]
+            if fits:
+                b = min(fits, key=lambda p: p["usd_per_month"])
+                return (b["usd_per_month"], None, b["name"])
+            return (None, None, "over Growth")
+        if vendor == "Jina":
+            return (jina_cost(pages), None, "paid key")
+        return (None, None, "")
+
+    brow = []
+    for pages in (5000, 100000):
+        cells = []
+        for v in ("Firecrawl", "ScrapingBee", "Crawl4AI Cloud", "Tavily", "Jina"):
+            m, ann, name = bill(v, pages)
+            if m is None:
+                cells.append("<td>— (%s)</td>" % esc(name))
+            elif ann:
+                cells.append("<td>$%s ($%s annual) — %s</td>" % (money2(m), money2(ann), esc(name)))
+            else:
+                cells.append("<td>$%s — %s</td>" % (money2(m), esc(name)))
+        brow.append("<tr><td>%s pages a month</td>%s</tr>" % ("{:,}".format(pages), "".join(cells)))
+    table_b = ("<table><tr><th>volume</th><th>Firecrawl</th><th>ScrapingBee</th><th>Crawl4AI Cloud</th>"
+               "<th>Tavily</th><th>Jina</th></tr>" + "".join(brow) + "</table>")
+
+    # ---- table C: the other leg — 1,000 searches ----
+    std_m, std_a, _ = fc_plan(100000)
+    # Run 118: Firecrawl's own page states 5,000 credits = 2,500 searches (and free = 1,000 = 500),
+    # so a search costs 2 credits. The earlier `2 / 10` divided by the result count and understated
+    # the search leg 10x ($0.17/1,000 instead of $1.66) and the Tavily gap as 45x instead of 4.5x.
+    fc_search_1k = 2 * std_a / 100000 * 1000
+    tv_search_1k = 1 * tv_plan["usd_per_month"] / tv_plan["credits"] * 1000
+    c4_search_1k = 1 * c4["credit_usd"] * 1000
+    jina_search_1k = ji["search_tokens_per_request"] / 1e6 * jina_rate * 1000
+    table_c = ("<table><tr><th>vendor</th><th>credits or tokens per search</th><th>per 1,000 searches</th>"
+               "<th>plan</th></tr>"
+               "<tr><td>Firecrawl</td><td>2 credits (2 per 10 results)</td><td>$%.2f</td>"
+               "<td>Standard, $%d annual</td></tr>"
+               "<tr><td>Tavily</td><td>1 credit (basic search)</td><td>$%.2f</td><td>Project, $%d</td></tr>"
+               "<tr><td>Crawl4AI Cloud</td><td>1 credit</td><td>$%.2f</td><td>any paid tier</td></tr>"
+               "<tr><td>Jina</td><td>10,000 tokens fixed</td><td>$%.2f</td><td>paid key</td></tr>"
+               "</table>" % (fc_search_1k, std_a, tv_search_1k, tv_plan["usd_per_month"],
+                             c4_search_1k, jina_search_1k))
+
+    # ---- table D: what the free tiers allow, pages and searches ----
+    frows = [
+        ("Firecrawl", "{:,} credits/month = 1,000 pages or 500 searches".format(a["firecrawl"]["free_credits_per_month"])),
+        ("ScrapingBee", "{:,} credits once = 200 JavaScript pages".format(sb["free_credits"])),
+        ("Crawl4AI Cloud", "{:,} credits/month = 1,000 browser pages".format(c4["free_credits_per_month"])),
+        ("Tavily", "{:,} credits/month = 3,333 crawled pages".format(tv["free_credits_per_month"])),
+        ("Jina", "{:,} tokens with a key = about {:,} pages at the measured median".format(
+            ji["free_tokens_with_key"], ji["free_tokens_with_key"] // jina_median)),
+    ]
+    table_d = ("<table><tr><th>vendor</th><th>free allowance, in pages</th></tr>"
+               + "".join("<tr><td>%s</td><td>%s</td></tr>" % r for r in frows) + "</table>")
+
+    json_per_1k = fc_hobby_m / (5000 / 5) * 1000
+    sb_credit_lo = sb["plans"][0]["usd_per_month"] / sb["plans"][0]["credits"]
+    sb_credit_hi = sb["plans"][4]["usd_per_month"] / sb["plans"][4]["credits"]
+    sb_ladder = sb_credit_lo / sb_credit_hi
+    std_gap = std_m / std_a - 1
+    c4_oss_stars = c4["oss"]["stars"]
+
+    body = (
+        "<h1>Firecrawl alternatives: 1,000 pages cost $3.80 at Firecrawl and $0.27 at Jina</h1>"
+        '<p class="lede">If you are leaving Firecrawl because of the bill, the first number to check is '
+        'what a page costs at the plan you would actually buy. At the Firecrawl Hobby plan 1,000 '
+        'browser-rendered pages cost <strong>$%.2f</strong>. The same 1,000 pages cost '
+        '<strong>$%.2f</strong> through the Jina Reader API at its measured output size and '
+        '<strong>$%.2f</strong> at the ScrapingBee Hobby plan with JavaScript rendering on — a '
+        '<strong>%.1f×</strong> spread between the dearest and the cheapest of the five vendors priced '
+        'here.</p>' % (fc_hobby_per1k, jina_per1k, sb5[0] / (sb5[2] / 5) * 1000, spread)
+        + "<p>That is the page leg only, and it is the half of the story most alternatives posts tell. "
+        "The second table below prices the other leg — search — and it changes the ranking without "
+        "reversing it: 1,000 searches cost <strong>$%.2f</strong> at Firecrawl, ahead of Tavily's "
+        "<strong>$%.2f</strong> but behind Jina's <strong>$%.2f</strong> and Crawl4AI's "
+        "<strong>$%.2f</strong>. Firecrawl is the dearest per page in this list and mid-table per "
+        "search, so neither table decides anything on its own.</p>"
+        % (fc_search_1k, tv_search_1k, jina_search_1k, c4_search_1k)
+        + "<h2>What one page costs, per vendor</h2>" + table_a
+        + "<p>Every row is one page returned as Markdown by the vendor's own browser, priced at the "
+        "cheapest plan that covers 1,000 pages, because that is the smallest purchase a buyer makes. "
+        "The units are not the same and are not treated as if they were: Firecrawl and Crawl4AI charge a "
+        "credit per rendered page, ScrapingBee charges five credits when JavaScript rendering is on, "
+        "Tavily charges 0.3 of a credit for a crawled page, and Jina charges output tokens.</p>"
+        + "<p>Jina's row is measured rather than quoted from a rate card: the Reader returns an "
+        "<code>X-Usage-Tokens</code> header, and three real pages read on 2026-11-09 came back at "
+        "%s, %s and %s tokens — a median of %s for a page of about %s characters. At $%s per million "
+        "tokens that is $%.2f per 1,000 pages. The spread inside those three pages is already "
+        "%.1f×, so a token-billed vendor hands the buyer a variable the others hide.</p>"
+        % ("{:,}".format(jina_tokens[0]), "{:,}".format(jina_tokens[1]), "{:,}".format(jina_tokens[2]),
+           "{:,}".format(jina_median), "{:,}".format(sorted(r["chars"] for r in ji["measured"])[1]),
+           money(ji["tiers"][0]["usd_per_1m_tokens"], 3), jina_per1k, jina_tokens[2] / jina_tokens[0])
+        + "<h2>The monthly bill at two volumes</h2>" + table_b
+        + "<p>The Firecrawl column shows both prices because the vendor's page shows one of them: its "
+        "plan slider opens on <strong>$%d</strong> for Standard and the footnote says <em>billed "
+        "annually</em>; paying monthly is $%d for the same 100,000 credits, which is %.1f%% more. At "
+        "5,000 pages a month Firecrawl's Hobby plan is the cheapest legitimate way to buy its own "
+        "service, and at 100,000 pages the ladder's own discount (up to 5.1× from Hobby to Scale per "
+        "1,000 credits) matters more than the vendor choice inside this table.</p>" % (std_a, std_m, std_gap * 100)
+        + "<h2>What a search costs — the leg where the ranking changes</h2>" + table_c
+        + "<p>Firecrawl charges two credits per search — two credits per ten results, and a search "
+        "returns ten — which at its Standard annual rate is $%.2f per 1,000 searches. Tavily charges one "
+        "credit per basic search on a $%d plan and comes out at $%.2f, %.1f× dearer for the same query; "
+        "Jina's fixed 10,000 tokens per search is $%.2f and Crawl4AI's single credit is $%.2f, both "
+        "cheaper than Firecrawl. If your pipeline is 90%% search and 10%% scrape, the page table above "
+        "is the wrong table — and the vendor it points to is not Firecrawl.</p>"
+        % (fc_search_1k, tv_plan["usd_per_month"], tv_search_1k, tv_search_1k / fc_search_1k,
+           jina_search_1k, c4_search_1k)
+        + "<h2>What the free tiers actually allow</h2>" + table_d
+        + "<p>Tavily's free allowance stretches furthest for crawling — 3,333 pages against 1,000 at "
+        "Firecrawl and Crawl4AI — while ScrapingBee's 1,000 free credits are only 200 JavaScript pages "
+        "at its own 5-credit rate. Jina's free key is not a monthly allowance: it is 10 million tokens, "
+        "once, which is about %s pages at the measured median.</p>"
+        % "{:,}".format(ji["free_tokens_with_key"] // jina_median)
+        + "<h2>Four traps in the numbers above</h2>"
+        + "<p><strong>1. Firecrawl's JSON format costs five credits a page, not one.</strong> Scrape and "
+        "crawl cost one credit, and the JSON, Question and Highlight formats add four, so Hobby's 5,000 "
+        "credits buy 1,000 JSON pages — <strong>$%.2f</strong> per 1,000, five times the $%.2f the plan "
+        "page's page count implies. A page that responds 403 or 404 is still returned and still costs a "
+        "credit; a scrape that returns no result is not charged.</p>" % (json_per_1k, fc_hobby_per1k)
+        + "<p><strong>2. ScrapingBee's credits are not pages.</strong> 75,000 credits at $19 is 75,000 "
+        "plain requests or 15,000 with JavaScript rendering, and the page states the credits do not roll "
+        "over. The same page's per-credit price falls %.1f× from Hobby ($%.7f a credit) to Business + "
+        "($%.7f), so buying the bigger block is worth more than switching vendor at that volume.</p>"
+        % (sb_ladder, sb_credit_lo, sb_credit_hi)
+        + "<p><strong>3. Price is not permission.</strong> Jina's Reader is the cheapest per page here, "
+        "and its own FAQ says the Reader models are licensed CC-BY-NC 4.0 — free for non-commercial use, "
+        "with commercial production use needing a licence Elastic sells separately since 2026-08-10. "
+        "A $0.27 bill per 1,000 pages is not a $0.27 commercial right to them.</p>"
+        + "<p><strong>4. Self-hosting is a licence plus a server, not a licence.</strong> Crawl4AI is "
+        "Apache-2.0 (%s stars, <code>pip install crawl4ai</code>) and can be run on your own machine for "
+        "nothing per page — but the server is a real cost, and this site prices the one it uses: a $6.00 "
+        "DigitalOcean Droplet bills $6.52 for a 730-hour month. That is the honest floor for a "
+        "self-hosted crawler, and it is worth paying only if your volume would otherwise exceed the "
+        "$10 plan.</p>" % "{:,}".format(c4_oss_stars)
+        + "<h2>When Firecrawl is still the right answer</h2>"
+        + "<p>This table prices pages and searches, not success. It does not measure how often each "
+        "vendor gets past a bot wall, how good the Markdown is, how the proxy pools differ, or how the "
+        "queues behave at 50 concurrent jobs — and those are what a production scraping bill is really "
+        "made of. What Firecrawl sells that is visible in these numbers is one credit balance across "
+        "search, scrape, map and crawl — one bill instead of four — plus a managed browser most of its "
+        "rivals make you operate. %s appears here because Firecrawl is mid-table on search, behind "
+        "Jina and Crawl4AI and ahead of Tavily, while its page leg is the dearest of five. The right "
+        "reading of this page is narrow: <em>for crawling at volume, Firecrawl's Hobby plan is the most "
+        "expensive per page in the table; on search it is neither the cheapest nor the dearest.</em></p>"
+        % labelled("firecrawl", d, "Firecrawl pricing — affiliate link (the vendor this page earns from)")
+        + "<h2>What is not in the table</h2>"
+        + "<p>Apify is deliberately absent: it meters compute units ($0.20 per GB-RAM-hour on its Free "
+        "and Starter plans) and lets each Actor quote its own per-result price, so any single per-page "
+        "figure would be a property of the Actor and the RAM I chose, not of the vendor. Quality, "
+        "latency and anti-bot success rates are not measured anywhere on this page. All prices were read "
+        "from the vendors' own pages on %s; the quotes and read times are in "
+        "<code>data/scraping-alternatives.json</code> in this repository, and the Jina token counts are "
+        "from the vendor's own response header, not estimated.</p>" % esc(a["as_of"])
+        + DISCLOSURE
+    )
+    return body
+
+
+def load_rental():
+    with open(os.path.join(HERE, "data", "gpu-rental.json"), encoding="utf-8") as f:
+        return json.load(f)
+
+
+def q_h100_rental(d, x):
+    """The same 80 GB H100, priced by the six clouds a buyer compares (probe106).
+
+    Every figure is computed from data/gpu-rental.json, which holds the rows read from each vendor's
+    own pricing page on 2026-11-09 02:36Z. The point of the page is that a per-hour quote without the
+    card VARIANT and the MINIMUM PURCHASE is not a comparable price: the cheapest listing on the page
+    is a PCIe card, and the dearest one cannot be bought one GPU at a time.
+    """
+    r = load_rental()
+    # Display names: every other page on the site prints a vendor's own casing, and a table of lowercase
+    # slugs reads like a data dump (run 104's `$0.08` defect class — the render, not the diff).
+    NAME = {"hyperstack": "Hyperstack", "runpod": "RunPod", "lambda": "Lambda", "coreweave": "CoreWeave",
+            "digitalocean": "DigitalOcean", "novita": "Novita"}
+    h730 = r["job_examples"]["month_hours"]
+    offers = r["offers"]
+    od = sorted([o for o in offers if o["tier"] == "on_demand"], key=lambda o: o["usd_per_gpu_hour"])
+    sp = sorted([o for o in offers if o["tier"] == "spot"], key=lambda o: o["usd_per_gpu_hour"])
+    res = sorted([o for o in offers if o["tier"] == "reserved"], key=lambda o: o["usd_per_gpu_hour"])
+    lo, hi = od[0], od[-1]
+    spread = hi["usd_per_gpu_hour"] / lo["usd_per_gpu_hour"]
+    # SXM only: hold the silicon shape fixed and the spread shrinks to a different number entirely
+    sxm = sorted([o for o in od if "SXM" in o["variant"]], key=lambda o: o["usd_per_gpu_hour"])
+    sxm_lo, sxm_hi = sxm[0], sxm[-1]
+    sxm_spread = sxm_hi["usd_per_gpu_hour"] / sxm_lo["usd_per_gpu_hour"]
+    nov_od = next(o for o in od if o["provider"] == "novita")
+    nov_sp = next(o for o in sp if o["provider"] == "novita")
+    cw = next(o for o in od if o["provider"] == "coreweave")
+    cw_sp = next(o for o in sp if o["provider"] == "coreweave")
+    nov_spot_disc = 1 - nov_sp["usd_per_gpu_hour"] / nov_od["usd_per_gpu_hour"]
+    # a 1-GPU-hour purchase is not possible everywhere: the minimum spend is what a small job pays
+    min_spend = cw["usd_per_gpu_hour"] * cw["min_purchase_gpus"]
+    cw_vs_cheap = min_spend / lo["usd_per_gpu_hour"]
+    lam1 = next(o for o in od if o["provider"] == "lambda" and o["variant"].startswith("H100 SXM (1x"))
+    lam8 = next(o for o in od if o["provider"] == "lambda" and o["variant"].startswith("H100 SXM (8x"))
+    small_premium = lam1["usd_per_gpu_hour"] / lam8["usd_per_gpu_hour"] - 1
+    # card variants at the same provider
+    rp_sxm = next(o for o in od if o["provider"] == "runpod" and o["variant"] == "H100 SXM")
+    rp_pcie = next(o for o in od if o["provider"] == "runpod" and o["variant"] == "H100 PCIe")
+    hs_sxm = next(o for o in od if o["provider"] == "hyperstack" and o["variant"] == "H100 SXM")
+    hs_pcie = next(o for o in od if o["provider"] == "hyperstack" and o["variant"] == "H100 PCIe")
+    hs_nvl = next(o for o in od if o["provider"] == "hyperstack" and o["variant"] == "H100 NVLink")
+    do_od = next(o for o in x["gpus"]["offers"]
+                 if o["family"] == "H100" and o["provider"] == "digitalocean" and o["tier"] == "on_demand")
+    be_lo = min(h730 * o["usd_per_gpu_hour"] /
+                next(y for y in od if y["provider"] == o["provider"] and y["variant"] == o["variant"])["usd_per_gpu_hour"]
+                for o in res)
+    be_hi = max(h730 * o["usd_per_gpu_hour"] /
+                next(y for y in od if y["provider"] == o["provider"] and y["variant"] == o["variant"])["usd_per_gpu_hour"]
+                for o in res)
+    sxm_vs_pcie = (rp_sxm["usd_per_gpu_hour"] / rp_pcie["usd_per_gpu_hour"] - 1) * 100
+    # billing granularity: 1,000 jobs of 40 seconds, rounded per second vs per minute
+    JOBS, SECS = 1000, 40
+    sec_billed = JOBS * SECS / 3600.0
+    min_billed = JOBS * 1 / 60.0
+    sec_cost = sec_billed * lo["usd_per_gpu_hour"]
+    min_cost = min_billed * lo["usd_per_gpu_hour"]
+    round_penalty = min_billed / sec_billed - 1
+
+    def row(o, tier_label):
+        minp = o["min_purchase_gpus"]
+        return (f"<tr><td>{esc(NAME[o['provider']])}</td><td>{esc(o['variant'])}</td>"
+                f"<td>{o['vram_gb']} GB</td><td>{esc(tier_label)}</td>"
+                f"<td>${money2(o['usd_per_gpu_hour'])}</td><td>{esc(o['billing'])}</td>"
+                f"<td>{minp} GPU{'s' if minp > 1 else ''}</td>"
+                f"<td>${money2(o['usd_per_gpu_hour'] * h730)}</td></tr>")
+
+    rows = "".join(row(o, "on-demand") for o in od) + "".join(row(o, "spot") for o in sp)
+    h100_job = [("Hyperstack", hs_sxm["usd_per_gpu_hour"]), ("Novita", nov_od["usd_per_gpu_hour"]),
+                ("RunPod", rp_sxm["usd_per_gpu_hour"]), ("DigitalOcean", do_od["usd_per_gpu_hour"]),
+                ("Lambda", lam1["usd_per_gpu_hour"]), ("CoreWeave", cw["usd_per_gpu_hour"])]
+    job_rows = "".join(f"<tr><td>{esc(p)}</td><td>${money2(v)}</td><td>${money2(v * 800)}</td></tr>"
+                       for p, v in h100_job)
+    res_rows = ""
+    for o in res:
+        same = next(y for y in od if y["provider"] == o["provider"] and y["variant"] == o["variant"])
+        be = h730 * o["usd_per_gpu_hour"] / same["usd_per_gpu_hour"]
+        res_rows += (f"<tr><td>{esc(o['variant'])}</td><td>${money2(o['usd_per_gpu_hour'])}</td>"
+                     f"<td>${money2(same['usd_per_gpu_hour'])}</td><td>{be:,.0f} h/month</td>"
+                     f"<td>{be / h730 * 100:.0f}%</td></tr>")
+    body = [
+        f"<h1>H100 rental price: ${money2(lo['usd_per_gpu_hour'])} to ${money2(hi['usd_per_gpu_hour'])} "
+        f"an hour for the same 80 GB card</h1>",
+        f"<p class=\"lede\">Six clouds rent an 80 GB H100 and, on the pages read for this one at "
+        f"{esc(r['read_at'])}, the on-demand hours run from <strong>${money2(lo['usd_per_gpu_hour'])}</strong> "
+        f"({esc(NAME[lo['provider']])}, {esc(lo['variant'])}) to <strong>${money2(hi['usd_per_gpu_hour'])}</strong> "
+        f"({esc(NAME[hi['provider']])}) — <strong>{spread:.2f}×</strong> for the same GPU model. That number is real "
+        f"but it is not the lesson: hold the card shape fixed at SXM and the spread is "
+        f"<strong>{sxm_spread:.2f}×</strong> (${money2(sxm_lo['usd_per_gpu_hour'])} to "
+        f"${money2(sxm_hi['usd_per_gpu_hour'])}). Most of the headline gap is two other things — which "
+        f"variant of the card you are quoted, and how many you are allowed to buy — and neither appears in "
+        f"a \"per GPU-hour\" figure.</p>",
+        "<h2>Every H100 hour on the six pricing pages this page read</h2>",
+        f"<p>Rows are on-demand unless the tier says spot. A price exists only where the vendor publishes one "
+        f"for that variant and tier; nothing here is converted from another card. Read from the vendors' own "
+        f"pages on {esc(r['read_at'])}; DigitalOcean's and Novita's rows are the same reads the rest of this "
+        f"site uses.</p>",
+        "<table><tr><th>cloud</th><th>H100 variant</th><th>VRAM</th><th>tier</th><th>$/GPU-hour</th>"
+        "<th>billing</th><th>minimum</th><th>730 h</th></tr>" + rows + "</table>",
+        "<h2>The cheapest hour is not the cheapest bill</h2>",
+        f"<p>CoreWeave's {esc(cw['variant'])} is priced by the node: ${money2(cw['usd_per_node_hour'])} for "
+        f"{cw['gpus_per_node']} GPUs is ${money2(cw['usd_per_gpu_hour'])} per GPU-hour, but the smallest "
+        f"purchase is <strong>${money2(min_spend)}</strong>. One GPU-hour there costs what "
+        f"<strong>{cw_vs_cheap:.1f} hours</strong> of "
+        f"{esc(NAME[lo['provider']])}'s ${money2(lo['usd_per_gpu_hour'])} card cost. Lambda sells one GPU by the "
+        f"hour, and charges for the privilege: the 1× SXM instance is "
+        f"<strong>{small_premium * 100:.1f}% more per GPU-hour</strong> than its own 8× instance "
+        f"(${money2(lam1['usd_per_gpu_hour'])} vs ${money2(lam8['usd_per_gpu_hour'])}). If your job is one "
+        f"GPU for two hours, the cheapest quote per hour can be the most expensive way to run it.</p>",
+        "<h2>SXM, NVL, PCIe: the same model in three shapes</h2>",
+        f"<p>At RunPod the SXM card is <strong>{sxm_vs_pcie:.1f}% more</strong> than the PCIe card "
+        f"(${money2(rp_sxm['usd_per_gpu_hour'])} vs ${money2(rp_pcie['usd_per_gpu_hour'])}); at Hyperstack "
+        f"the SXM hour is ${money2(hs_sxm['usd_per_gpu_hour'])} against ${money2(hs_pcie['usd_per_gpu_hour'])} "
+        f"for PCIe, with an NVLink variant at ${money2(hs_nvl['usd_per_gpu_hour'])} "
+        f"between them. These are not interchangeable products — the interconnect differs — and this page "
+        f"does not measure throughput, so it cannot tell you whether the SXM premium pays for itself. It can "
+        f"tell you that a \"per GPU-hour\" quote with no variant is half a price.</p>",
+        "<h2>What a 100-hour, 8-GPU job costs on each</h2>",
+        "<p>800 GPU-hours of the SXM card, e.g. a fine-tune that takes one eight-GPU node 100 hours:</p>",
+        "<table><tr><th>cloud</th><th>$/GPU-hour (SXM)</th><th>800 GPU-hours</th></tr>" + job_rows + "</table>",
+        f"<p>The same 800 hours range from ${money2(hs_sxm['usd_per_gpu_hour'] * 800)} to "
+        f"${money2(cw['usd_per_gpu_hour'] * 800)} — and on CoreWeave the 8-GPU minimum is exactly the shape "
+        f"of this job, which is why node-only pricing is the cheapest table to print and the most expensive one to buy from.</p>",
+        "<h2>The cheapest hour on this page is a spot hour</h2>",
+        f"<p>{esc(NAME[nov_od['provider']])}'s interruptible SXM hour is <strong>${money2(nov_sp['usd_per_gpu_hour'])}"
+        f"</strong> — <strong>{nov_spot_disc * 100:.1f}% below</strong> its own on-demand price of "
+        f"${money2(nov_od['usd_per_gpu_hour'])}, and below every on-demand listing here. CoreWeave's spot hour "
+        f"is ${money(cw_sp['usd_per_gpu_hour'], 3)} per GPU on the same 8-GPU node minimum "
+        f"(${money2(cw_sp['usd_per_node_hour'])}/hour). Both are interruptible: the provider may reclaim the "
+        f"machine, so a spot hour is a price for work you checkpoint, not for work with a deadline. The spot "
+        f"discount is also the one number vendors change without notice.</p>",
+        "<h2>730 hours: what a month of one H100 costs</h2>",
+        "<p>730 is a 31-day month and it is not a plan: no vendor here sells a monthly H100 at a flat rate, so "
+        "this column is arithmetic on the hourly price, not an invoice.</p>",
+        "<table><tr><th>cloud</th><th>variant</th><th>$730 h</th></tr>" +
+        "".join(f"<tr><td>{esc(NAME[o['provider']])}</td><td>{esc(o['variant'])}</td>"
+                f"<td>${money2(o['usd_per_gpu_hour'] * h730)}</td></tr>" for o in od) + "</table>",
+        "<h2>A reservation is a utilisation bet</h2>",
+        "<p>Hyperstack publishes both an on-demand and a reservation price for the same card, which makes the "
+        "break-even visible. It is the hourly saving multiplied by the hours you actually use:</p>",
+        "<table><tr><th>variant</th><th>reserved $/h</th><th>on-demand $/h</th><th>break-even</th>"
+        "<th>% of a 730 h month</th></tr>" + res_rows + "</table>",
+        f"<p>Between <strong>{be_lo / h730 * 100:.0f}% and {be_hi / h730 * 100:.0f}%</strong> of every hour in "
+        f"the month has to be busy before the reservation beats paying on demand — {be_lo:,.0f} to "
+        f"{be_hi:,.0f} hours, about 17 to 20 hours a day. Below that, the "
+        f"reservation is the more expensive choice, and it is still the more expensive choice if the job "
+        f"finishes in a weekend.</p>",
+        "<h2>Billing granularity turns seconds into money</h2>",
+        f"<p>Take {JOBS:,} jobs of {SECS} seconds each: {sec_billed:.2f} GPU-hours of real work. Billed per "
+        f"second (RunPod, Novita, DigitalOcean) that is ${money2(sec_cost)} at "
+        f"${money2(lo['usd_per_gpu_hour'])}/hour. Billed per minute (Hyperstack) every job rounds up to a "
+        f"minute — {min_billed:.2f} GPU-hours, <strong>{round_penalty * 100:.0f}% more</strong>, "
+        f"${money2(min_cost)}. The rounding rule adds <strong>${money2(min_cost - sec_cost)}</strong> over these "
+        f"{JOBS:,} jobs — about a third of what choosing between this page's cheapest and dearest hours is "
+        f"worth for the same work, which is exactly the decision a per-hour table invites you to make.</p>",
+        "<h2>What this page does not know</h2>",
+        "<p>No throughput benchmarks: SXM has more memory bandwidth than a PCIe card and this page does not "
+        "measure how much faster a job runs on either, so it cannot price performance. No availability: a "
+        "listed price you cannot get a machine at is not a price you pay, and none of these pages publishes "
+        "stock. No storage or egress: the per-hour rate excludes volumes, object storage, images and data "
+        "transfer, which for a 100-hour job can be a real line. Vast.ai's marketplace prices are set per host "
+        "and are not in the HTML its pricing page serves, so it is absent from the table rather than measured "
+        "at zero. Lambda's figures carry a footnote: they take effect 2026-11-16, so a reader before that date "
+        "sees different numbers in their console. Nothing on this page was rented or benchmarked.</p>",
+        DISCLOSURE,
+        "<p>" + aff_link(x, "novita", "Novita GPU pricing — affiliate link") + " · "
+        + aff_link(x, "digitalocean", "DigitalOcean GPU Droplets — affiliate link") + "</p>",
+        f"<p>Novita is the second-cheapest SXM hour here and the cheapest hour on the page if you can use "
+        f"spot; it is not the cheapest on-demand listing, and its ${money2(nov_od['usd_per_gpu_hour'])} SXM "
+        f"hour is {nov_od['usd_per_gpu_hour'] / hs_sxm['usd_per_gpu_hour'] * 100 - 100:.1f}% above Hyperstack's "
+        f"on the same variant. DigitalOcean's ${money2(do_od['usd_per_gpu_hour'])} H100 hour is mid-table. If neither is the right "
+        f"buy for your job, the table above is the reason to say so.</p>",
+    ]
+    return "".join(body)
 
 
 QUESTIONS = [
@@ -1998,7 +3313,7 @@ QUESTIONS = [
     ("firecrawl-search-cost", "Firecrawl search cost", lambda d, x: q_firecrawl_credits_per_search(d)),
     ("firecrawl-cost-per-credit", "Firecrawl cost per credit", lambda d, x: q_firecrawl_pricing_per_credit(d)),
     ("elevenlabs-credits-to-minutes", "ElevenLabs credits to minutes", lambda d, x: q_elevenlabs_credits_to_minutes(d)),
-    ("elevenlabs-pricing-per-minute", "ElevenLabs pricing per minute", lambda d, x: q_elevenlabs_pricing_per_minute(d)),
+    ("elevenlabs-pricing-per-minute", "ElevenLabs cost per minute", lambda d, x: q_elevenlabs_pricing_per_minute(d)),
     ("elevenlabs-agent-pricing", "ElevenLabs agent pricing per minute", lambda d, x: q_elevenlabs_agent_pricing(d)),
     ("elevenlabs-plan-minutes", "ElevenLabs plans and pricing: minutes per plan", lambda d, x: q_elevenlabs_plan_minutes(d)),
     # Run 99: `elevenlabs startup grant` is a measured Autocomplete suggestion with 8 tails, inside a
@@ -2014,7 +3329,10 @@ QUESTIONS = [
     # one. Deferred once in this same run until the unit question was settled: /pricing/api's own FAQ says
     # "API usage is billed in US dollars, not credits" while its plan column prints characters, so the page
     # takes characters from the API column and never converts the Creative page's credits.
-    ("elevenlabs-free-tier", "ElevenLabs free tier: 10,000 characters a month, worth $0.80",
+    # Run 105: retitled to carry the phrase probe105.py measured 10 completions for
+    # (`elevenlabs free plan`: limit / credits / commercial use / api / voices) — the old title
+    # named the allowance, which is the weaker half of the question.
+    ("elevenlabs-free-tier", "ElevenLabs free plan: 10,000 characters a month, a non-commercial licence, and 2 concurrent requests",
      lambda d, x: q_elevenlabs_free_tier(d)),
     # Run 100 (probe100.json, 2026-11-09 01:2xZ; controls `elevenlabs pricing` 10, `firecrawl pricing`
     # 10, `digitalocean droplet pricing` 10): `elevenlabs credits` returns 10 completions including
@@ -2023,6 +3341,12 @@ QUESTIONS = [
     # computed in q_elevenlabs_credits_per_minute from dataset.json's credit_costs block (read 01:32Z).
     ("elevenlabs-credits-per-minute", "ElevenLabs credits per minute",
      lambda d, x: q_elevenlabs_credits_per_minute(d)),
+    # Run 103: `elevenlabs concurrency` returns 7 completions and `elevenlabs concurrent` 5, including
+    # `elevenlabs too many concurrent requests`; `elevenlabs rate limit` answers 9 (probe103.py,
+    # 2026-11-09 02:0xZ, control `elevenlabs pricing` = 10). Titles, prices and limits read live the same
+    # hour from /pricing, /pricing/agents, the 429 help-centre article and the burst/queueing guides.
+    ("elevenlabs-concurrency-limit", "ElevenLabs concurrency limit: 5 speech requests or 10 agent calls on the same $22 plan",
+     lambda d, x: q_elevenlabs_concurrency(d)),
     # Run 100, second page: `digitalocean bandwidth pricing` and `digitalocean droplet bandwidth
     # pricing / limit / overage` each return 10 completions (probe100.json). The rates and the
     # per-second accrual rule are read from docs.digitalocean.com (vendor-dated 2026-11-05) into
@@ -2037,7 +3361,7 @@ QUESTIONS = [
     # `vultr vs` = 10 suggestions): `digitalocean free credit $200`, `digitalocean free credits`,
     # `digitalocean free trial $200`, `digitalocean free $200` all complete. It is the only page in the
     # set aimed at a signup decision rather than a bill, and it states the referral commission openly.
-    ("digitalocean-free-credit", "DigitalOcean free credit: $200 for 60 days",
+    ("digitalocean-free-credit", "DigitalOcean free credit: $5, $100 or $200 — the window decides, not the amount",
      q_digitalocean_free_credit),
     # Run 90: the head-to-head page run 89 deferred until the competitors' prices were actually read.
     # Title and slug = `digitalocean vs hetzner`, a measured Autocomplete suggestion (probe89.py).
@@ -2057,6 +3381,15 @@ QUESTIONS = [
     ("firecrawl-vs-tavily", "Firecrawl vs Tavily: which is cheaper depends on volume, and the answer flips",
      q_firecrawl_vs_tavily),
     ("h100-price-per-hour", "H100 price per hour", q_gpu_price_per_hour),
+    # Run 106: the page the buying decision needs. probe106.py measured 22 stems on Google Autocomplete
+    # (control `elevenlabs pricing` = 10): `h100 rental price` / `h100 rental` 8 tails, `cheapest h100`
+    # 10 (incl. `cheapest h100 rental`, `cheapest h100 per hour`), `h100 cloud pricing` 8, `runpod vs vast`
+    # 10, `lambda vs runpod` 10, `runpod alternatives` 10. The existing GPU page answers "what does an
+    # hour cost at the two clouds this site tracks"; this one answers the question a buyer actually asks,
+    # which is which of the six clouds is cheapest for MY job — and the answer is that the per-hour figure
+    # is not comparable without the variant and the minimum purchase.
+    ("h100-rental-price", "H100 rental price: $2.50 to $6.16 an hour for the same 80 GB card",
+     lambda d, x: q_h100_rental(d, x)),
     ("novita-ai-api-pricing", "Novita AI API pricing", q_novita_api_pricing),
     # Run 92: `novita ai vs openrouter` is the FIRST completion for the brand-complete stem `novita ai vs`
     # and both word orders complete (probe92.py, 2026-11-08 23:1xZ; controls `vultr vs` 10, `elevenlabs
@@ -2087,6 +3420,22 @@ QUESTIONS = [
     ("glm-5-2-pricing", "GLM 5.2 pricing", lambda d, x: q_model_price(d, x, "glm-5.2")),
     ("gemma-4-26b-a4b-pricing", "Gemma 4 26B A4B pricing",
      lambda d, x: q_model_price(d, x, "gemma-4-26b-a4b")),
+    # Run 104: the first page aimed at a DECISION rather than a price lookup. probe104.py (2026-11-09
+    # 02:2xZ) measured `elevenlabs alternative` 10 completions and `elevenlabs alternatives` 10 more
+    # (`... free`, `... open source`, `... reddit`, `... 2026`), plus `cheaper than elevenlabs` 6 — a
+    # searcher who has decided to leave and is pricing the exit. Every figure is computed from
+    # data/tts-alternatives.json (OpenAI, Google, Polly, Cartesia read 02:24–02:29Z) and dataset.json's
+    # ElevenLabs ladder. It prints ElevenLabs as the dearest of five and still carries its link, with the
+    # reason it can be the right answer stated in the same sentence.
+    ("elevenlabs-alternatives", "ElevenLabs alternatives priced per 1,000 characters",
+     lambda d, x: q_elevenlabs_alternatives(d)),
+    # Run 107: the second decision page, and the first for the scraping program. probe104.py measured
+    # `firecrawl alternative` 10 completions and `firecrawl alternatives` 10 more (`... open source`,
+    # `... free`, `... self hosted`, `... cheaper alternative`), so this is an exit, not a rate lookup.
+    # It prices both legs of a scraping bill: the page leg (Firecrawl $3.80/1,000 against Jina's
+    # measured $0.27) and the search leg, where Firecrawl is the cheapest of the four that sell one.
+    ("firecrawl-alternatives", "Firecrawl alternatives priced per 1,000 pages",
+     lambda d, x: q_firecrawl_alternatives(d)),
 ]
 
 
@@ -2099,6 +3448,9 @@ TITLE_BY_SLUG = {s: t for s, t, _ in QUESTIONS}
 # 0/34 restate the title. A description that repeats the title spends the whole snippet on the words
 # already above it.
 DESCRIPTIONS = {
+    # 110-158 chars, carries a number, does not restate the title opening (run 85 rule)
+    "h100-rental-price": ("Six clouds, one 80 GB card: $2.50 to $6.16 a GPU-hour. Two cannot sell you a "
+                         "single GPU, and a 40-second job is billed 50% differently."),
     "firecrawl-vs-tavily":
         "10,000 crawled pages cost $44.00 at Firecrawl and $16.00 at Tavily; at 100,000 it is $99.00 "
         "against $220.00, so the cheaper one flips near 44,787 pages.",
@@ -2109,8 +3461,8 @@ DESCRIPTIONS = {
         "At 2 vCPU and 4 GiB DigitalOcean lists $24.00 a month against Hetzner's €5.99 ($6.69); at "
         "1 GiB Hetzner is the dearest of the three at $7.25.",
     "digitalocean-free-credit":
-        "New accounts get $200 of credit that expires after 60 days — about 15 of the $6 Droplet for "
-        "the whole window, or 45 hours of an H100 at $4.41.",
+        "$5 covers 0 of 31 plans for 90 days; $100 covers 7 of 31 for 60 days, and $88 of it "
+        "expires on the $6 Droplet.",
     "firecrawl-cost-per-page":
         "One credit is one page, and five if you ask for JSON — so 5,000 credits on the $19 Hobby plan "
         "are 5,000 pages or 1,000 JSON pages, not the same purchase.",
@@ -2123,6 +3475,9 @@ DESCRIPTIONS = {
     "elevenlabs-credits-to-minutes":
         "275,000 characters on the Creator plan is about 306 finished minutes at 900 characters a "
         "minute, not the 275 the vendor's own credits column suggests.",
+    "elevenlabs-concurrency-limit":
+        "One concurrent request costs $4.40 a month on Creator and $39.60 on Business, and the vendor's "
+        "pricing table and its 429 article disagree on the top plan.",
     "elevenlabs-credits-per-minute":
         "121,000 credits buy 366 minutes of transcription, 121 of speech or 12 of studio dubbing: one "
         "pool, eight burn rates.",
@@ -2136,14 +3491,14 @@ DESCRIPTIONS = {
         "$0.08 per managed agent minute plus LLM usage, billed as a separate line: the agent minute is "
         "not an all-in minute, and the vendor's table says so.",
     "elevenlabs-plan-minutes":
-        "Both 300 and 1,238 finished minutes cost $99 — the ladder is block-priced, so the 25th minute "
-        "past Creator costs the whole $77 step-up, or $3.08 a minute.",
+        "At 900 characters a minute Creator's 275 minutes become 306 finished minutes, and minute 306 costs "
+        "the whole $77 step-up — 4.5x the bill.",
     "elevenlabs-startup-grant":
         "33,000,000 characters is 8.83 months of Scale credit over 12 — 2,750,000 a month — and $2,640 "
         "at the $0.08 v4 rate, not the $5,500 claimed.",
     "elevenlabs-free-tier":
-        "The Free plan's 10,000 characters is $0.80 of v4 speech, about 10 minutes; on v4 Turbo the same "
-        "plan prints 20,000 characters and 20 minutes for $0.80 again.",
+        "10,000 free characters are 10 minutes of speech, 1 minute of studio dubbing or 30.3 minutes "
+        "of transcription — and the licence is non-commercial.",
     "deepgram-pricing-per-minute":
         "$0.0036 to $0.0092 a minute for speech to text. The $0.075 usually quoted is the Voice Agent, "
         "8.2× the cheapest STT minute on the same page.",
@@ -2207,6 +3562,16 @@ DESCRIPTIONS = {
     "index":
         f"{len(QUESTIONS)} questions on what Firecrawl, ElevenLabs, Deepgram, DigitalOcean, Novita and ten "
         f"open models cost, each from a dated vendor read.",
+    # Run 104: the decision page. The description names the two bills that make the point (the block plan
+    # ElevenLabs forces at this volume and the per-character rate it is measured against).
+    "elevenlabs-alternatives":
+        "At 100,000 characters a month ElevenLabs bills $22 because its smallest covering plan is Creator, "
+        "where OpenAI tts-1 bills $1.50 and Chirp 3 HD $3.00.",
+    # Run 107: the exit page. The description carries the two bills that make the point and no claim
+    # the body does not compute: the Hobby page price, the Jina measured price, the search price.
+    "firecrawl-alternatives":
+        "$3.80 per 1,000 pages at Hobby against $0.27 at Jina, and $1.66 per 1,000 searches against "
+        "Tavily's $7.50: the leg of the bill decides which vendor is cheap.",
 }
 
 # Run 85: internal links, so a reader (or a crawler) landing on any one question can reach the other
@@ -2221,7 +3586,7 @@ RELATED = {
     "elevenlabs-credits-to-minutes": ["elevenlabs-plan-minutes", "elevenlabs-pricing-per-minute"],
     "elevenlabs-pricing-per-minute": ["elevenlabs-credits-to-minutes", "elevenlabs-agent-pricing",
                                       "deepgram-vs-elevenlabs",
-                                      "elevenlabs-plan-minutes"],
+                                      "elevenlabs-plan-minutes", "elevenlabs-alternatives"],
     "elevenlabs-agent-pricing": ["elevenlabs-pricing-per-minute", "deepgram-voice-agent-pricing",
                                  "api-cost-calculator"],
     "elevenlabs-plan-minutes": ["elevenlabs-credits-to-minutes", "elevenlabs-pricing-per-minute",
@@ -2234,6 +3599,19 @@ RELATED = {
     # tier (what the free allowance really buys), the plan ladder and the per-minute API prices.
     "elevenlabs-credits-per-minute": ["elevenlabs-free-tier", "elevenlabs-plan-minutes",
                                       "elevenlabs-pricing-per-minute"],
+    # run 103: the concurrency page is a plan-decision page, so it points at the price ladder and the
+    # agent-minute rate rather than at another limit.
+    "elevenlabs-concurrency-limit": ["elevenlabs-plan-minutes", "elevenlabs-agent-pricing",
+                                     "elevenlabs-pricing-per-minute"],
+    # run 104: the decision page points at the rate it is comparing against, the block ladder that produced
+    # the $22 bill, and the layer-by-layer page where an agent minute is a different product.
+    "elevenlabs-alternatives": ["elevenlabs-pricing-per-minute", "elevenlabs-plan-minutes",
+                                "deepgram-vs-elevenlabs"],
+    # run 107: the scraping decision page points at the two pages that carry its own arithmetic (the
+    # credit-per-page page and the Tavily head-to-head where the search leg is already priced) and at
+    # the search-cost page, so a reader landing on the exit page can check the numbers behind it.
+    "firecrawl-alternatives": ["firecrawl-cost-per-page", "firecrawl-vs-tavily",
+                                "firecrawl-search-cost"],
     # run 100: bandwidth is the next line on a Droplet bill after the plan price, so it links from
     # the price page and back to the droplet table and the signup credit.
     "digitalocean-droplet-bandwidth-pricing": ["digitalocean-droplet-pricing", "digitalocean-free-credit",
@@ -2253,7 +3631,10 @@ RELATED = {
     "digitalocean-free-credit": ["digitalocean-droplet-pricing", "h100-price-per-hour"],
     "digitalocean-vs-hetzner": ["digitalocean-droplet-pricing", "digitalocean-free-credit",
                                 "api-cost-calculator"],
-    "h100-price-per-hour": ["novita-ai-api-pricing", "digitalocean-droplet-pricing"],
+    # run 106: the card page and the buying-decision page point at each other, and both point at the
+    # Novita token page (the GPU buyer and the token buyer are different people at the same vendor).
+    "h100-price-per-hour": ["h100-rental-price", "novita-ai-api-pricing", "digitalocean-droplet-pricing"],
+    "h100-rental-price": ["h100-price-per-hour", "novita-ai-api-pricing", "digitalocean-free-credit"],
     "novita-ai-api-pricing": ["llm-api-pricing-comparison", "novita-ai-vs-openrouter",
                               "h100-price-per-hour"],
     "novita-ai-vs-openrouter": ["novita-ai-api-pricing", "llm-api-pricing-comparison",
@@ -2409,9 +3790,18 @@ def _check_in(scratch, written, d, failures):
         return [f"sitemap.xml does not parse: {e}"], written
     if len(locs) < 13:
         failures.append(f"sitemap has only {len(locs)} urls")
+    def _rel(u):
+        # Run 109: SITE_BASE may carry a path (a GitHub *project* Pages site lives at
+        # https://<org>.github.io/<repo>/, not at the root — the tool cannot create the
+        # <org>.github.io repo because repo names may not contain a dot). Strip the whole base,
+        # not just the host, or every loc maps to "dated-price-index/q/..." and the check fails.
+        b = BASE.rstrip("/")
+        if b in u:
+            return u.split(b, 1)[1].lstrip("/") or "index.html"
+        return re.sub(r"^[a-z]+://[^/]+/", "", u)
+
     for loc in locs:
-        rel = loc.split("/", 3)[-1] if loc.startswith("http") else loc
-        rel = re.sub(r"^[a-z]+://[^/]+/", "", loc)
+        rel = _rel(loc)
         if not os.path.exists(os.path.join(scratch, rel)):
             failures.append(f"sitemap loc with no file: {loc}")
     if "Sitemap:" not in open(os.path.join(scratch, "robots.txt"), encoding="utf-8").read():
@@ -2428,7 +3818,7 @@ def _check_in(scratch, written, d, failures):
         if len(qlinks) != len(QUESTIONS):
             failures.append(f"llms.txt lists {len(qlinks)} answered questions, QUESTIONS has {len(QUESTIONS)}")
         for u in re.findall(r"\]\(([^)]+)\)", lt):
-            rel = re.sub(r"^[a-z]+://[^/]+/", "", u)
+            rel = _rel(u)
             if not os.path.exists(os.path.join(scratch, rel)):
                 failures.append(f"llms.txt links to {u}, which is not in the render")
         for bad in PLACEHOLDER_HOSTS + ("REPLACE-WITH", "utm_", "ref="):
@@ -2501,6 +3891,29 @@ def _check_in(scratch, written, d, failures):
                          "the Starter step-up")):
         if needed not in fq:
             failures.append(f"free-tier page lost {needed!r} ({why})")
+    # Run 105: the licence half of the free-tier page (demand measured in probe105.py: `elevenlabs
+    # free plan commercial use` and `elevenlabs free credits reset` are typed queries). Every number
+    # below is recomputed from the dataset; the two quoted clauses are vendor text, so they are
+    # asserted as strings. The "ten months" slip in the first draft is asserted absent — the whole
+    # 10,000-credit month is ONE minute of studio dubbing, and a sentence claiming ten was wrong.
+    _items = {i["product"]: i for i in el["credit_costs"]["items"]}
+    _free_chars = ft["chars_v4"] / _items["Text to Speech"]["credits"]
+    _stt_min = _free_chars / _items["Speech to Text"]["credits"]
+    _dub_studio_min = _free_chars / _items["Dubbing Studio without watermark"]["credits"]
+    _spread_free = _stt_min / _dub_studio_min
+    _conc_free = next(x for x in el["concurrency"]["tts_concurrent_requests"] if x["plan"] == "Free")
+    for needed, why in ((f"{_stt_min:.1f} minutes", "transcription minutes in one free month"),
+                        (f"{_dub_studio_min:.0f} minute", "studio-dubbing minutes in one free month"),
+                        (f"{_spread_free:.1f}&times;", "the spread inside the free balance"),
+                        (f"{_conc_free['requests']} concurrent requests", "the free concurrency limit"),
+                        ("non-commercial purposes", "the Terms-of-Use licence clause"),
+                        ("Unusual activity detected", "the abuse-detector wording"),
+                        ("does not apply to the Free plan", "the no-rollover rule")):
+        if needed not in fq:
+            failures.append(f"free-tier page lost {needed!r} ({why})")
+    for bad in ("ten months of allowance", "$0.80 a month</strong> of v4 speech"):
+        if bad in fq:
+            failures.append(f"free-tier page carries a known-wrong sentence: {bad!r}")
     # Run 100: the credits page. The spread and the studio-dubbing minutes are the reason it exists;
     # recompute both from dataset.json so a data edit cannot leave a stale sentence behind.
     cc = el["credit_costs"]
@@ -2515,6 +3928,48 @@ def _check_in(scratch, written, d, failures):
                         (f"${money(creator_q['usd'] / creator_q['credits'], 6)}", "the per-credit price")):
         if needed not in cq:
             failures.append(f"credits page lost {needed!r} ({why})")
+    # Run 106: the H100 rental page. Every claim below is recomputed here from data/gpu-rental.json —
+    # not typed — so a data edit cannot leave the prose behind. The page exists because probe106.py
+    # showed the buyer's query is "cheapest h100 rental", not "what does Novita charge".
+    rr = load_rental()
+    rod = sorted([o for o in rr["offers"] if o["tier"] == "on_demand"], key=lambda o: o["usd_per_gpu_hour"])
+    rlo, rhi = rod[0], rod[-1]
+    rsxm = [o for o in rod if "SXM" in o["variant"]]
+    rsp = [o for o in rr["offers"] if o["tier"] == "spot" and o["provider"] == "novita"][0]
+    rcw = next(o for o in rod if o["provider"] == "coreweave")
+    rres = [o for o in rr["offers"] if o["tier"] == "reserved"]
+    rbes = sorted(730 * o["usd_per_gpu_hour"] /
+                  next(y for y in rod if y["provider"] == o["provider"] and y["variant"] == o["variant"])["usd_per_gpu_hour"]
+                  for o in rres)
+    rq = open(os.path.join(scratch, "q", "h100-rental-price.html"), encoding="utf-8").read()
+    for needed, why in (
+            (f"${money2(rlo['usd_per_gpu_hour'])}", "the cheapest on-demand hour"),
+            (f"${money2(rhi['usd_per_gpu_hour'])}", "the dearest on-demand hour"),
+            (f"{rhi['usd_per_gpu_hour'] / rlo['usd_per_gpu_hour']:.2f}×", "the all-variant spread"),
+            (f"{(max(o['usd_per_gpu_hour'] for o in rsxm) / min(o['usd_per_gpu_hour'] for o in rsxm)):.2f}×",
+             "the SXM-only spread"),
+            (f"${money2(rcw['usd_per_gpu_hour'] * rcw['min_purchase_gpus'])}", "CoreWeave's minimum spend"),
+            (f"{(rcw['usd_per_gpu_hour'] * rcw['min_purchase_gpus']) / rlo['usd_per_gpu_hour']:.1f} hours",
+             "the minimum-spend conversion"),
+            (f"{(1 - rsp['usd_per_gpu_hour'] / next(o for o in rod if o['provider'] == 'novita')['usd_per_gpu_hour']) * 100:.1f}%",
+             "the spot discount"),
+            (f"{rbes[0]:,.0f} h/month", "the low break-even"),
+            (f"{rbes[-1]:,.0f} h/month", "the high break-even"),
+            ("$49.24", "the node price the minimum-spend claim rests on"),
+            ("Billed per minute (Hyperstack)", "the granularity finding")):
+        if needed not in rq:
+            failures.append(f"h100-rental-price page lost {needed!r} ({why})")
+    if "hyperstack's" in rq or "novita's interruptible" in rq:
+        failures.append("h100-rental-price page prints a lowercase provider slug")
+    # the billing-rounding claim must beat, not lose to, the price comparison it is measured against
+    _sec = 1000 * 40 / 3600.0
+    _min = 1000 / 60.0
+    _rule = (_min - _sec) * rlo["usd_per_gpu_hour"]
+    _choice = _sec * (rhi["usd_per_gpu_hour"] - rlo["usd_per_gpu_hour"])
+    if not 0.2 < _rule / _choice < 0.5:
+        failures.append(f"billing-rounding claim no longer a third of the price gap: {_rule / _choice:.2f}")
+    if f"${money2(_rule)}" not in rq:
+        failures.append(f"h100-rental-price page lost the rounding cost ${money2(_rule)}")
     # Run 100: the bandwidth page. 7 days is a quarter of the 28-day accrual window, so a $6
     # Droplet's accrued allowance is 250 GiB — the claim the page is built on.
     bwd = load_bandwidth()
@@ -2544,11 +3999,92 @@ def _check_in(scratch, written, d, failures):
     pm = open(os.path.join(scratch, "q", "elevenlabs-plan-minutes.html"), encoding="utf-8").read()
     if "$3.08" not in pm:
         failures.append("ElevenLabs plan page lost the $3.08 per overshooting minute figure")
+    # Run 103: the concurrency page. Every figure below is recomputed from dataset.json's concurrency
+    # block, so a vendor re-read cannot leave a stale number on the page; the Business disagreement is
+    # asserted explicitly because it is the page's headline.
+    conc = el["concurrency"]
+    cq_path = os.path.join(scratch, "q", "elevenlabs-concurrency-limit.html")
+    cq = open(cq_path, encoding="utf-8").read()
+    tts_c = {r["plan"]: r for r in conc["tts_concurrent_requests"]}
+    ag_c = {r["plan"]: r for r in conc["agent_concurrent_calls"]}
+    slot_rise_c = ((tts_c["Business"]["usd"] / tts_c["Business"]["requests"])
+                   / (tts_c["Starter"]["usd"] / tts_c["Starter"]["requests"]))
+    be_c = ((ag_c["Pro"]["usd"] - ag_c["Creator"]["usd"])
+            / (conc["burst"]["burst_agent_usd_per_minute"] - conc["burst"]["standard_agent_usd_per_minute"]))
+    for needed, why in (
+            (f"{slot_rise_c:.1f}&times; more", "the per-slot price rise"),
+            (f"{be_c:,.0f} call-minutes", "the burst-vs-upgrade break-even"),
+            (f"${money2(conc['burst']['burst_agent_usd_per_minute'])} a minute", "the burst rate"),
+            (f"{conc['tts_help_center_business']}", "the 429 article's Business figure"),
+            (f"{tts_c['Business']['requests']} concurrent requests", "the pricing table's Business figure"),
+            (f"{min(ag_c['Creator']['calls'] * conc['burst']['max_multiplier'], conc['burst']['absolute_cap_non_enterprise'])} concurrent",
+             "the burst ceiling computed from the plan's own number")):
+        if needed not in cq:
+            failures.append(f"concurrency page lost {needed!r} ({why})")
+    if "too_many_concurrent_requests" not in cq or "system_busy" not in cq:
+        failures.append("concurrency page lost the two 429 messages")
+    # Run 104: the alternatives page. Its headline is a bill, not a rate, so every figure the page is
+    # built on is recomputed here from the two data files: ElevenLabs' smallest covering plan at 100,000
+    # characters, the three per-character bills at the same volume, and the free-tier multiple.
+    alt = load_ttsa()
+    aq = open(os.path.join(scratch, "q", "elevenlabs-alternatives.html"), encoding="utf-8").read()
+    el100_plan = min((p for p in el["ladder"] if p["chars"] >= 100000), key=lambda p: p["usd"])
+    el100 = el100_plan["usd"]
+    oa100 = 100000 / 1e6 * next(o["usd_per_1m_chars"] for o in alt["offers"]
+                               if o["vendor"] == "OpenAI" and o["product"] == "tts-1")
+    g100 = 100000 / 1e6 * next(o["usd_per_1m_chars"] for o in alt["offers"]
+                               if o["vendor"] == "Google Cloud" and o["product"] == "Chirp 3: HD")
+    g_free_chars = next(o["free_chars_per_month"] for o in alt["offers"]
+                        if o["vendor"] == "Google Cloud" and o["product"] == "Chirp 3: HD")
+    el_free = el["free_tier"]["chars_v4"]
+    for needed, why in ((f"${el100:.2f}", "the ElevenLabs bill at 100,000 characters"),
+                        (f"${oa100:.2f}", "the OpenAI bill at the same volume"),
+                        (f"${g100:.2f}", "the Google bill at the same volume"),
+                        (f"{el100 / oa100:.1f}×", "the spread against OpenAI"),
+                        (f"{g_free_chars / el_free:.0f}×", "the free-tier multiple"),
+                        (f"{el_free:,}", "the ElevenLabs free allowance")):
+        if needed not in aq:
+            failures.append(f"alternatives page lost {needed!r} ({why})")
+    if "affiliate link" not in aq:
+        failures.append("alternatives page carries the ElevenLabs link without the words 'affiliate link'")
+    if "most expensive of the five" not in aq:
+        failures.append("alternatives page lost the sentence that names ElevenLabs as the dearest")
+    # Run 107: the scraping-exit page. Two numbers on it are computed from the plan ladder rather than
+    # read from a rate card, so they are the ones a refactor breaks: the Crawl4AI row must be the
+    # marginal credit price (1 credit x $0.001 x 1,000), not the $8.33 the smallest plan costs.
+    sc = load_scrapea()
+    sq = open(os.path.join(scratch, "q", "firecrawl-alternatives.html"), encoding="utf-8").read()
+    jm = sorted(r["tokens"] for r in sc["jina"]["measured"])[1]
+    j_per1k = jm / 1e6 * sc["jina"]["tiers"][0]["usd_per_1m_tokens"] * 1000
+    c4_per1k = sc["crawl4ai"]["credits"]["real_browser"] * sc["crawl4ai"]["credit_usd"] * 1000
+    fc_hobby = min(p["usd_per_month"] for p in fc["plans"] if p["pages_included"] >= 5000)
+    fc_per1k = fc_hobby / 5000 * 1000
+    for needed, why in ((f"${j_per1k:.2f}", "the Jina measured page price"),
+                        (f"${fc_per1k:.2f}", "the Firecrawl Hobby page price"),
+                        (f"${c4_per1k:.2f}", "the Crawl4AI marginal page price"),
+                        (f"{jm:,}", "the median measured token count"),
+                        (f"${fc_hobby / (5000 / 5) * 1000:.2f}", "the JSON-format page price"),
+                        ("1,872", "the free-token page equivalent")):
+        if needed not in sq:
+            failures.append(f"firecrawl-alternatives lost {needed!r} ({why})")
+    if "affiliate link" not in sq:
+        failures.append("firecrawl-alternatives carries the Firecrawl link without the words 'affiliate link'")
+    if "most expensive per page in the table" not in sq:
+        failures.append("firecrawl-alternatives lost the sentence that names Firecrawl's page leg dearest")
     # 4. the SERP snippet layer (run 85). Shape measured on page 1 at 2026-11-08 21:35Z: 0/34
     # descriptions restate the title's opening, the paying positions for `firecrawl pricing` and
     # `digitalocean droplet pricing` carry a price, and 2/34 exceed 160 characters. So: one description
     # per page, 110-158 chars, at least one number, never the title repeated, and every number in it
     # must already be visible on that page — the snippet cannot drift away from the body.
+    # Run 131: two pages shipped with a literal backslash inside an attribute value
+    # (`<p class=\"lede\">`), because a doubled escape in the source string rendered what looked
+    # like a quote in the .py file and what is a backslash in the HTML. Browsers drop the class,
+    # so the paragraph silently loses its styling and any script reading the attribute sees the
+    # wrong name. Nothing in the suite noticed; this line makes it a build failure.
+    for rel in [w for w in written if w.endswith(".html")]:
+        t = open(os.path.join(scratch, rel), encoding="utf-8").read()
+        if '\\"' in t:
+            failures.append(f"{rel}: contains a literal backslash before a quote (attribute will not parse)")
     seen = {}
     for rel in [w for w in written if w.endswith(".html")]:
         t = open(os.path.join(scratch, rel), encoding="utf-8").read()
@@ -2570,7 +4106,10 @@ def _check_in(scratch, written, d, failures):
             failures.append(f"{rel}: description duplicates {seen[dsc]}")
         seen[dsc] = rel
         body_text = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", t)))
-        for num in set(re.findall(r"\$?\d[\d,]*(?:\.\d+)?", dsc)):
+        # Run 123: the pattern swallows the comma after a figure ("$5, expiring" -> "$5,"),
+        # so a description that puts a comma straight after a number could never pass.
+        # Normalise the captured token instead of contorting the prose to the regex.
+        for num in {n.rstrip(",") for n in re.findall(r"\$?\d[\d,]*(?:\.\d+)?", dsc)}:
             if num not in body_text:
                 failures.append(f"{rel}: description number {num} is not visible in the page body")
         for target in re.findall(r'href="([a-z0-9-]+)\.html"', t):
@@ -2584,6 +4123,113 @@ def _check_in(scratch, written, d, failures):
     for slug in DESCRIPTIONS:
         if slug != "index" and slug not in TITLE_BY_SLUG:
             failures.append(f"DESCRIPTIONS names {slug!r}, which is not a question page")
+    # Run 110: the Novita entry-cost section. Recomputed from dataset_ext.json (+ the GPU offers), not
+    # from the builder's own variables, so a refactor that breaks the arithmetic fails here.
+    ext = json.load(open(os.path.join(HERE, "dataset_ext.json"), encoding="utf-8"))
+    nq = open(os.path.join(scratch, "q", "novita-ai-api-pricing.html"), encoding="utf-8").read()
+    _paid = [r for r in ext["novita_tokens"]["rows"]
+             if (r["input_usd_per_mtok"] or 0) > 0 or (r["output_usd_per_mtok"] or 0) > 0]
+    _best = min(_paid, key=lambda r: (40 * r["input_usd_per_mtok"] + 10 * r["output_usd_per_mtok"], r["name"]))
+    _blend = (40 * _best["input_usd_per_mtok"] + 10 * _best["output_usd_per_mtok"]) / 50
+    _tok = NOVITA_ENTRY["min_topup_usd"] / _blend
+    _worst = max(_paid, key=lambda r: (40 * r["input_usd_per_mtok"] + 10 * r["output_usd_per_mtok"], r["name"]))
+    _blend2 = (40 * _worst["input_usd_per_mtok"] + 10 * _worst["output_usd_per_mtok"]) / 50
+    _tok2 = NOVITA_ENTRY["min_topup_usd"] / _blend2
+    _spot = min(o["usd_per_gpu_hour"] for o in ext["gpus"]["offers"]
+                if o["family"] == "H100" and o["provider"] == "novita" and o["tier"] == "spot")
+    _hrs = NOVITA_ENTRY["min_topup_usd"] / _spot
+    _days = (date.fromisoformat(NOVITA_ENTRY["retire_date"])
+             - date(int(NOVITA_ENTRY["read"][0:4]), int(NOVITA_ENTRY["read"][5:7]), int(NOVITA_ENTRY["read"][8:10]))).days
+    for needed, why in ((f"${NOVITA_ENTRY['min_topup_usd']:.2f}", "the minimum top-up floor"),
+                        (f"{_tok:.1f}M tokens", "what the floor buys of the cheapest 4:1 chat mix"),
+                        (f"{_tok2:.1f}M", "what the floor buys of the dearest 4:1 chat mix"),
+                        (f"{_tok / _tok2:.0f}×", "the spread between the two"),
+                        (f"{_hrs:.1f} hours", "what the floor buys of the cheapest H100 spot hour"),
+                        (f"${_spot:.2f}", "the Novita H100 spot rate used"),
+                        (NOVITA_ENTRY["retire_date"], "the model-retirement date"),
+                        (f"in {_days} days", "the countdown to that date"),
+                        ("must be greater than $10", "the doc's own top-up wording"),
+                        ("499", "the charged client-disconnect status"),
+                        ("generally not available", "the refund policy"),
+                        ("suspicious registration activity", "the voucher-revocation clause")):
+        if needed not in nq:
+            failures.append(f"novita page lost {needed!r} ({why})")
+    _normc = lambda s: re.sub(r"[^a-z0-9]", "", s.lower())
+    _retired_rows = sum(1 for r in ext["novita_tokens"]["rows"]
+                        if any(_normc(n) in _normc(r.get("name") or "") for n in NOVITA_ENTRY["retire_named"]))
+    if _retired_rows != 2:
+        failures.append(f"novita page claims two retired rows; dataset has {_retired_rows}")
+    # Run 111: the Sandbox credit. Recompute both hour figures from the vendor's per-second unit prices and
+    # assert the page's scope sentence, so the correction cannot be silently flipped back or generalised.
+    def _sb_rate(vcpu, gib):
+        return (vcpu * NOVITA_ENTRY["sandbox_cpu_usd_per_vcpu_sec"]
+                + gib * NOVITA_ENTRY["sandbox_ram_usd_per_gib_sec"]) * 3600.0
+    _sb_small = NOVITA_ENTRY["sandbox_credit_usd"] / _sb_rate(
+        NOVITA_ENTRY["sandbox_small_vcpu"], NOVITA_ENTRY["sandbox_small_gib"])
+    _sb_big = NOVITA_ENTRY["sandbox_credit_usd"] / _sb_rate(
+        NOVITA_ENTRY["sandbox_big_vcpu"], NOVITA_ENTRY["sandbox_big_gib"])
+    for needed, why in ((f"{_sb_small:,.0f} hours", "hours of 1 vCPU / 1 GiB the $100 Sandbox credit buys"),
+                        (f"{_sb_big:,.0f} hours", "hours of 4 vCPU / 8 GiB the $100 Sandbox credit buys"),
+                        (f"${NOVITA_ENTRY['sandbox_credit_usd']:.0f} in promotional credits",
+                         "the Sandbox credit amount"),
+                        ("No credit card is required", "the doc's own no-card wording"),
+                        ("for eligible Novita Sandbox usage", "the doc's own scope wording"),
+                        ("buys no inference at", "the sentence that stops the credit being read as an LLM credit"),
+                        (NOVITA_ENTRY["sandbox_read"], "the Sandbox read stamp")):
+        if needed not in nq:
+            failures.append(f"novita page lost {needed!r} ({why})")
+    if "no page on novita.ai states the voucher" in nq:
+        failures.append("novita page repeats run 110's over-broad claim that no voucher size is published "
+                        "anywhere (the Sandbox page publishes one)")
+    if "affiliate link" not in nq:
+        failures.append("novita page carries its link without the words 'affiliate link'")
+    # Run 133 (a): the sentinel leak. _mix_map closes its last segment at 1e9; when no two price lines
+    # cross, that single full-range segment used to render as "below 1000000000.00 input tokens per
+    # output token" — on 8 of the 10 model pages. A sentinel is not a threshold: no page may print it.
+    for w in written:
+        if not w.startswith("q/"):
+            continue
+        html_w = open(os.path.join(scratch, w), encoding="utf-8").read()
+        if "1000000000" in html_w:
+            failures.append(f"{w} prints the _mix_map sentinel as a threshold")
+    # Run 133 (b): the characters-per-minute band. Recompute every row from its own characters and
+    # minutes, then assert the page carries the band and the two bills derived from it.
+    band = cpm_band()
+    for r in band["rows"]:
+        want = r["characters"] / r["minutes"]
+        if abs(want - r["chars_per_minute"]) > 0.05:
+            failures.append(f"chars-per-minute row {r['unit']!r} says {r['chars_per_minute']}, "
+                            f"its own numbers give {want:.2f}")
+    _meas = sorted(r["chars_per_minute"] for r in band["rows"] if r["kind"] == "measured")
+    if _meas[0] != band["measured_min"] or _meas[-1] != band["measured_max"]:
+        failures.append("chars-per-minute min/max do not match the measured rows")
+    pmq = open(os.path.join(scratch, "q", "elevenlabs-pricing-per-minute.html"), encoding="utf-8").read()
+    _rate = el["rates_usd_per_1000_chars"]["multilingual_v4_api"]
+    for needed, why in ((f"{band['measured_min']:,.0f}&ndash;{band['measured_max']:,.0f}", "the measured band"),
+                        (f"median <strong>{band['measured_median']:,.0f}", "the measured median"),
+                        (f"${money(_rate * band['measured_min'] / 1000, 4)}", "the low per-minute bill"),
+                        (f"${money(_rate * band['measured_max'] / 1000, 4)}", "the high per-minute bill"),
+                        (f"{100_000 / band['measured_max']:,.0f}&ndash;{100_000 / band['measured_min']:,.0f}",
+                         "the finished minutes in 100,000 characters"),
+                        (str(band["measured_n"]), "the number of measured rows")):
+        if needed not in pmq:
+            failures.append(f"per-minute page lost {needed!r} ({why})")
+    # Run 134: every page that divides by the 1,000-character convention must say so. These five did it
+    # silently, which reads as a measurement; the sentence is generated from the same data file and must
+    # appear on each of them, with the band and a link to the page that prices it.
+    _bandstr = f"{band['measured_min']:,.0f}&ndash;{band['measured_max']:,.0f}"
+    for name in ("elevenlabs-credits-to-minutes", "elevenlabs-plan-minutes", "elevenlabs-startup-grant",
+                 "elevenlabs-free-tier", "elevenlabs-alternatives"):
+        path = os.path.join(scratch, "q", f"{name}.html")
+        if not os.path.exists(path):
+            failures.append(f"q/{name}.html missing, so its per-minute convention note cannot be checked")
+            continue
+        body = open(path, encoding="utf-8").read()
+        for needed, why in (("is a convention, not a measurement", "the convention disclaimer"),
+                            (_bandstr, "the measured characters-per-minute band"),
+                            ("elevenlabs-pricing-per-minute.html", "the link to the page that prices the band")):
+            if needed not in body:
+                failures.append(f"q/{name}.html lost {needed!r} ({why})")
     return failures, written
 
 
