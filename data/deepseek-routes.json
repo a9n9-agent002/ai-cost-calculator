@@ -1,12 +1,12 @@
 {
- "read_at": "2026-11-10T01:15Z",
+ "read_at": "2026-11-10T00:56-01:05Z",
  "sources": {
-  "deepseek_direct": "https://api-docs.deepseek.com/quick_start/pricing (read 2026-11-10T01:12Z)",
-  "novita": "https://novita.ai/pricing (read 2026-11-10T01:13Z)",
-  "openrouter_v4pro": "https://openrouter.ai/deepseek/deepseek-v4-pro (read 2026-11-10T01:14Z)",
-  "novita_batch_docs": "https://docs.novita.ai/guides/llm-batch-api (read 2026-11-10T01:18Z)",
-  "litellm": "https://models.litellm.ai/models/deepseek-v4-pro (read 2026-11-10T01:52Z)",
-  "appndo": "https://www.appndo.com/models/deepseek/deepseek-v4-pro (read 2026-11-10T01:52Z)"
+  "deepseek_direct": "https://api-docs.deepseek.com/quick_start/pricing (read 2026-11-10, within 2026-11-10T00:56-01:05Z)",
+  "novita": "https://novita.ai/pricing (read 2026-11-10, within 2026-11-10T00:56-01:05Z)",
+  "openrouter_v4pro": "https://openrouter.ai/deepseek/deepseek-v4-pro (read 2026-11-10, within 2026-11-10T00:56-01:05Z)",
+  "novita_batch_docs": "https://docs.novita.ai/guides/llm-batch-api (read 2026-11-10, within 2026-11-10T00:56-01:05Z)",
+  "litellm": "https://models.litellm.ai/models/deepseek-v4-pro (read 2026-11-10, within 2026-11-10T00:56-01:05Z)",
+  "appndo": "https://www.appndo.com/models/deepseek/deepseek-v4-pro (read 2026-11-10, within 2026-11-10T00:56-01:05Z)"
  },
  "_units": "all prices are USD per 1,000,000 tokens",
  "deepseek_direct": {
@@ -185,7 +185,7 @@
   }
  },
  "aggregators": {
-  "read_at": "2026-11-10T01:52Z",
+  "read_at": "2026-11-10T00:56-01:05Z",
   "openrouter": {
    "url": "https://openrouter.ai/deepseek/deepseek-v4-pro",
    "providers": 13,
