@@ -1,0 +1,58 @@
+{
+  "read_at": "2026-11-10T01:15Z",
+  "sources": {
+    "deepseek_direct": "https://api-docs.deepseek.com/quick_start/pricing (read 2026-11-10T01:12Z)",
+    "novita": "https://novita.ai/pricing (read 2026-11-10T01:13Z)",
+    "openrouter_v4pro": "https://openrouter.ai/deepseek/deepseek-v4-pro (read 2026-11-10T01:14Z)",
+    "novita_batch_docs": "https://docs.novita.ai/guides/llm-batch-api (read 2026-11-10T01:18Z)"
+  },
+  "_units": "all prices are USD per 1,000,000 tokens",
+  "deepseek_direct": {
+    "deepseek-flash": {"cache_hit": {"off_peak": 0.003, "peak": 0.006}, "cache_miss": {"off_peak": 0.15, "peak": 0.30}, "output": {"off_peak": 0.60, "peak": 1.20}},
+    "deepseek-v4-pro": {"cache_hit": {"off_peak": 0.022, "peak": 0.044}, "cache_miss": {"off_peak": 0.66, "peak": 1.32}, "output": {"off_peak": 1.98, "peak": 3.96}},
+    "peak_windows_utc": ["01:00-04:00", "06:00-10:00"],
+    "peak_days": "Monday-Friday, excluding Chinese public holidays",
+    "peak_hours_per_week": 35,
+    "hours_per_week": 168,
+    "longest_offpeak_run_hours": 63,
+    "longest_offpeak_run": "Friday 10:00Z to Monday 01:00Z"
+  },
+  "novita": {
+    "DeepSeek V4.1 Flash 1017": {"input": 0.30, "output": 1.20, "cache_read": 0.006},
+    "DeepSeek V4 Pro 0813": {"input": 1.32, "output": 3.96, "cache_read": 0.044},
+    "DeepSeek V4 Flash 0731": {"input": 0.44, "output": 1.32, "cache_read": 0.028},
+    "DeepSeek V4 Pro": {"input": 1.60, "output": 3.20, "cache_read": 0.135},
+    "DeepSeek R1 0528": {"input": 0.70, "output": 2.50, "cache_read": 0.35},
+    "batch_discount_terms": "introductory 50% discount on input and output tokens for supported models",
+    "batch_supported_models": ["openai/gpt-oss-120b", "deepseek/deepseek-r1-0528"],
+    "batch_delivery": "results within 24 hours"
+  },
+  "openrouter_v4pro_providers": {
+    "_model": "DeepSeek V4 Pro 0423 (deepseek/deepseek-v4-pro)",
+    "Relace": {"input": 0.90, "output": 1.50, "cache_read": 0.25},
+    "StreamLake (45% off)": {"input": 0.9553, "output": 1.911, "cache_read": 0.07961},
+    "SiliconFlow": {"input": 1.00, "output": 1.50, "cache_read": 0.135},
+    "NovitaAI": {"input": 1.60, "output": 3.20, "cache_read": 0.135},
+    "GMICloud (45% off)": {"input": 0.9570, "output": 1.914, "cache_read": 0.07975},
+    "Alibaba Cloud Int. (US)": {"input": 1.56, "output": 3.12, "cache_read": 0.13},
+    "Alibaba Cloud Int.": {"input": 1.416, "output": 2.832, "cache_read": 0.118},
+    "AtlasCloud": {"input": 1.68, "output": 3.38, "cache_read": 0.13},
+    "DeepInfra": {"input": 1.30, "output": 2.60, "cache_read": 0.10},
+    "Azure": {"input": 1.91, "output": 3.83, "cache_read": 0.16},
+    "Baidu Qianfan": {"input": 1.69, "output": 3.38, "cache_read": 0.14},
+    "Venice": {"input": 1.65, "output": 3.301, "cache_read": 0.33},
+    "DigitalOcean": {"input": 1.044, "output": 2.088, "cache_read": 0.2088}
+  },
+  "price_history_reported": {
+    "_note": "pre-2026-08-16 flat rates, reported identically by aireiter.com and ofox.ai price-history pages read 2026-11-10; DeepSeek's own page no longer prints them",
+    "deepseek-v4-pro": {"cache_hit": 0.003625, "cache_miss": 0.435, "output": 0.87},
+    "deepseek-flash": {"cache_hit": 0.0028, "cache_miss": 0.14, "output": 0.28},
+    "effective": "2026-08-16T16:00Z",
+    "sources": ["https://aireiter.com/blog/deepseek-api-price-increase", "https://ofox.ai/blog/deepseek-api-price-increase-new-rates-peak-hours-cache-cost-2026/"]
+  },
+  "workloads": {
+    "W1_no_cache": {"input_miss": 40000000, "input_hit": 0, "output": 10000000},
+    "W2_agent_98pct_cache": {"input_miss": 820000, "input_hit": 39180000, "output": 10000000},
+    "W3_chat_output_heavy": {"input_miss": 5000000, "input_hit": 0, "output": 20000000}
+  }
+}
