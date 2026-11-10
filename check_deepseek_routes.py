@@ -143,6 +143,32 @@ close(nov['DeepSeek R1 0528']['output'] * 0.5, 1.25, 'r1-0528 batch output is $1
 for k in ('deepseek_direct', 'novita', 'openrouter_v4pro', 'novita_batch_docs'):
     ok('read 2026-11-10' in D['sources'][k], 'source %s carries its reading time' % k)
 
+# --- 10. the three aggregator tables (the section the draft added)
+AG = D['aggregators']
+close(AG['litellm']['input_ceiling'] / AG['litellm']['input_floor'], 4.55, 'LiteLLM spread is 4.55x', 0.01)
+ok(AG['litellm']['providers'] == 24 and AG['litellm']['listings'] == 40, 'LiteLLM lists 24 providers / 40 listings')
+ok(AG['appndo']['providers'] == 22, 'Appndo lists 22 providers')
+ok(AG['openrouter']['providers'] == len(prov), 'OpenRouter provider count matches its table')
+for k in ('openrouter', 'litellm', 'appndo'):
+    ok(AG[k]['offpeak_column'] is False, '%s prints no off-peak column' % k)
+
+mix5 = 5 * ds['cache_miss']['peak'] + ds['output']['peak']
+mix5_off = 5 * ds['cache_miss']['off_peak'] + ds['output']['off_peak']
+mix5_hf = 5 * AG['appndo']['input_floor'] + AG['appndo']['output_floor']
+close(mix5, 10.56, '5:1 mix at peak $10.56', 0.01)
+close(mix5_off, 5.28, '5:1 mix off-peak $5.28', 0.01)
+close(mix5_hf, 3.045, '5:1 mix at the Appndo floor $3.045', 0.001)
+close((1 - mix5_hf / mix5) * 100, 71.2, 'floor is 71.2% below peak', 0.1)
+close((1 - mix5_hf / mix5_off) * 100, 42.3, 'floor is only 42.3% below off-peak', 0.1)
+ok(AG['appndo']['input_floor'] == old['cache_miss'] and AG['appndo']['output_floor'] == old['output'],
+   'the Appndo floor equals the retired pre-2026-08-16 flat rates')
+close(10 * ds['cache_miss']['peak'] + 2 * ds['output']['peak'], 21.12, '10M+2M at peak is $21.12', 0.01)
+close(10 * ds['cache_miss']['off_peak'] + 2 * ds['output']['off_peak'], 10.56, '10M+2M off-peak is $10.56', 0.01)
+close(10 * AG['appndo']['input_floor'] + 2 * AG['appndo']['output_floor'], AG['appndo']['monthly_estimate_10m_2m'],
+     'the Appndo monthly estimate recomputes from its own floor', 0.01)
+close(30 * AG['litellm']['databricks_cache_write'], 39.60, '1M cached daily = 30M writes = $39.60/month', 0.01)
+ok(AG['litellm']['cache_write'] == 0, 'DeepSeek publishes no cache-write charge')
+
 print('checks: %d   fails: %d' % (checks, len(fails)))
 if fails:
     for f in fails:
