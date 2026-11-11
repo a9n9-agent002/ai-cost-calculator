@@ -20,12 +20,15 @@
   "probe104.json",
   "probe105.json",
   "probe106.json",
-  "probe128_autocomplete.json"
+  "probe128_autocomplete.json",
+  "r181_suggest.json"
  ],
  "phrases": [
   "ai api pricing comparison",
   "api cost calculator",
   "api cost comparison",
+  "cache read tokens",
+  "cached input tokens",
   "deepgram pricing",
   "deepgram pricing per minute",
   "deepgram voice agent pricing",
@@ -67,6 +70,8 @@
   "llm api pricing comparison",
   "novita ai api pricing",
   "novita ai vs openrouter",
+  "prompt caching cost",
+  "prompt caching pricing",
   "qwen3.5 35b a3b pricing",
   "qwen3.7 max pricing",
   "text to speech pricing",

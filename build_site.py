@@ -213,6 +213,33 @@ def compute_changes():
 
 # ---------- renderers ----------
 
+_CTA = re.compile(r'<p>(?:(?!</p>).)*?rel="sponsored[^"]*".*?</p>', re.S)
+
+
+def _cta_first(body):
+    """Move a single-vendor page's labelled link panel up under the lede (run 173).
+
+    Measured 2026-11-10: on this site the affiliate link sat at 72-99% of the words on every
+    question page and at 92-95% on voices.html and the vendor pages, while the two independent
+    pages ranking beside my dev.to article put the commercial mention in their first sentences.
+    Only applied where the page carries exactly ONE sponsored panel, so the multi-vendor index
+    (two panels, each beside its own product section) is untouched.
+    """
+    ms = list(_CTA.finditer(body))
+    if len(ms) != 1:
+        return body
+    m = ms[0]
+    rest = body[:m.start()] + body[m.end():]
+    end_h1 = rest.find("</h1>")
+    if end_h1 < 0:
+        return body
+    cut = rest.find("</p>", end_h1 + 5)
+    if cut < 0:
+        return body
+    cut += len("</p>")
+    return rest[:cut] + m.group(0).replace("<p>", '<p class="cta">', 1) + rest[cut:]
+
+
 def page(title, body, root="", desc=None):
     """Every page needs its own description (run 85). Until then this emitted NO meta description at
     all, so the site's front door (priority 1.0 in the sitemap) had none, and the question pages
@@ -227,11 +254,19 @@ def page(title, body, root="", desc=None):
             f"<title>{esc(title)}</title>"
             f"<meta name=\"description\" content=\"{esc(desc)}\">"
             f"<style>{CSS}</style></head><body><main>"
-            f"{body}</main></body></html>\n")
+            f"{_cta_first(body)}</main></body></html>\n")
 
 
-FIRECRAWL_DEST_NOTE = (" (opens Firecrawl's Alexandria data-provider catalogue; the plan "
-                       "ladder quoted here is read from firecrawl.dev/pricing)")
+DEST_NOTES = {
+    "firecrawl": (" (opens Firecrawl's Alexandria data-provider catalogue; the plan "
+                  "ladder quoted here is read from firecrawl.dev/pricing)"),
+    "elevenlabs": (" (opens elevenlabs.io, whose home page lists plan prices; the per-1,000-character "
+                   "API rates quoted here are on its Pricing → API page)"),
+    "digitalocean": (" (opens digitalocean.com, whose home page lists no prices at all; the Droplet "
+                     "prices quoted here are on its Pricing page)"),
+    "novita": (" (opens novita.ai, whose home page lists some model rates; the full price list "
+               "quoted here is on its Pricing page)"),
+}
 
 
 def el_minutes(chars, cpm):
@@ -242,14 +277,19 @@ def el_minutes(chars, cpm):
 def link_html(name, url):
     """An affiliate link is never printed without the label inside the anchor.
 
-    Run 108 followed every approved link to its destination: the Firecrawl one lands on
-    alexandria.firecrawl.dev, a different product from the credit ladder this site quotes,
-    so the note beside it says where the click goes. Attribution was verified intact
-    (via=agent001 / dub_id on the redirected URL).
+    Run 108 followed every approved link to its destination. Run 177 tried to steer the click and
+    measured that the approved links cannot be deep-linked (`/pricing` on the link host is 404 for
+    ElevenLabs; Firecrawl's `/agent001/pricing` is a Dub "Link Not Found" page), while the
+    destinations carry far fewer prices than the pages that price them (digitalocean.com home: 0
+    "$" strings vs 41 on /pricing; elevenlabs.io home: 36 vs 292 on /pricing/api). So every anchor
+    says where the click goes and where the numbers are.
     """
     anchor = f'<a href="{href(url)}" rel="sponsored noopener">{esc(name)} — affiliate link</a>'
-    if "firecrawl.link" in url:
-        anchor += FIRECRAWL_DEST_NOTE
+    for dom, key in (("firecrawl.link", "firecrawl"), ("try.elevenlabs.io", "elevenlabs"),
+                     ("m.do.co", "digitalocean"), ("novita.ai", "novita")):
+        if dom in url:
+            anchor += DEST_NOTES[key]
+            break
     return anchor
 
 
@@ -633,6 +673,18 @@ def _check_in(S, written, d):
             end = t.find("</a>", m.start())
             if "affiliate link" not in t[start:end]:
                 failures.append(f"{p}: unlabelled affiliate href {m.group(1)}")
+    # run 177: every affiliate anchor says where the click lands (the approved links cannot be
+    # deep-linked; digitalocean.com's home page has 0 "$" strings vs 41 on /pricing)
+    NOTE_FOR = (("firecrawl.link", "Alexandria"), ("try.elevenlabs.io", "elevenlabs.io"),
+                ("m.do.co", "digitalocean.com"), ("novita.ai", "novita.ai"))
+    for p, t in html.items():
+        for m in re.finditer(r'<a href="(https://(?:firecrawl\.link|try\.elevenlabs\.io|m\.do\.co|novita\.ai)[^"]*)"\s+rel="sponsored[^"]*"[^>]*>', t):
+            tail = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", t[m.end():m.end() + 600]))
+            want = next((k for dom, k in NOTE_FOR if dom in m.group(1)), None)
+            if want is None:
+                failures.append(f"{p}: affiliate href to an unrecognised host: {m.group(1)}")
+            elif want not in tail[:260]:
+                failures.append(f"{p}: affiliate anchor does not say where it lands (expected {want!r})")
     # run 85: the SERP snippet layer. One description per page, 110-158 chars, a number in it, never the
     # title repeated, and every number in the description already visible on that page.
     # run 131: a literal backslash before a quote in an attribute (the `<p class=\"lede\">` defect)

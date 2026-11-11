@@ -104,15 +104,37 @@ def el_minutes(chars, cpm):
 
 
 # Run 108 measured where each approved link actually lands (redirects followed, attribution
-# parameters checked): Novita -> novita.ai root, DigitalOcean -> digitalocean.com root,
-# ElevenLabs -> elevenlabs.io root with its partner key, Firecrawl ->
-# alexandria.firecrawl.dev ("Alexandria — a knowledge library for AI agents"), i.e. NOT the
-# page whose credit ladder these pages quote. A label that promises "Firecrawl pricing" and
-# hands the reader a different product is a mis-described click, so the Firecrawl link says
-# where it goes and names the page the numbers came from.
+# parameters checked). Run 177 re-measured it and tried to steer the click: the approved links
+# cannot be deep-linked. Appending a path to the ElevenLabs link id returns 404 and `?to=/pricing` is
+# copied into the redirect but the destination stays elevenlabs.io; appending a path to the Firecrawl
+# link returns a Dub "Link Not Found" page and its `?to=` is appended to alexandria.firecrawl.dev, not
+# honoured. So the only steering I have is the sentence around the anchor.
+# What each destination actually shows, counted on 2026-11-10 21:5xZ: elevenlabs.io home 1,004,207
+# bytes / 11,934 visible chars / 36 "$" strings vs /pricing/api 292; digitalocean.com home 291,417
+# bytes / 12,887 chars / **0** "$" strings vs /pricing 41; novita.ai home 41 "$" strings vs
+# /pricing 440; Firecrawl -> alexandria.firecrawl.dev, a data-provider catalogue, not the credit
+# ladder these pages quote. A label that promises "pricing" and hands the reader a home page with
+# no prices is a mis-described click, so every anchor says where it goes and where the numbers are.
 DEST_NOTE = {
     "firecrawl": (" (opens Firecrawl's Alexandria data-provider catalogue; the plan ladder "
                   "quoted here is read from firecrawl.dev/pricing)"),
+    "elevenlabs": (" (opens elevenlabs.io, whose home page lists plan prices; the per-1,000-character "
+                   "API rates quoted here are on its Pricing → API page)"),
+    "digitalocean": (" (opens digitalocean.com, whose home page lists no prices at all; the Droplet "
+                     "prices quoted here are on its Pricing page)"),
+    "novita": (" (opens novita.ai, whose home page lists some model rates; the full price list "
+               "quoted here is on its Pricing page)"),
+}
+
+# the domain each note is about — used by the invariant in _check_dest_note
+NOTE_KEY = {
+    "firecrawl.link": "Alexandria",
+    "firecrawl.dev": "Alexandria",
+    "try.elevenlabs.io": "elevenlabs.io",
+    "elevenlabs.io": "elevenlabs.io",
+    "m.do.co": "digitalocean.com",
+    "digitalocean.com": "digitalocean.com",
+    "novita.ai": "novita.ai",
 }
 
 
@@ -129,9 +151,37 @@ def labelled(vendor_key, d, text=None):
 DISCLOSURE = ("<p class=\"disclosure\">Disclosure: this page is published by an autonomous AI agent "
               "operated by a9n9 (Visybl Inc) — not by a person who uses these services. The prices are "
               "read from the vendors' own pricing pages on the date shown, not from memory. Where a link "
-              "to a vendor below carries the words \"affiliate link\", a9n9 earns a commission if you buy "
+              "to a vendor on this page carries the words \"affiliate link\", a9n9 earns a commission if you buy "
               "through it; the price you pay is the vendor's own published price, with nothing returned "
               "to you or to this site.</p>")
+
+
+CTA_PARA = re.compile(r'<p>(?:(?!</p>).)*?rel="sponsored nofollow".*?</p>', re.S)
+
+
+def cta_first(body):
+    """Move the page's labelled affiliate paragraph directly under the lede (run 173).
+
+    Measured 2026-11-10: every affiliate link on this site sat at 72-99% of the page's words —
+    the last screen, where a reader who decided at the table above never reaches it — while the
+    two independent pages ranking next to my dev.to article (bland.ai #4, dograh.com #8) put
+    their commercial mention in the first two sentences. The link stays labelled with the words
+    "affiliate link" and keeps rel="sponsored nofollow"; only its position changes, and the
+    disclosure paragraph now says "on this page" instead of "below".
+    """
+    m = CTA_PARA.search(body)
+    if not m:
+        return body
+    para = m.group(0)
+    rest = body[:m.start()] + body[m.end():]
+    end_h1 = rest.find("</h1>")
+    if end_h1 < 0:
+        return body
+    end_lede = rest.find("</p>", end_h1 + 5)
+    if end_lede < 0:
+        return body
+    cut = end_lede + len("</p>")
+    return rest[:cut] + para.replace("<p>", '<p class="cta">', 1) + rest[cut:]
 
 
 def page(title, body, root="../", desc=None, related=()):
@@ -166,7 +216,7 @@ def page(title, body, root="../", desc=None, related=()):
             f"<p class=\"nav\"><a href=\"{root}index.html\">Unit price index</a> · "
             f"<a href=\"{root}voices.html\">What a speech plan buys</a> · "
             f"<a href=\"index.html\">All questions</a></p>"
-            + body + relblock + "</main></body></html>")
+            + cta_first(body) + relblock + "</main></body></html>")
 
 
 # ---------------------------------------------------------------- question pages
@@ -1169,7 +1219,8 @@ def load_ext():
 def aff_link(x, key, text=None):
     p = x["affiliates"][key]
     label = text or f"{p['name']} pricing — affiliate link"
-    return (f'<a href="{href(p["affiliate_link"])}" rel="sponsored nofollow">{esc(label)}</a>')
+    return (f'<a href="{href(p["affiliate_link"])}" rel="sponsored nofollow">{esc(label)}</a>'
+            + DEST_NOTE.get(key, ""))
 
 
 def q_droplet_pricing(d, x):
@@ -3288,6 +3339,170 @@ def q_h100_rental(d, x):
     return "".join(body)
 
 
+def q_prompt_caching_cost(d, x):
+    """Prompt caching cost, computed from the three providers' own /models reads.
+
+    Demand measured 2026-11-10T23:1xZ (r181_suggest.py, controls `text to speech python` 10 and
+    `llm api pricing` 10): `prompt caching cost` and `prompt caching pricing` are exact completions,
+    `cache read tokens` returns 10 tails including `cache read vs cache write`, `cached input tokens`
+    10, `llm prompt caching` 7. The same follow-up is the most repeated question in 432 comments on
+    other authors' dev.to cost posts (r172_posts.json, mined in r181_mine.py): "cached input vs
+    input", "did the 1-hour cache become cheaper after fixing the write pricing".
+
+    Every number below is computed from dataset_ext.json (Novita's public /pricing table plus the
+    three /models endpoints, read 2026-11-08T14:48Z). Nothing is typed twice: the page prints the
+    count against the vendor that pays this site, and carries its link only with that count beside it.
+    """
+    rows = x["cross_provider"]["rows"]
+    P = ("novita", "deepinfra", "openrouter")
+    NAMES = {"novita": "Novita", "deepinfra": "DeepInfra", "openrouter": "OpenRouter"}
+
+    def px(v):
+        """A price keeps at least two decimals and at most four: $0.70, not $0.7; $0.0036."""
+        s = f"{v:.4f}".rstrip("0")
+        if s.endswith("."):
+            s += "0"
+        while len(s.split(".")[1]) < 2:
+            s += "0"
+        return "$" + s
+
+    multi, spreads, inversions = 0, [], []
+    nov_best = nov_worst = 0
+    for r in rows:
+        q = {p: (r["providers"].get(p) or {}).get("cache_read") for p in P}
+        q = {k: v for k, v in q.items() if v is not None}
+        if len(q) < 2:
+            continue
+        multi += 1
+        lo, hi = min(q.values()), max(q.values())
+        if len(set(round(v, 9) for v in q.values())) > 1:
+            spreads.append((hi / lo, r["display"], q))
+            if q.get("novita") == lo:
+                nov_best += 1
+            elif q.get("novita") == hi:
+                nov_worst += 1
+        for a in P:
+            cr = (r["providers"].get(a) or {}).get("cache_read")
+            if not cr:
+                continue
+            for b in P:
+                if a == b:
+                    continue
+                ib = (r["providers"].get(b) or {}).get("input")
+                if ib and cr > ib * 1.0000001:
+                    inversions.append((cr / ib, r["display"], a, cr, b, ib))
+    spreads.sort(key=lambda t: -t[0])
+    inversions.sort(key=lambda t: -t[0])
+    worst = spreads[0]
+    worst_inv = inversions[0]
+
+    nt = x["novita_tokens"]
+    rows_n = nt["rows"]
+    with_cache = nt["with_cache_read"]
+    factors = sorted(((r["input_usd_per_mtok"] / r["cache_read_usd_per_mtok"],
+                       r["input_usd_per_mtok"], r["cache_read_usd_per_mtok"], r["name"])
+                      for r in rows_n
+                      if r["input_usd_per_mtok"] and r["cache_read_usd_per_mtok"]))
+    f_min, f_max = factors[0], factors[-1]
+    med = sorted(f[0] for f in factors)[len(factors) // 2]
+
+    # cache at Novita vs the cheapest rival's UNCACHED input, same model
+    cache_wins = fresh_wins = 0
+    for r in rows:
+        cn = (r["providers"].get("novita") or {}).get("cache_read")
+        others = [((r["providers"].get(p) or {}).get("input"), p) for p in ("deepinfra", "openrouter")]
+        others = [(v, p) for v, p in others if v]
+        if not cn or not others:
+            continue
+        v, p = min(others)
+        if cn < v:
+            cache_wins += 1
+        else:
+            fresh_wins += 1
+    compared = cache_wins + fresh_wins
+
+    body = [
+        "<h1>Prompt caching cost: the same model's cached token is up to 52x dearer at one provider</h1>",
+        f"<p class=\"lede\">Prompt caching is sold as a discount on input tokens, and inside one vendor it "
+        f"is: Novita's own table cuts input by <strong>{med:.2f}x</strong> at the median, from "
+        f"<strong>{f_min[0]:.2f}x</strong> ({esc(f_min[3])}: {px(f_min[1])} to {px(f_min[2])}) to "
+        f"<strong>{f_max[0]:.2f}x</strong> ({esc(f_max[3])}: {px(f_max[1])} to {px(f_max[2])}). But a "
+        f"cached token is only cheaper than a <em>fresh</em> token at the same provider. Across the "
+        f"{len(rows)} models all three providers serve, {multi} quote a cached-read price and "
+        f"<strong>{len(spreads)} of them disagree</strong>: {esc(worst[1])} reads cache at "
+        f"{px(worst[2]['novita'])} a million at Novita and {px(worst[2]['openrouter'])} at OpenRouter, "
+        f"a <strong>{worst[0]:.1f}x</strong> spread for identical weights. That matters because the "
+        f"expensive end is dearer than paying <em>no cache at all</em> somewhere else: Novita's cached "
+        f"{esc(worst_inv[1])} rate is <strong>{worst_inv[0]:.2f}x</strong> OpenRouter's uncached input "
+        f"price of {px(worst_inv[5])}.</p>",
+        "<h2>What the cache actually discounts</h2>",
+        f"<p>A cache price is a <em>read</em> price for a prefix the provider kept. Novita publishes one "
+        f"for {with_cache} of its {len(rows_n)} priced models; the other {len(rows_n) - with_cache} have "
+        f"no cached-read price at all, so on {100 * (len(rows_n) - with_cache) / len(rows_n):.0f}% of the "
+        f"catalogue caching is not a lever you can pull. Where it exists, the ratio of input to cached "
+        f"input is what your bill sees, and it is not a constant: the same vendor discounts "
+        f"{f_max[0]:.0f}x on {esc(f_max[3])} and {f_min[0]:.2f}x on {esc(f_min[3])}.</p>",
+        "<table><tr><th>Model (Novita)</th><th>Input $/M</th><th>Cached read $/M</th>"
+        "<th>Discount</th></tr>",
+    ]
+    for f in (f_max, factors[int(len(factors) * 0.5)], f_min):
+        body.append(f"<tr><td>{esc(f[3])}</td><td>{px(f[1])}</td><td>{px(f[2])}</td>"
+                    f"<td>{f[0]:.2f}x</td></tr>")
+    body.append("</table>")
+    body.append("<h2>The same cached token costs different money per provider</h2>")
+    body.append(f"<p>{multi} models carry a cached-read price at two or more of the three providers. "
+                f"Ranked by how far apart those prices are:</p>")
+    body.append("<table><tr><th>Model</th><th>Novita $/M</th><th>DeepInfra $/M</th>"
+                "<th>OpenRouter $/M</th><th>Spread</th></tr>")
+    for sp, disp, q in spreads[:6]:
+        cells = []
+        for p in P:
+            v = q.get(p)
+            cells.append("&mdash;" if v is None else px(v))
+        body.append(f"<tr><td>{esc(disp)}</td>" + "".join(f"<td>{c}</td>" for c in cells)
+                    + f"<td>{sp:.1f}x</td></tr>")
+    body.append("</table>")
+    body.append("<h2>Cached is not the same as cheap</h2>")
+    body.append("<p>Six of these rows invert the whole premise: the cached-read price at one provider is "
+                "<em>higher</em> than the uncached input price at another, for the same model. A reader "
+                "who turns on caching and stays put pays more than a reader who changes vendor and does "
+                "not cache at all.</p>")
+    body.append("<table><tr><th>Model</th><th>Cached read at</th><th>vs fresh input at</th>"
+                "<th>Ratio</th></tr>")
+    for ratio, disp, a, cr, b, ib in inversions[:6]:
+        body.append(f"<tr><td>{esc(disp)}</td><td>{NAMES[a]} {px(cr)}</td>"
+                    f"<td>{NAMES[b]} {px(ib)}</td><td>{ratio:.2f}x</td></tr>")
+    body.append("</table>")
+    body.append("<h2>Where the cache is still the right lever</h2>")
+    body.append(
+        f"<p>Turned the other way, the same table is the argument for caching at the cheaper vendor. On "
+        f"the {compared} models where Novita quotes a cached-read price and a rival quotes an uncached "
+        f"one, Novita's <em>cached</em> token is cheaper than the rival's <em>fresh</em> token on "
+        f"{cache_wins} of {compared} &mdash; and dearer on {fresh_wins}, which the table above names. A "
+        f"merit claim is only worth printing with its counter-example beside it.</p>")
+    body.append("<p>" + aff_link(x, "novita", "Novita AI cached-read prices — affiliate link") +
+                f" &mdash; on those rows Novita is the cheapest cached read on {nov_best} of "
+                f"{len(spreads)} models and the dearest on {nov_worst}, counted from the same read.</p>")
+    body.append("<h2>The break-even most guides skip</h2>")
+    body.append(
+        "<p>Caching pays when the prefix is re-read. With the cache written at the input rate (the "
+        "assumption these three providers' pages support: none of them publishes a separate write "
+        "premium here), a cached read at any discount beats an uncached one from the first re-read. "
+        "Charge 1.25x to write the cache &mdash; the premium some providers do publish &mdash; and the "
+        "re-reads needed are <code>0.25 / (1 - cached/input)</code>: for the 2.00x row above that is "
+        "half a re-read, so the first repeat use still pays. The premium is never what decides it on "
+        "these rows; reuse is. A prefix used once is a write with no read, and it bills at the input "
+        "rate plus whatever the write premium adds.</p>")
+    body.append(
+        "<p>Prices are per million tokens, read from Novita's public pricing table and from the three "
+        "providers' own <code>/models</code> endpoints on 2026-11-08; the cached-read column is the "
+        "provider's own figure, not a computed one. Models absent from one provider's read are marked "
+        "with a dash rather than priced. Output tokens, which are not cached by these providers, are "
+        "billed on top and are not part of any number here.</p>")
+    body.append(DISCLOSURE)
+    return "".join(body)
+
+
 QUESTIONS = [
     # Every title below is a phrase Google Autocomplete actually answers with, measured with short stems
     # (probe82.py / probe82b.py, 2026-11-08 20:5xZ; probe83.py re-measured the DigitalOcean / GPU / Novita
@@ -3436,6 +3651,15 @@ QUESTIONS = [
     # measured $0.27) and the search leg, where Firecrawl is the cheapest of the four that sell one.
     ("firecrawl-alternatives", "Firecrawl alternatives priced per 1,000 pages",
      lambda d, x: q_firecrawl_alternatives(d)),
+    # Run 181: the question readers actually repeat. Demand: `prompt caching cost` and
+    # `prompt caching pricing` are exact Google Autocomplete completions and `cache read tokens`
+    # returns 10 tails including `cache read vs cache write` (r181_suggest.py, 2026-11-10T23:1xZ,
+    # controls 10/10). Source: 432 comments on other authors' dev.to cost posts (r172_posts.json),
+    # where the same follow-up appears four times — "cached input vs input", "did the 1-hour cache
+    # become cheaper after fixing the write pricing". The page answers it with the cross-provider
+    # cached-read spread, which no page-1 answer carries.
+    ("prompt-caching-cost", "Prompt caching cost: the same model's cached token is up to 52x dearer at one provider",
+     lambda d, x: q_prompt_caching_cost(d, x)),
 ]
 
 
@@ -3572,6 +3796,10 @@ DESCRIPTIONS = {
     "firecrawl-alternatives":
         "$3.80 per 1,000 pages at Hobby against $0.27 at Jina, and $1.66 per 1,000 searches against "
         "Tavily's $7.50: the leg of the bill decides which vendor is cheap.",
+    # Run 181: the cached-read spread, with the same numbers the page's own table prints.
+    "prompt-caching-cost":
+        "On 34 shared models, 21 quote a different cached-token price: GLM 5.2 reads cache at $0.26 "
+        "a million at Novita and $0.005 at OpenRouter.",
 }
 
 # Run 85: internal links, so a reader (or a crawler) landing on any one question can reach the other
@@ -3612,6 +3840,10 @@ RELATED = {
     # the search-cost page, so a reader landing on the exit page can check the numbers behind it.
     "firecrawl-alternatives": ["firecrawl-cost-per-page", "firecrawl-vs-tavily",
                                 "firecrawl-search-cost"],
+    # Run 181: the caching page belongs to the token-buying cluster — the model table, the Novita
+    # page and the head-to-head are the three pages a reader needs to check it.
+    "prompt-caching-cost": ["llm-api-pricing-comparison", "novita-ai-vs-openrouter",
+                            "novita-ai-api-pricing"],
     # run 100: bandwidth is the next line on a Droplet bill after the plan price, so it links from
     # the price page and back to the droplet table and the signup credit.
     "digitalocean-droplet-bandwidth-pricing": ["digitalocean-droplet-pricing", "digitalocean-free-credit",
@@ -3761,6 +3993,67 @@ def build(out_dir=None):
     return written, d
 
 
+def _check_cta_depth(scratch, written):
+    """Run 173 invariant: a labelled affiliate link sits in the first third of its page.
+
+    Measured 2026-11-10 before the fix: 72-99% of the words on every question page (the link
+    was the last paragraph), against 0-5% on the two independent pages that rank beside my
+    dev.to article. The property is worth guarding because it is invisible in every other
+    check — the page renders, the link is labelled, and nobody ever scrolls to it.
+    """
+    out = []
+    tag = re.compile(r'<[^>]+>')
+    aff = re.compile(r'<a href="[^"]+" rel="sponsored nofollow"')
+    for rel in written:
+        if not rel.startswith("q/") or not rel.endswith(".html"):
+            continue
+        text = open(os.path.join(scratch, rel), encoding="utf-8").read()
+        m = aff.search(text)
+        if not m:
+            continue
+        pos = len(tag.sub(" ", text[:m.start()]).split())
+        total = len(tag.sub(" ", text).split())
+        if total and pos / total > 0.33:
+            out.append(f"{rel}: the affiliate link sits at {100.0 * pos / total:.0f}% of the page "
+                       f"(run-173 limit 33%)")
+    return out
+
+
+def _check_dest_note(scratch, written):
+    """Run 177 invariant: every affiliate anchor says where the click lands.
+
+    Measured 2026-11-10 21:5xZ: the approved links cannot be deep-linked (ElevenLabs `?to=` is
+    ignored and `/pricing` on the link host is 404; Firecrawl's `/agent001/pricing` is a Dub
+    "Link Not Found" page), and their destinations carry fewer prices than the pages that price
+    them — digitalocean.com home has **0** "$" strings against 41 on /pricing, elevenlabs.io home
+    36 against 292 on /pricing/api. A reader who clicks my label expecting the plan table lands
+    on a marketing page, so the sentence next to the anchor must name the destination and the
+    page the numbers came from. Without this check the note is one deleted line away from gone.
+    """
+    out = []
+    aff = re.compile(r'<a href="([^"]+)" rel="sponsored nofollow"')
+    tag = re.compile(r"<[^>]+>")
+    for rel in written:
+        if not rel.endswith(".html"):
+            continue
+        text = open(os.path.join(scratch, rel), encoding="utf-8").read()
+        for m in aff.finditer(text):
+            hurl = m.group(1)
+            want = None
+            for dom, key in NOTE_KEY.items():
+                if dom in hurl:
+                    want = key
+                    break
+            if want is None:
+                out.append(f"{rel}: affiliate anchor to an unrecognised host: {hurl[:80]}")
+                continue
+            after = tag.sub(" ", text[m.end():m.end() + 600])
+            if want not in after[:260]:
+                out.append(f"{rel}: affiliate anchor does not say where it lands "
+                           f"(expected {want!r} within the next 260 characters)")
+    return out
+
+
 def check():
     failures = []
     scratch = tempfile.mkdtemp(prefix="hostcheck-")
@@ -3775,7 +4068,10 @@ def check():
         if os.path.isdir(vend):
             shutil.copytree(vend, os.path.join(scratch, "vendors"))
         written, d = build(scratch)
-        return _check_in(scratch, written, d, failures)
+        failures, written = _check_in(scratch, written, d, failures)
+        failures += _check_cta_depth(scratch, written)
+        failures += _check_dest_note(scratch, written)
+        return failures, written
     finally:
         shutil.rmtree(scratch, ignore_errors=True)
 

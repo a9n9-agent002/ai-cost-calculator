@@ -1,0 +1,433 @@
+[
+ {
+  "q": "prompt caching cost",
+  "prefix": "prompt caching cost",
+  "fam": "A-cache",
+  "n_google": 10,
+  "n_second": 10,
+  "exact": true,
+  "startswith": [
+   "prompt caching cost",
+   "prompt caching cost in claude",
+   "prompt caching cost bedrock",
+   "prompt caching cost reduction",
+   "prompt caching cost openai"
+  ],
+  "merged": [
+   "prompt caching cost",
+   "prompt caching cost in claude",
+   "prompt caching cost bedrock",
+   "prompt caching cost reduction",
+   "prompt caching cost openai",
+   "prompt caching pricing bedrock",
+   "prompt caching pricing anthropic",
+   "gemini prompt caching cost",
+   "anthropic prompt caching cost",
+   "aws prompt caching cost"
+  ]
+ },
+ {
+  "q": "prompt caching pricing",
+  "prefix": "prompt caching pricing",
+  "fam": "A-cache",
+  "n_google": 10,
+  "n_second": 10,
+  "exact": true,
+  "startswith": [
+   "prompt caching pricing",
+   "prompt caching pricing bedrock",
+   "prompt caching pricing anthropic"
+  ],
+  "merged": [
+   "prompt caching pricing",
+   "prompt caching pricing bedrock",
+   "prompt caching pricing anthropic",
+   "prompt caching cost in claude",
+   "prompt caching cost bedrock",
+   "prompt caching cost openai",
+   "claude prompt caching pricing",
+   "openai prompt caching pricing",
+   "gemini prompt caching pricing",
+   "aws prompt caching pricing"
+  ]
+ },
+ {
+  "q": "does prompt caching save money",
+  "prefix": "does prompt caching",
+  "fam": "A-cache",
+  "n_google": 10,
+  "n_second": 10,
+  "exact": false,
+  "startswith": [
+   "does prompt caching reduce latency",
+   "does prompt caching reduce cost",
+   "does prompt caching reduce token usage",
+   "does prompt caching improve speed",
+   "does prompt caching improve latency"
+  ],
+  "merged": [
+   "does prompt caching reduce latency",
+   "does prompt caching reduce cost",
+   "does prompt caching reduce token usage",
+   "does prompt caching improve speed",
+   "does prompt caching improve latency",
+   "is prompt caching automatic",
+   "is prompt caching good",
+   "how does prompt caching work",
+   "what does prompt caching mean",
+   "how does prompt caching work anthropic"
+  ]
+ },
+ {
+  "q": "prompt caching worth it",
+  "prefix": "prompt caching worth",
+  "fam": "A-cache",
+  "n_google": 0,
+  "n_second": 0,
+  "exact": false,
+  "startswith": [],
+  "merged": []
+ },
+ {
+  "q": "cache read tokens",
+  "prefix": "cache read",
+  "fam": "A-cache",
+  "n_google": 10,
+  "n_second": 10,
+  "exact": true,
+  "startswith": [
+   "cache read tokens",
+   "cache read",
+   "cache read claude",
+   "cache read tokens claude",
+   "cache read vs cache write",
+   "cache reader",
+   "cache read through",
+   "cache read token cost",
+   "cache read tokens meaning",
+   "cache read cost claude"
+  ],
+  "merged": [
+   "cache read tokens",
+   "cache read",
+   "cache read claude",
+   "cache read tokens claude",
+   "cache read vs cache write",
+   "cache reader",
+   "cache read through",
+   "cache read token cost",
+   "cache read tokens meaning",
+   "cache read cost claude"
+  ]
+ },
+ {
+  "q": "cached input tokens",
+  "prefix": "cached input",
+  "fam": "A-cache",
+  "n_google": 10,
+  "n_second": 10,
+  "exact": true,
+  "startswith": [
+   "cached input tokens",
+   "cached input",
+   "cached input tokens meaning",
+   "cached input vs input",
+   "cached input meaning",
+   "cached input openai",
+   "cached input storage",
+   "cached input tokens openai",
+   "cached input openai meaning",
+   "cached input azure openai"
+  ],
+  "merged": [
+   "cached input tokens",
+   "cached input",
+   "cached input tokens meaning",
+   "cached input vs input",
+   "cached input meaning",
+   "cached input openai",
+   "cached input storage",
+   "cached input tokens openai",
+   "cached input openai meaning",
+   "cached input azure openai"
+  ]
+ },
+ {
+  "q": "how does prompt caching work",
+  "prefix": "how does prompt caching",
+  "fam": "A-cache",
+  "n_google": 10,
+  "n_second": 10,
+  "exact": true,
+  "startswith": [
+   "how does prompt caching work",
+   "how does prompt caching work in claude",
+   "how does prompt caching work anthropic",
+   "how does prompt caching work openai",
+   "how does prompt caching improve ai performance",
+   "how does prompt caching work in bedrock",
+   "how does prompt caching work in claude code"
+  ],
+  "merged": [
+   "how does prompt caching work",
+   "how does prompt caching work in claude",
+   "how does prompt caching work anthropic",
+   "how does prompt caching work openai",
+   "how does prompt caching improve ai performance",
+   "how does prompt caching work in bedrock",
+   "how does prompt caching work in claude code",
+   "what does prompt caching mean",
+   "how is prompt caching implemented",
+   "what is prompt caching in claude"
+  ]
+ },
+ {
+  "q": "llm prompt caching",
+  "prefix": "llm prompt caching",
+  "fam": "A-cache",
+  "n_google": 7,
+  "n_second": 7,
+  "exact": true,
+  "startswith": [
+   "llm prompt caching"
+  ],
+  "merged": [
+   "llm prompt caching",
+   "local llm prompt caching",
+   "llm system prompt caching",
+   "llm gateway prompt caching",
+   "lite llm prompt caching",
+   "ruby llm prompt caching",
+   "how does llm prompt caching work"
+  ]
+ },
+ {
+  "q": "openrouter prompt caching",
+  "prefix": "openrouter prompt",
+  "fam": "A-cache",
+  "n_google": 10,
+  "n_second": 10,
+  "exact": true,
+  "startswith": [
+   "openrouter prompt caching",
+   "openrouter prompt logging",
+   "openrouter prompt injection",
+   "openrouter prompt",
+   "openrouter prompt code",
+   "openrouter prompt tokens limit exceeded",
+   "openrouter prompt_cache_key",
+   "openrouter prompt post processing",
+   "openrouter prompt training",
+   "openrouter prompt janitor ai"
+  ],
+  "merged": [
+   "openrouter prompt caching",
+   "openrouter prompt logging",
+   "openrouter prompt injection",
+   "openrouter prompt",
+   "openrouter prompt code",
+   "openrouter prompt tokens limit exceeded",
+   "openrouter prompt_cache_key",
+   "openrouter prompt post processing",
+   "openrouter prompt training",
+   "openrouter prompt janitor ai"
+  ]
+ },
+ {
+  "q": "deepseek prompt caching",
+  "prefix": "deepseek prompt",
+  "fam": "A-cache",
+  "n_google": 10,
+  "n_second": 10,
+  "exact": true,
+  "startswith": [
+   "deepseek prompts",
+   "deepseek prompt janitor ai",
+   "deepseek prompt janitor ai reddit",
+   "deepseek prompt reddit",
+   "deepseek prompt template",
+   "deepseek prompt injection",
+   "deepseek prompt generator",
+   "deepseek prompting guide",
+   "deepseek prompt caching",
+   "deepseek prompt engineering"
+  ],
+  "merged": [
+   "deepseek prompts",
+   "deepseek prompt janitor ai",
+   "deepseek prompt janitor ai reddit",
+   "deepseek prompt reddit",
+   "deepseek prompt template",
+   "deepseek prompt injection",
+   "deepseek prompt generator",
+   "deepseek prompting guide",
+   "deepseek prompt caching",
+   "deepseek prompt engineering"
+  ]
+ },
+ {
+  "q": "prompt cache cost",
+  "prefix": "prompt cache cost",
+  "fam": "A-cache",
+  "n_google": 10,
+  "n_second": 10,
+  "exact": false,
+  "startswith": [],
+  "merged": [
+   "prompt caching cost",
+   "prompt caching cost in claude",
+   "prompt caching cost bedrock",
+   "prompt caching cost reduction",
+   "prompt caching cost openai",
+   "prompt cache pricing",
+   "gemini prompt caching cost",
+   "anthropic prompt caching cost",
+   "aws prompt caching cost",
+   "prompt cache expired higher cost expected"
+  ]
+ },
+ {
+  "q": "cache hit rate cost",
+  "prefix": "cache hit rate",
+  "fam": "B-rate",
+  "n_google": 10,
+  "n_second": 10,
+  "exact": false,
+  "startswith": [
+   "cache hit rate",
+   "cache hit rate llm",
+   "cache hit rate claude code",
+   "cache hit rate meaning",
+   "cache hit rate ai",
+   "cache hit rate openrouter",
+   "cache hit rate claude"
+  ],
+  "merged": [
+   "cache hit rate",
+   "cache hit rate llm",
+   "cache hit rate claude code",
+   "cache hit rate meaning",
+   "cache hit ratio",
+   "cache hit ratio formula",
+   "cache hit rate ai",
+   "cache hit rate openrouter",
+   "cache hit rate claude",
+   "cache hit ratio meaning"
+  ]
+ },
+ {
+  "q": "llm cache hit rate",
+  "prefix": "llm cache hit",
+  "fam": "B-rate",
+  "n_google": 6,
+  "n_second": 6,
+  "exact": true,
+  "startswith": [
+   "llm cache hit",
+   "llm cache hit rate",
+   "llm cache hit meaning",
+   "llm cache hit vs miss"
+  ],
+  "merged": [
+   "llm cache hit",
+   "llm cache hit rate",
+   "llm cache hit meaning",
+   "llm cache hit vs miss",
+   "how does llm cache hit work",
+   "hit and miss ratio in cache memory"
+  ]
+ },
+ {
+  "q": "cost per token calculator",
+  "prefix": "cost per token",
+  "fam": "B-rate",
+  "n_google": 10,
+  "n_second": 10,
+  "exact": false,
+  "startswith": [
+   "cost per token",
+   "cost per token claude",
+   "cost per token claude code",
+   "cost per token chatgpt",
+   "cost per token openai",
+   "cost per token ai",
+   "cost per token over time",
+   "cost per token opus 5.5",
+   "cost per token anthropic",
+   "cost per token opus 5"
+  ],
+  "merged": [
+   "cost per token",
+   "cost per token claude",
+   "cost per token claude code",
+   "cost per token chatgpt",
+   "cost per token openai",
+   "cost per token ai",
+   "cost per token over time",
+   "cost per token opus 5.5",
+   "cost per token anthropic",
+   "cost per token opus 5"
+  ]
+ },
+ {
+  "q": "text to speech python",
+  "prefix": "text to speech python",
+  "fam": "CONTROL",
+  "n_google": 10,
+  "n_second": 10,
+  "exact": true,
+  "startswith": [
+   "text to speech python",
+   "text to speech python library",
+   "text to speech python module",
+   "text to speech python code",
+   "text to speech python library offline",
+   "text to speech python program",
+   "text to speech python code github",
+   "text to speech python github",
+   "text to speech python pyttsx3",
+   "text to speech python windows"
+  ],
+  "merged": [
+   "text to speech python",
+   "text to speech python library",
+   "text to speech python module",
+   "text to speech python code",
+   "text to speech python library offline",
+   "text to speech python program",
+   "text to speech python code github",
+   "text to speech python github",
+   "text to speech python pyttsx3",
+   "text to speech python windows"
+  ]
+ },
+ {
+  "q": "llm api pricing",
+  "prefix": "llm api pricing",
+  "fam": "CONTROL",
+  "n_google": 10,
+  "n_second": 10,
+  "exact": true,
+  "startswith": [
+   "llm api pricing comparison",
+   "llm api pricing",
+   "llm api pricing comparison 2026",
+   "llm api pricing calculator",
+   "llm api pricing comparison reddit",
+   "llm api pricing chart",
+   "llm api pricing compare"
+  ],
+  "merged": [
+   "llm api pricing comparison",
+   "llm api pricing",
+   "llm api pricing comparison 2026",
+   "llm api pricing calculator",
+   "llm api pricing comparison reddit",
+   "llm api pricing chart",
+   "llm api pricing compare",
+   "llm api price list",
+   "llm api free",
+   "llm api cost"
+  ]
+ }
+]
